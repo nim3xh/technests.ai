@@ -5,6 +5,7 @@ const router = express.Router();
 router.post("/", accountDetailController.save);
 router.get("/", accountDetailController.index);
 router.get("/:id", accountDetailController.show);
+router.get("/account/:account", accountDetailController.showByAccount);
 router.patch("/:id", accountDetailController.update);
 router.delete("/:id", accountDetailController.destroy);
 
