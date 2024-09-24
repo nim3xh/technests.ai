@@ -10,7 +10,12 @@ module.exports = (sequelize, DataTypes) => {
      * The `models/index` file will call this method automatically.
      */
     static associate(models) {
-      // define association here
+      // An AccountDetail belongs to a User, associated by account and accountNumber
+      this.belongsTo(models.User, {
+        foreignKey: "account", // The field in AccountDetail that links to accountNumber in User
+        targetKey: "accountNumber", // The field in User that will be referenced
+        as: "user",
+      });
     }
   }
   AccountDetail.init({
