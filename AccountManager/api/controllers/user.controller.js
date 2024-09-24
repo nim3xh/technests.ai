@@ -27,7 +27,7 @@ function show(req, res) {
     .then((result) => {
       if (result) {
         res.status(200).json(result);
-      }else{
+      } else {
         res.status(404).json({
           message: "User not found",
         });
@@ -61,17 +61,41 @@ function update(req, res) {
     name: req.body.name,
   };
 
-  models.User.update(UpdatedUser, { where: { id: id } }).then((result) => { 
-    res.status(200).json({
-      message: "User updated successfully",
-      user: result,
+  models.User.update(UpdatedUser, { where: { id: id } })
+    .then((result) => {
+      res.status(200).json({
+        message: "User updated successfully",
+        user: result,
+      });
+    })
+    .catch((error) => {
+      res.status(500).json({
+        message: "Something went wrong",
+        error: error,
+      });
     });
-  }).catch((error) => {
-    res.status(500).json({
-      message: "Something went wrong",
-      error: error,
-    });
-  });
+}
+
+//update user by account number
+function updateByAccount(req, res) { 
+  const account = req.params.accountNumber; 
+  const UpdatedUser = { 
+    accountNumber: req.body.accountNumber, 
+    name: req.body.name, 
+  }; 
+  models.User.update(UpdatedUser, { where: { accountNumber: account } }) 
+    .then((result) => { 
+      res.status(200).json({ 
+        message: "User updated successfully", 
+        user: result, 
+      }); 
+    }) 
+    .catch((error) => { 
+      res.status(500).json({ 
+        message: "Something went wrong", 
+        error: error, 
+      }); 
+    }); 
 }
 
 function destroy(req, res) {
@@ -93,7 +117,8 @@ function destroy(req, res) {
 
 // get account details by account number
 function showByAccount(req, res) {
-  const account = req.params.account;
+  const account = req.params.accountNumber; 
+  console.log(account); // This should log 'APEX-246808'
   models.User.findOne({ where: { accountNumber: account } })
     .then((result) => {
       if (result) {
@@ -119,4 +144,5 @@ module.exports = {
   update: update,
   destroy: destroy,
   showByAccount: showByAccount,
+  updateByAccount: updateByAccount,
 };
