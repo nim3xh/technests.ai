@@ -2,6 +2,7 @@ const models = require("../models");
 const fs = require("fs");
 const csv = require("csv-parser");
 
+
 function save(req, res) {
   const accountDetail = {
     account: req.body.account,
@@ -255,7 +256,7 @@ function destroy(req, res) {
 function showByACnu(req, res) {
   const account = req.params.account;
 
-  models.AccountDetail.findOne({ where: { account: account } })
+  models.AccountDetail.findAll({ where: { accountNumber: account } })
     .then((result) => {
       if (result) {
         res.status(200).json(result);
