@@ -15,10 +15,10 @@ module.exports = {
       accountBalance: {
         type: Sequelize.DOUBLE
       },
-      accountName: {
+      status: {
         type: Sequelize.STRING
       },
-      status: {
+      accountNumber: {
         type: Sequelize.STRING
       },
       createdAt: {

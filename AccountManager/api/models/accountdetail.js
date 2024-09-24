@@ -1,7 +1,5 @@
-'use strict';
-const {
-  Model
-} = require('sequelize');
+"use strict";
+const { Model } = require("sequelize");
 module.exports = (sequelize, DataTypes) => {
   class AccountDetail extends Model {
     /**
@@ -12,20 +10,23 @@ module.exports = (sequelize, DataTypes) => {
     static associate(models) {
       // An AccountDetail belongs to a User, associated by account and accountNumber
       this.belongsTo(models.User, {
-        foreignKey: "account", // The field in AccountDetail that links to accountNumber in User
+        foreignKey: "accountNumber", // The field in AccountDetail that links to accountNumber in User
         targetKey: "accountNumber", // The field in User that will be referenced
         as: "user",
       });
     }
   }
-  AccountDetail.init({
-    account: DataTypes.STRING,
-    accountBalance: DataTypes.DOUBLE,
-    accountName: DataTypes.STRING,
-    status: DataTypes.STRING
-  }, {
-    sequelize,
-    modelName: 'AccountDetail',
-  });
+  AccountDetail.init(
+    {
+      account: DataTypes.STRING,
+      accountBalance: DataTypes.DOUBLE,
+      status: DataTypes.STRING,
+      accountNumber: DataTypes.STRING,
+    },
+    {
+      sequelize,
+      modelName: "AccountDetail",
+    }
+  );
   return AccountDetail;
 };

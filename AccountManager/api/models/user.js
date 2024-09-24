@@ -10,7 +10,7 @@ module.exports = (sequelize, DataTypes) => {
     static associate(models) {
       // A User has many AccountDetails, associated by accountNumber
       this.hasMany(models.AccountDetail, {
-        foreignKey: "account", // The field in AccountDetail that links to accountNumber in User
+        foreignKey: "accountNumber", // The field in AccountDetail that links to accountNumber in User
         sourceKey: "accountNumber", // The field in User that will be linked
         as: "accountDetails",
       });
