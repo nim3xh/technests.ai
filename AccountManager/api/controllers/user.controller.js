@@ -26,7 +26,7 @@ function save(req, res) {
 
 // Add users from a CSV file
 async function addUserFromCsv(req, res) {
-  const csvFilePath = req.file.path; // Assuming you're using multer to handle file uploads
+  const csvFilePath = req.file.path; 
   const users = [];
   const uniqueAccountNumbers = new Set(); // To track unique account numbers
 
@@ -41,7 +41,7 @@ async function addUserFromCsv(req, res) {
       .pipe(csv())
       .on("data", (row) => {
         // Extract the relevant fields from the CSV row
-        const fullAccountName = row["Account Name"]; // e.g., "APEX-194320 (Manny)"
+        const fullAccountName = row["Account Name"];
 
         // Extract the account number and name from the Account Name
         const accountNumberMatch = fullAccountName.match(/^([^ ]+) \(/); // Match the account number before the space and parentheses
@@ -123,7 +123,7 @@ async function addUsersFromCsv(req, res) {
           .pipe(csv())
           .on("data", (row) => {
             // Extract the relevant fields from the CSV row
-            const fullAccountName = row["Account Name"]; // e.g., "APEX-194320 (Manny)"
+            const fullAccountName = row["Account Name"];
 
             // Extract the account number and name from the Account Name
             const accountNumberMatch = fullAccountName.match(/^([^ ]+) \(/); // Match the account number before the space and parentheses
@@ -272,7 +272,6 @@ function destroy(req, res) {
 // get account details by account number
 function showByAccount(req, res) {
   const account = req.params.accountNumber;
-  console.log(account); // This should log 'APEX-246808'
   models.User.findOne({ where: { accountNumber: account } })
     .then((result) => {
       if (result) {

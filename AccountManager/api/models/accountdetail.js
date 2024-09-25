@@ -22,6 +22,8 @@ module.exports = (sequelize, DataTypes) => {
       accountBalance: DataTypes.DOUBLE,
       status: DataTypes.STRING,
       accountNumber: DataTypes.STRING,
+      trailingThreshold: DataTypes.DOUBLE,
+      PnL: DataTypes.DOUBLE,
     },
     {
       sequelize,

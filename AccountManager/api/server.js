@@ -8,7 +8,7 @@ const axios = require("axios");
 
 // Function to upload CSV files
 const uploadCsvFiles = async () => {
-  const directoryPath = path.join(__dirname, "path/to/your/csv/folder"); // Update to your CSV folder path
+  const directoryPath = path.join(__dirname, "path/to/your/csv/folder"); // CSV folder path
   const files = fs
     .readdirSync(directoryPath)
     .filter((file) => file.endsWith(".csv"));

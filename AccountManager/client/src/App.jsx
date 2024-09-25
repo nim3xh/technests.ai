@@ -2,6 +2,39 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import "./App.css";
 
+// Helper function to generate random colors
+const generateRandomColor = () => {
+  const letters = "0123456789ABCDEF";
+  let color = "#";
+  for (let i = 0; i < 6; i++) {
+    color += letters[Math.floor(Math.random() * 16)];
+  }
+  return color;
+};
+
+// Helper function to calculate luminance and determine if the color is light or dark
+const getLuminance = (hex) => {
+  const rgb = parseInt(hex.substring(1), 16);
+  const r = (rgb >> 16) & 0xff;
+  const g = (rgb >> 8) & 0xff;
+  const b = (rgb >> 0) & 0xff;
+
+  const luminance = 0.299 * r + 0.587 * g + 0.114 * b;
+  return luminance;
+};
+
+// Function to map account names to colors
+const assignColorsToAccounts = (data) => {
+  const accountColors = {};
+  data.forEach((item) => {
+    const accountName = item.name;
+    if (!accountColors[accountName]) {
+      accountColors[accountName] = generateRandomColor();
+    }
+  });
+  return accountColors;
+};
+
 function App() {
   const [combinedData, setCombinedData] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
@@ -9,23 +42,43 @@ function App() {
   const [error, setError] = useState(null);
   const [accountFilter, setAccountFilter] = useState("");
   const [csvFiles, setCsvFiles] = useState([]);
+  const [accountColors, setAccountColors] = useState({});
+   const [isAdminOnly, setIsAdminOnly] = useState(false);
 
-  // Pagination state
+  const [selectedProcessRange, setSelectedProcessRange] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10; // Change this to the number of items per page you want
+  const itemsPerPage = 10;
 
-  // Function to merge user and account details based on accountNumber
+  const processRanges = [
+    { label: "47000", min: 46750, max: 47249 },
+    { label: "47500", min: 47250, max: 47749 },
+    { label: "48000", min: 47750, max: 48249 },
+    { label: "48500", min: 48250, max: 48749 },
+    { label: "49000", min: 48750, max: 49249 },
+    { label: "49500", min: 49250, max: 49749 },
+    { label: "50000", min: 49750, max: 50249 },
+    { label: "50500", min: 50500, max: 50749 },
+    { label: "51000", min: 50750, max: 51249 },
+    { label: "51500", min: 51250, max: 51749 },
+    { label: "52000", min: 51750, max: 52249 },
+    { label: "52500", min: 52250, max: 52749 },
+    { label: "53000", min: 52750, max: 53249 },
+    { label: "53500", min: 53250, max: 53749 },
+    { label: "54000", min: 53750, max: 54249 },
+    { label: "54500", min: 54250, max: 54749 },
+    { label: "55000", min: 54750, max: 55249 },
+  ];
+
   const mergeData = (users, accountDetails) => {
     return accountDetails.map((account) => {
       const user = users.find((u) => u.accountNumber === account.accountNumber);
       return {
         ...account,
-        name: user ? user.name : "Unknown", // Handle case where user might not exist
+        name: user ? user.name : "Unknown",
       };
     });
   };
 
-  // Fetch data from both APIs and merge them
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -39,7 +92,10 @@ function App() {
           accountDetailsResponse.data
         );
         setCombinedData(mergedData);
-        setFilteredData(mergedData); // Set filtered data to full dataset initially
+        setFilteredData(mergedData);
+
+        // Assign random colors to account names
+        setAccountColors(assignColorsToAccounts(mergedData));
         setLoading(false);
       } catch (err) {
         setError("Something went wrong while fetching data.");
@@ -50,7 +106,6 @@ function App() {
     fetchData();
   }, []);
 
-  // Handle filtering by accountNumber
   useEffect(() => {
     let filtered = combinedData;
 
@@ -60,16 +115,30 @@ function App() {
       );
     }
 
-    setFilteredData(filtered);
-    setCurrentPage(1); // Reset to page 1 when filter changes
-  }, [accountFilter, combinedData]);
+    // Filter by "admin only" status if checkbox is checked
+    if (isAdminOnly) {
+      filtered = filtered.filter((item) => item.status === "admin only");
+    }
 
-  // Get current items for pagination
+    if (selectedProcessRange) {
+      const selectedRange = processRanges.find(
+        (range) => range.label === selectedProcessRange
+      );
+      filtered = filtered.filter(
+        (item) =>
+          item.accountBalance >= selectedRange.min &&
+          item.accountBalance <= selectedRange.max
+      );
+    }
+
+    setFilteredData(filtered);
+    setCurrentPage(1);
+  }, [accountFilter, selectedProcessRange, combinedData,isAdminOnly]);
+
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = filteredData.slice(indexOfFirstItem, indexOfLastItem);
 
-  // Pagination controls
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
 
   const handleNextPage = () => {
@@ -88,12 +157,10 @@ function App() {
     setCurrentPage(pageNum);
   };
 
-  // Function to handle file input change
   const handleFileChange = (e) => {
     setCsvFiles(e.target.files);
   };
 
-  // Function to upload CSV files
   const uploadCsvs = async () => {
     const formData = new FormData();
     for (const file of csvFiles) {
@@ -118,19 +185,16 @@ function App() {
         }),
       ]);
       alert("CSV uploaded successfully!");
-      setCsvFiles([]); // Clear the files input
-      // Optionally fetch data again after upload
+      setCsvFiles([]);
     } catch (error) {
       console.error("Error uploading CSVs:", error);
       alert("Failed to upload CSV files.");
     }
   };
 
-  // Conditionally render loading, error, or table
   if (loading) return <p>Loading...</p>;
   if (error) return <p>{error}</p>;
 
-  // Get unique values for accountNumber for dropdown filters
   const uniqueAccountNumbers = [
     ...new Set(
       combinedData.map((item) => `${item.accountNumber} (${item.name})`)
@@ -141,7 +205,6 @@ function App() {
     <div className="App">
       <h1>Account Details</h1>
 
-      {/* Dropdown to filter by Account Number */}
       <label htmlFor="accountFilter">Filter by Account: </label>
       <select
         id="accountFilter"
@@ -156,12 +219,35 @@ function App() {
         ))}
       </select>
 
-      {/* File upload for accounts and users */}
-      <h2>Upload CSVs</h2>
-      <input type="file" accept=".csv" multiple onChange={handleFileChange} />
-      <button onClick={uploadCsvs}>Upload Accounts and Users</button>
+      <label htmlFor="processCsv">Process CSV: </label>
+      <select
+        id="processCsv"
+        value={selectedProcessRange}
+        onChange={(e) => setSelectedProcessRange(e.target.value)}
+      >
+        <option value="">Select Range</option>
+        {processRanges.map((range) => (
+          <option key={range.label} value={range.label}>
+            {range.label}
+          </option>
+        ))}
+      </select>
+      <br/>
+      {/* Checkbox to filter by "admin only" status */}
+      <label>
+        <input
+          type="checkbox"
+          checked={isAdminOnly}
+          onChange={(e) => setIsAdminOnly(e.target.checked)}
+        />
+        Show Admin Only
+      </label>
 
-      {/* Display filtered data */}
+      <br />
+      <br />
+      <input type="file" accept=".csv" multiple onChange={handleFileChange} />
+      <button onClick={uploadCsvs}>Fetch CSVs</button>
+
       <table border="1">
         <thead>
           <tr>
@@ -169,21 +255,36 @@ function App() {
             <th>Account Balance</th>
             <th>Account Name</th>
             <th>Status</th>
+            <th>Trailing threshold</th>
+            <th>PnL</th>
           </tr>
         </thead>
         <tbody>
-          {currentItems.map((account) => (
-            <tr key={account.id}>
-              <td>{account.account}</td>
-              <td>{account.accountBalance}</td>
-              <td>{`${account.accountNumber} (${account.name})`}</td>
-              <td>{account.status}</td>
-            </tr>
-          ))}
+          {currentItems.map((account) => {
+            const backgroundColor = accountColors[account.name];
+            const luminance = getLuminance(backgroundColor);
+            const textColor = luminance > 160 ? "#000000" : "#FFFFFF"; // Dark text for light background, light text for dark background
+
+            return (
+              <tr
+                key={account.id}
+                style={{
+                  backgroundColor,
+                  color: textColor,
+                }}
+              >
+                <td>{account.account}</td>
+                <td>{account.accountBalance}</td>
+                <td>{`${account.accountNumber} (${account.name})`}</td>
+                <td>{account.status}</td>
+                <td>{account.trailingThreshold}</td>
+                <td>{account.PnL}</td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
 
-      {/* Pagination Controls */}
       <div className="pagination">
         <button onClick={handlePrevPage} disabled={currentPage === 1}>
           Previous
@@ -225,26 +326,6 @@ function App() {
           Next
         </button>
       </div>
-
-      <style>{`
-        .pagination {
-          display: flex;
-          justify-content: center;
-          margin-top: 20px;
-        }
-        .pagination button {
-          margin: 0 5px;
-          padding: 5px 10px;
-          cursor: pointer;
-        }
-        .pagination button.active {
-          font-weight: bold;
-          background-color: #ddd;
-        }
-        .pagination button:disabled {
-          cursor: not-allowed;
-        }
-      `}</style>
     </div>
   );
 }

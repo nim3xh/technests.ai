@@ -2,13 +2,14 @@ const models = require("../models");
 const fs = require("fs");
 const csv = require("csv-parser");
 
-
 function save(req, res) {
   const accountDetail = {
     account: req.body.account,
     accountBalance: req.body.accountBalance,
     status: req.body.status,
     accountNumber: req.body.accountNumber,
+    trailingThreshold: req.body.trailingThreshold,
+    PnL: req.body.PnL,
   };
 
   models.AccountDetail.create(accountDetail)
@@ -28,29 +29,44 @@ function save(req, res) {
 
 function importFromCSV(req, res) {
   const results = [];
-  const filePath = req.file.path; // Adjust based on how you upload files
+  const filePath = req.file.path; 
 
   fs.createReadStream(filePath)
     .pipe(csv())
     .on("data", (data) => {
+      console.log(data); // Log the data for debugging
+
       const account = data.Account;
       const accountBalance = parseFloat(
-        data["Account Balance"].replace(/,/g, "")
+        data["Account Balance"] ? data["Account Balance"].replace(/,/g, "") : 0
       );
       const status = data.Status;
       const accountNameParts = data["Account Name"].split(" (");
       const accountNumber = accountNameParts[0];
-      const name = accountNameParts[1].slice(0, -1); // Remove the closing parenthesis
+      const name = accountNameParts[1] ? accountNameParts[1].slice(0, -1) : ""; // Remove the closing parenthesis
+
+      const trailingThreshold = data["Trailing Threshold"]
+        ? parseFloat(data["Trailing Threshold"].replace(/,/g, ""))
+        : null;
+      
+      const PnL = data["PnL"]
+        ? parseFloat(data["PnL"].replace(/,/g, ""))
+        : null; // Change to null if PnL is missing
 
       results.push({
         account,
         accountBalance,
         status,
         accountNumber,
-        name, // If needed
+        name,
+        trailingThreshold,
+        PnL,
       });
     })
     .on("end", () => {
+      // Log results to check for PnL values
+      console.log("Parsed Results:", results);
+
       // Save all results to the database
       models.AccountDetail.bulkCreate(results)
         .then(() => {
@@ -84,16 +100,28 @@ async function importFromCSVs(req, res) {
       fs.createReadStream(filePath)
         .pipe(csv())
         .on("data", (data) => {
+          console.log(data); // Log the data for debugging
+
           const account = data.Account;
           const accountBalance = parseFloat(
-            data["Account Balance"].replace(/,/g, "")
+            data["Account Balance"]
+              ? data["Account Balance"].replace(/,/g, "")
+              : 0
           );
           const status = data.Status;
           const accountNameParts = data["Account Name"].split(" (");
           const accountNumber = accountNameParts[0];
           const name = accountNameParts[1]
             ? accountNameParts[1].slice(0, -1)
-            : ""; // Remove the closing parenthesis if it exists
+            : ""; // Remove the closing parenthesis
+
+          const trailingThreshold = data["Trailing Threshold"]
+            ? parseFloat(data["Trailing Threshold"].replace(/,/g, ""))
+            : null; // Use null for missing values
+
+          const PnL = data["PnL"]
+            ? parseFloat(data["PnL"].replace(/,/g, ""))
+            : null; // Set to null if missing
 
           results.push({
             account,
@@ -101,9 +129,12 @@ async function importFromCSVs(req, res) {
             status,
             accountNumber,
             name,
+            trailingThreshold,
+            PnL,
           });
         })
         .on("end", () => {
+          console.log("Processed Results:", results); // Log results after processing
           resolve();
         })
         .on("error", (error) => {
@@ -113,9 +144,7 @@ async function importFromCSVs(req, res) {
   };
 
   // Create an array of promises for each file
-  const promises = files.map((file) => {
-    return processCSV(file.path); // Adjust based on how you upload files
-  });
+  const promises = files.map((file) => processCSV(file.path)); // Adjust based on how you upload files
 
   // Wait for all files to be processed
   await Promise.all(promises);
@@ -135,6 +164,9 @@ async function importFromCSVs(req, res) {
       (result) => !existingAccountSet.has(result.account)
     );
 
+    // Log the new accounts for debugging
+    console.log("New Accounts to Import:", newAccounts);
+
     // Save all new results to the database
     if (newAccounts.length > 0) {
       await models.AccountDetail.bulkCreate(newAccounts);
@@ -151,6 +183,7 @@ async function importFromCSVs(req, res) {
     });
   }
 }
+
 
 function show(req, res) {
   const id = req.params.id;
@@ -192,6 +225,8 @@ function update(req, res) {
     accountBalance: req.body.accountBalance,
     status: req.body.status,
     accountNumber: req.body.accountNumber,
+    trailingThreshold: req.body.trailingThreshold,
+    PnL: req.body.PnL,
   };
 
   models.AccountDetail.update(updatedAccountDetail, { where: { id: id } })
@@ -217,6 +252,8 @@ function updateByACnu(req, res) {
     accountBalance: req.body.accountBalance,
     status: req.body.status,
     accountNumber: req.body.accountNumber,
+    trailingThreshold: req.body.trailingThreshold,
+    PnL: req.body.PnL,
   };
 
   models.AccountDetail.update(updatedAccountDetail, {
