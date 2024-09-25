@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import "./App.css";
 
+const BaseURL = import.meta.env.VITE_BASE_URL;
+
 // Helper function to generate random colors
 const generateRandomColor = () => {
   const letters = "0123456789ABCDEF";
@@ -43,7 +45,7 @@ function App() {
   const [accountFilter, setAccountFilter] = useState("");
   const [csvFiles, setCsvFiles] = useState([]);
   const [accountColors, setAccountColors] = useState({});
-   const [isAdminOnly, setIsAdminOnly] = useState(false);
+  const [isAdminOnly, setIsAdminOnly] = useState(false);
 
   const [selectedProcessRange, setSelectedProcessRange] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -83,8 +85,8 @@ function App() {
     const fetchData = async () => {
       try {
         const [usersResponse, accountDetailsResponse] = await Promise.all([
-          axios.get("http://localhost:3000/users"),
-          axios.get("http://localhost:3000/accountDetails"),
+          axios.get(`${BaseURL}users`),
+          axios.get(`${BaseURL}accountDetails`),
         ]);
 
         const mergedData = mergeData(
@@ -108,6 +110,7 @@ function App() {
 
   useEffect(() => {
     let filtered = combinedData;
+    console.log(BaseURL);
 
     if (accountFilter) {
       filtered = filtered.filter(
@@ -133,7 +136,7 @@ function App() {
 
     setFilteredData(filtered);
     setCurrentPage(1);
-  }, [accountFilter, selectedProcessRange, combinedData,isAdminOnly]);
+  }, [accountFilter, selectedProcessRange, combinedData, isAdminOnly]);
 
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
@@ -169,16 +172,12 @@ function App() {
 
     try {
       await Promise.all([
-        axios.post(
-          "http://localhost:3000/accountDetails/add-accounts",
-          formData,
-          {
-            headers: {
-              "Content-Type": "multipart/form-data",
-            },
-          }
-        ),
-        axios.post("http://localhost:3000/users/add-users", formData, {
+        axios.post(`${BaseURL}accountDetails/add-accounts`, formData, {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }),
+        axios.post(`${BaseURL}users/add-users`, formData, {
           headers: {
             "Content-Type": "multipart/form-data",
           },
@@ -232,7 +231,7 @@ function App() {
           </option>
         ))}
       </select>
-      <br/>
+      <br />
       {/* Checkbox to filter by "admin only" status */}
       <label>
         <input
