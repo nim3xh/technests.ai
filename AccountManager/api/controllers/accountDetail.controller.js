@@ -90,6 +90,7 @@ function importFromCSV(req, res) {
     });
 }
 
+// Function to import from multiple CSVs
 async function importFromCSVs(req, res) {
   const results = [];
   const files = req.files; // Assuming multiple files are uploaded
@@ -102,25 +103,55 @@ async function importFromCSVs(req, res) {
         .on("data", (data) => {
           console.log(data); // Log the data for debugging
 
-          const account = data.Account;
+          const account = data.Account || ""; // Safely access Account, default to empty string if undefined
+
+          // Skip processing if Account is NULL or empty
+          if (!account) {
+            return; // Skip this row if Account is missing or empty
+          }
+
           const accountBalance = parseFloat(
             data["Account Balance"]
               ? data["Account Balance"].replace(/,/g, "")
               : 0
           );
-          const status = data.Status;
-          const accountNameParts = data["Account Name"].split(" (");
-          const accountNumber = accountNameParts[0];
-          const name = accountNameParts[1]
-            ? accountNameParts[1].slice(0, -1)
-            : ""; // Remove the closing parenthesis
+          const status = data.Status || "unknown"; // Default to 'unknown' if Status is missing
 
-          const trailingThreshold = data["Trailing Threshold"]
-            ? parseFloat(data["Trailing Threshold"].replace(/,/g, ""))
+          // Safely extract account number and name
+          let accountNumber = "";
+          let name = "";
+
+          if (data["Account Name"]) {
+            const accountNameParts = data["Account Name"].split(" (");
+            accountNumber = accountNameParts[0];
+            name = accountNameParts[1] ? accountNameParts[1].slice(0, -1) : ""; // Remove the closing parenthesis
+          } else {
+            // Handle missing "Account Name" by constructing a name from the Account column
+            let accountParts = account.split("-"); // Split Account by hyphen
+
+            // If the first part is "PA", skip it
+            if (accountParts[0] === "PA") {
+              accountParts = accountParts.slice(1); // Ignore the first part
+            }
+
+            // Check if there are at least two parts after the prefix is removed
+            if (accountParts.length >= 2) {
+              accountNumber = `${accountParts[0]}-${accountParts[1]}`; // Construct account number from the relevant parts
+              name = `${accountNumber} (Unknown)`; // Append "(Unknown)"
+            } else {
+              accountNumber = account; // Fallback to the full account if the expected format is not found
+              name = `${account} (Unknown)`; // Append "(Unknown)"
+            }
+          }
+
+          const trailingThreshold = data["Auto Liquidate Threshold Value"]
+            ? parseFloat(
+                data["Auto Liquidate Threshold Value"].replace(/,/g, "")
+              )
             : null; // Use null for missing values
 
-          const PnL = data["PnL"]
-            ? parseFloat(data["PnL"].replace(/,/g, ""))
+          const PnL = data["P&L"]
+            ? parseFloat(data["P&L"].replace(/,/g, ""))
             : null; // Set to null if missing
 
           results.push({
@@ -183,6 +214,7 @@ async function importFromCSVs(req, res) {
     });
   }
 }
+
 
 
 function show(req, res) {
@@ -311,14 +343,37 @@ function showByACnu(req, res) {
     });
 }
 
+function destroyAll(req, res) {
+  models.AccountDetail.destroy({
+    where: {}, // No condition means all records will be deleted
+    truncate: true, // This will delete all records and reset auto-increment keys
+  })
+    .then((result) => {
+      res.status(200).json({
+        message: "All account details deleted successfully",
+        deletedRecords: result, // Number of records deleted
+      });
+    })
+    .catch((error) => {
+      res.status(500).json({
+        message: "Something went wrong",
+        error: error,
+      });
+    });
+}
+
+
+
 module.exports = {
   save: save,
   show: show,
   index: index,
   update: update,
   destroy: destroy,
+  destroyAll: destroyAll,
   showByACnu: showByACnu,
   updateByACnu: updateByACnu,
   importFromCSV: importFromCSV,
   importFromCSVs: importFromCSVs,
 };
+

@@ -125,31 +125,36 @@ async function addUsersFromCsv(req, res) {
             // Extract the relevant fields from the CSV row
             const fullAccountName = row["Account Name"];
 
-            // Extract the account number and name from the Account Name
-            const accountNumberMatch = fullAccountName.match(/^([^ ]+) \(/); // Match the account number before the space and parentheses
-            const nameMatch = fullAccountName.match(/\(([^)]+)\)/); // Match the name inside parentheses
+            // Ensure fullAccountName is defined before attempting to match
+            if (fullAccountName) {
+              // Extract the account number and name from the Account Name
+              const accountNumberMatch = fullAccountName.match(/^([^ ]+) \(/); // Match the account number before the space and parentheses
+              const nameMatch = fullAccountName.match(/\(([^)]+)\)/); // Match the name inside parentheses
 
-            const accountNumber = accountNumberMatch
-              ? accountNumberMatch[1]
-              : null; // Get account number
-            const name = nameMatch ? nameMatch[1].trim() : null; // Get name
+              const accountNumber = accountNumberMatch
+                ? accountNumberMatch[1]
+                : null; // Get account number
+              const name = nameMatch ? nameMatch[1].trim() : null; // Get name
 
-            // Ensure both account number and name are extracted
-            if (accountNumber && name) {
-              // Check if the account number is already processed or exists in the database
-              if (
-                !uniqueAccountNumbers.has(accountNumber) &&
-                !existingAccountNumbers.has(accountNumber)
-              ) {
-                // Create user object only if the account number is unique and doesn't exist
-                const user = {
-                  accountNumber: accountNumber,
-                  accountBalance: row["Account Balance"].replace(/,/g, ""), // Remove commas for balance
-                  status: row.Status,
-                  name: name, // Use the extracted name
-                };
-                users.push(user);
-                uniqueAccountNumbers.add(accountNumber); // Mark this account number as processed
+              // Ensure both account number and name are extracted
+              if (accountNumber && name) {
+                // Check if the account number is already processed or exists in the database
+                if (
+                  !uniqueAccountNumbers.has(accountNumber) &&
+                  !existingAccountNumbers.has(accountNumber)
+                ) {
+                  // Create user object only if the account number is unique and doesn't exist
+                  const user = {
+                    accountNumber: accountNumber,
+                    accountBalance: row["Account Balance"]
+                      ? row["Account Balance"].replace(/,/g, "") // Remove commas for balance
+                      : "0", // Default to "0" if balance is missing
+                    status: row.Status || "unknown", // Default status if missing
+                    name: name, // Use the extracted name
+                  };
+                  users.push(user);
+                  uniqueAccountNumbers.add(accountNumber); // Mark this account number as processed
+                }
               }
             }
           })

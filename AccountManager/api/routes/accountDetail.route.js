@@ -13,5 +13,5 @@ router.get("/account/:account", accountDetailController.showByACnu);
 router.patch("/:id", accountDetailController.update);
 router.patch("/account/:account", accountDetailController.updateByACnu);
 router.delete("/:id", accountDetailController.destroy);
-
+router.delete("/", accountDetailController.destroyAll);
 module.exports = router;

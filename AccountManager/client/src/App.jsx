@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import "./App.css";
+import { Navbar, Nav, Container } from "react-bootstrap"; // Import these components
+import "bootstrap/dist/css/bootstrap.min.css";
 
 const BaseURL = import.meta.env.VITE_BASE_URL;
 
-// Helper function to generate random colors
 const generateRandomColor = () => {
   const letters = "0123456789ABCDEF";
   let color = "#";
@@ -14,7 +15,6 @@ const generateRandomColor = () => {
   return color;
 };
 
-// Helper function to calculate luminance and determine if the color is light or dark
 const getLuminance = (hex) => {
   const rgb = parseInt(hex.substring(1), 16);
   const r = (rgb >> 16) & 0xff;
@@ -25,7 +25,6 @@ const getLuminance = (hex) => {
   return luminance;
 };
 
-// Function to map account names to colors
 const assignColorsToAccounts = (data) => {
   const accountColors = {};
   data.forEach((item) => {
@@ -46,10 +45,8 @@ function App() {
   const [csvFiles, setCsvFiles] = useState([]);
   const [accountColors, setAccountColors] = useState({});
   const [isAdminOnly, setIsAdminOnly] = useState(false);
-
+  const [isPAaccount, setIsPAaccount] = useState(false);
   const [selectedProcessRange, setSelectedProcessRange] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
 
   const processRanges = [
     { label: "47000", min: 46750, max: 47249 },
@@ -70,6 +67,21 @@ function App() {
     { label: "54500", min: 54250, max: 54749 },
     { label: "55000", min: 54750, max: 55249 },
   ];
+
+  const deleteAllAccounts = async () => {
+    if (window.confirm("Are you sure you want to delete all account details?")) {
+      try {
+        await axios.delete(`${BaseURL}accountDetails/`); // No need to append '*'
+        alert("All account details deleted successfully.");
+        setCombinedData([]); // Clear the data in the frontend after deletion
+        setFilteredData([]); // Clear the filtered data as well
+      } catch (error) {
+        console.error("Error deleting all accounts:", error);
+        alert("Failed to delete all accounts.");
+      }
+    }
+  };
+
 
   const mergeData = (users, accountDetails) => {
     return accountDetails.map((account) => {
@@ -96,7 +108,6 @@ function App() {
         setCombinedData(mergedData);
         setFilteredData(mergedData);
 
-        // Assign random colors to account names
         setAccountColors(assignColorsToAccounts(mergedData));
         setLoading(false);
       } catch (err) {
@@ -110,19 +121,30 @@ function App() {
 
   useEffect(() => {
     let filtered = combinedData;
-    console.log(BaseURL);
 
+    // Apply account filter
     if (accountFilter) {
       filtered = filtered.filter(
         (item) => `${item.accountNumber} (${item.name})` === accountFilter
       );
     }
 
-    // Filter by "admin only" status if checkbox is checked
+    // Filter for admin only status
     if (isAdminOnly) {
       filtered = filtered.filter((item) => item.status === "admin only");
     }
 
+    // Filter for non-admin status
+    if (!isAdminOnly) {
+      filtered = filtered.filter((item) => item.status !== "admin only");
+    }
+
+    // Filter accounts that start with "PA"
+    if (isPAaccount) {
+      filtered = filtered.filter((item) => item.account.startsWith("PA"));
+    }
+
+    // Filter by selected process range
     if (selectedProcessRange) {
       const selectedRange = processRanges.find(
         (range) => range.label === selectedProcessRange
@@ -134,31 +156,9 @@ function App() {
       );
     }
 
+    // Update the filtered data
     setFilteredData(filtered);
-    setCurrentPage(1);
-  }, [accountFilter, selectedProcessRange, combinedData, isAdminOnly]);
-
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentItems = filteredData.slice(indexOfFirstItem, indexOfLastItem);
-
-  const totalPages = Math.ceil(filteredData.length / itemsPerPage);
-
-  const handleNextPage = () => {
-    if (currentPage < totalPages) {
-      setCurrentPage(currentPage + 1);
-    }
-  };
-
-  const handlePrevPage = () => {
-    if (currentPage > 1) {
-      setCurrentPage(currentPage - 1);
-    }
-  };
-
-  const handlePageClick = (pageNum) => {
-    setCurrentPage(pageNum);
-  };
+  }, [accountFilter, selectedProcessRange, combinedData, isAdminOnly, isPAaccount,]);
 
   const handleFileChange = (e) => {
     setCsvFiles(e.target.files);
@@ -185,6 +185,8 @@ function App() {
       ]);
       alert("CSV uploaded successfully!");
       setCsvFiles([]);
+      // refresh page
+      window.location.reload();
     } catch (error) {
       console.error("Error uploading CSVs:", error);
       alert("Failed to upload CSV files.");
@@ -200,131 +202,149 @@ function App() {
     ),
   ];
 
+  // Calculate total number of accounts and rows
+  const totalAccounts = uniqueAccountNumbers.length;
+  const totalRows = filteredData.length;
+
+  // Calculate unique accounts from filteredData
+  const uniqueAccountsInFilteredData = new Set(
+    filteredData.map((item) => `${item.accountNumber} (${item.name})`)
+  );
+  const totalUniqueAccountsDisplayed = uniqueAccountsInFilteredData.size;
+
   return (
     <div className="App">
-      <h1>Account Details</h1>
+      {/* Navbar Section */}
+      <Navbar bg="dark" variant="dark" expand="lg">
+        <Container>
+          <Navbar.Brand href="#home">Account Details</Navbar.Brand>
+          <Navbar.Toggle aria-controls="basic-navbar-nav" />
+          <Navbar.Collapse id="basic-navbar-nav">
+            <Nav className="me-auto">
+            </Nav>
+          </Navbar.Collapse>
+        </Container>
+      </Navbar>
 
-      <label htmlFor="accountFilter">Filter by Account: </label>
-      <select
-        id="accountFilter"
-        value={accountFilter}
-        onChange={(e) => setAccountFilter(e.target.value)}
-      >
-        <option value="">All</option>
-        {uniqueAccountNumbers.map((account) => (
-          <option key={account} value={account}>
-            {account}
-          </option>
-        ))}
-      </select>
+      {/* Main Content */}
+      <Container style={{ marginTop: '20px' }}>
+        {/* <h1>Account Details</h1> */}
 
-      <label htmlFor="processCsv">Process CSV: </label>
-      <select
-        id="processCsv"
-        value={selectedProcessRange}
-        onChange={(e) => setSelectedProcessRange(e.target.value)}
-      >
-        <option value="">Select Range</option>
-        {processRanges.map((range) => (
-          <option key={range.label} value={range.label}>
-            {range.label}
-          </option>
-        ))}
-      </select>
-      <br />
-      {/* Checkbox to filter by "admin only" status */}
-      <label>
-        <input
-          type="checkbox"
-          checked={isAdminOnly}
-          onChange={(e) => setIsAdminOnly(e.target.checked)}
-        />
-        Show Admin Only
-      </label>
+        <div className="filter-container">
+          <label htmlFor="accountFilter">Filter by Account: </label>
+          <select
+            id="accountFilter"
+            value={accountFilter}
+            onChange={(e) => setAccountFilter(e.target.value)}
+            style={{ marginRight: '10px' }}
+          >
+            <option value="">All</option>
+            {uniqueAccountNumbers.map((account) => (
+              <option key={account} value={account}>
+                {account}
+              </option>
+            ))}
+          </select>
 
-      <br />
-      <br />
-      <input type="file" accept=".csv" multiple onChange={handleFileChange} />
-      <button onClick={uploadCsvs}>Fetch CSVs</button>
+          <label htmlFor="processCsv">Process CSV: </label>
+          <select
+            id="processCsv"
+            value={selectedProcessRange}
+            onChange={(e) => setSelectedProcessRange(e.target.value)}
+            style={{ marginLeft: '10px' }}
+          >
+            <option value="">Select Range</option>
+            {processRanges.map((range) => (
+              <option key={range.label} value={range.label}>
+                {range.label}
+              </option>
+            ))}
+          </select>
+        </div>
 
-      <table border="1">
-        <thead>
-          <tr>
-            <th>Account</th>
-            <th>Account Balance</th>
-            <th>Account Name</th>
-            <th>Status</th>
-            <th>Trailing threshold</th>
-            <th>PnL</th>
-          </tr>
-        </thead>
-        <tbody>
-          {currentItems.map((account) => {
-            const backgroundColor = accountColors[account.name];
-            const luminance = getLuminance(backgroundColor);
-            const textColor = luminance > 160 ? "#000000" : "#FFFFFF"; // Dark text for light background, light text for dark background
+        {/* Checkboxes */}
+        <div className="checkbox-container" style={{ marginTop: '20px' }}>
+          <label>
+            <input
+              type="checkbox"
+              checked={isAdminOnly}
+              onChange={(e) => setIsAdminOnly(e.target.checked)}
+              style={{ marginRight: '5px' }}
+            />
+            Show Admin Only
+          </label>
 
-            return (
-              <tr
-                key={account.id}
-                style={{
-                  backgroundColor,
-                  color: textColor,
-                }}
-              >
-                <td>{account.account}</td>
-                <td>{account.accountBalance}</td>
-                <td>{`${account.accountNumber} (${account.name})`}</td>
-                <td>{account.status}</td>
-                <td>{account.trailingThreshold}</td>
-                <td>{account.PnL}</td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
+          <label style={{ marginLeft: '20px' }}>
+            <input
+              type="checkbox"
+              checked={isPAaccount}
+              onChange={(e) => setIsPAaccount(e.target.checked)}
+              style={{ marginRight: '5px' }}
+            />
+            Show PA Accounts
+          </label>
+        </div>
 
-      <div className="pagination">
-        <button onClick={handlePrevPage} disabled={currentPage === 1}>
-          Previous
-        </button>
+        {/* File Upload */}
+        <div className="file-upload-container" style={{ marginTop: '20px' }}>
+          <input type="file" accept=".csv" multiple onChange={handleFileChange} />
+          <button onClick={uploadCsvs} style={{ marginLeft: '10px' }}>
+            Fetch CSVs
+          </button>
+        </div>
 
-        {currentPage > 3 && (
-          <>
-            <button onClick={() => handlePageClick(1)}>1</button>
-            <span>...</span>
-          </>
-        )}
+        {/* Summary Section */}
+        <div id="summary" className="summary-container" style={{ marginTop: '30px' }}>
+          <h4>Total Rows Displayed: {totalRows}</h4>
+          <h4>Total Unique Accounts Displayed: {totalUniqueAccountsDisplayed}</h4>
+          <button
+            onClick={deleteAllAccounts}
+            style={{ marginTop: '10px', color: 'red' }}
+          >
+            Clear all Account Details
+          </button>
+        </div>
 
-        {Array.from({ length: Math.min(totalPages, 5) }, (_, index) => {
-          const pageNum = Math.max(1, currentPage - 2) + index;
-          if (pageNum <= totalPages) {
-            return (
-              <button
-                key={pageNum}
-                onClick={() => handlePageClick(pageNum)}
-                className={currentPage === pageNum ? "active" : ""}
-              >
-                {pageNum}
-              </button>
-            );
-          }
-          return null;
-        })}
+        {/* Account Details Table */}
+        <table border="1" >
+          <thead>
+            <tr>
+              <th>Account</th>
+              <th>Account Balance</th>
+              <th>Account Name</th>
+              <th>Status</th>
+              <th>Trailing Threshold</th>
+              <th>PnL</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredData.map((account) => {
+              const backgroundColor = accountColors[account.name];
+              const luminance = getLuminance(backgroundColor);
+              const textColor = luminance > 160 ? "#000000" : "#FFFFFF";
 
-        {currentPage < totalPages - 2 && (
-          <>
-            <span>...</span>
-            <button onClick={() => handlePageClick(totalPages)}>
-              {totalPages}
-            </button>
-          </>
-        )}
-
-        <button onClick={handleNextPage} disabled={currentPage === totalPages}>
-          Next
-        </button>
-      </div>
+              return (
+                <tr
+                  key={account.id}
+                  style={{
+                    backgroundColor,
+                    color: textColor,
+                  }}
+                >
+                  <td>{account.account}</td>
+                  <td>{account.accountBalance}</td>
+                  <td>
+                    {account.accountNumber} ({account.name})
+                  </td>
+                  <td>{account.status}</td>
+                  <td>{account.trailingThreshold}</td>
+                  <td>{account.PnL}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </Container>
     </div>
   );
 }

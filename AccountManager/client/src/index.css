@@ -1,11 +1,22 @@
 :root {
+  --light-bg: #ffffff;
+  --light-text: #213547;
+  --dark-bg: #242424;
+  --dark-text: rgba(255, 255, 255, 0.87);
+  --primary-color-light: #646cff;
+  --primary-color-dark: #535bf2;
+  --button-bg-light: #f9f9f9;
+  --button-bg-dark: #1a1a1a;
+  --border-color-hover-light: #747bff;
+  --border-color-hover-dark: #646cff;
+
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
 
   color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+  color: var(--dark-text);
+  background-color: var(--dark-bg);
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -13,26 +24,30 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-a:hover {
-  color: #535bf2;
-}
-
 body {
   margin: 0;
   display: flex;
-  place-items: center;
+  justify-content: center;
+  align-items: center;
   min-width: 320px;
   min-height: 100vh;
+  background-color: var(--dark-bg);
+  color: var(--dark-text);
+}
+
+a {
+  font-weight: 500;
+  color: var(--primary-color-light);
+  text-decoration: inherit;
+}
+a:hover {
+  color: var(--primary-color-dark);
 }
 
 h1 {
   font-size: 3.2em;
   line-height: 1.1;
+  color: var(--dark-text);
 }
 
 button {
@@ -42,12 +57,13 @@ button {
   font-size: 1em;
   font-weight: 500;
   font-family: inherit;
-  background-color: #1a1a1a;
+  background-color: var(--button-bg-dark);
+  color: var(--dark-text);
   cursor: pointer;
-  transition: border-color 0.25s;
+  transition: border-color 0.25s, background-color 0.25s, color 0.25s;
 }
 button:hover {
-  border-color: #646cff;
+  border-color: var(--border-color-hover-dark);
 }
 button:focus,
 button:focus-visible {
@@ -56,13 +72,141 @@ button:focus-visible {
 
 @media (prefers-color-scheme: light) {
   :root {
-    color: #213547;
-    background-color: #ffffff;
+    background-color: var(--light-bg);
+    color: var(--light-text);
+  }
+
+  body {
+    background-color: var(--light-bg);
+    color: var(--light-text);
+  }
+
+  h1 {
+    color: var(--light-text);
+  }
+
+  a {
+    color: var(--primary-color-light);
   }
   a:hover {
-    color: #747bff;
+    color: var(--border-color-hover-light);
   }
+
   button {
-    background-color: #f9f9f9;
+    background-color: var(--button-bg-light);
+    color: var(--light-text);
   }
+
+  button:hover {
+    border-color: var(--border-color-hover-light);
+  }
+}
+/* Summary Section Styles */
+.summary-container {
+  margin-top: 30px;
+  padding: 20px;
+  background-color: #f8f9fa; /* Light gray background */
+  border-radius: 10px;
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1); /* Soft shadow for depth */
+  text-align: center;
+}
+
+.summary-container h4 {
+  margin: 10px 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #333; /* Darker text color */
+}
+
+.summary-container button {
+  margin-top: 10px;
+  padding: 8px 16px;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.summary-container button:hover {
+  background-color: #c82333; /* Darker red on hover */
+}
+
+/* Table container styling */
+table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  border: 1px solid #ddd;
+  border-radius: 10px; /* Curved corners for the table */
+  overflow: hidden;
+  margin-top: 20px;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1); /* Soft shadow for depth */
+}
+
+/* Table headers */
+table thead th {
+  background-color: #242424;
+  padding: 10px;
+  font-weight: 600;
+  border-bottom: 2px solid #ddd;
+  border-right: 1px solid #ddd; /* Vertical border between headers */
+  text-align: left;
+}
+
+/* Remove the right border from the last header cell */
+table thead th:last-child {
+  border-right: none;
+}
+
+/* Table body rows */
+table tbody td {
+  padding: 10px;
+  border-bottom: 1px solid #ddd; /* Horizontal borders */
+  border-right: 1px solid #ddd;  /* Vertical borders between columns */
+  text-align: left;
+}
+
+/* Remove the right border from the last cell in each row */
+table tbody tr td:last-child {
+  border-right: none;
+}
+
+/* Last row styling - to prevent border on the last row */
+table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* Table row hover effect */
+table tbody tr:hover {
+  background-color: #f9f9f9;
+}
+
+/* Table with alternating row colors */
+table tbody tr:nth-child(odd) {
+  background-color: #f8f9fa;
+}
+
+table tbody tr:nth-child(even) {
+  background-color: #ffffff;
+}
+
+/* Curved corners for the table */
+table {
+  border-radius: 10px;
+}
+
+/* Rounded corners for top-left and top-right */
+table thead th:first-child {
+  border-top-left-radius: 10px;
+}
+
+table thead th:last-child {
+  border-top-right-radius: 10px;
+}
+
+/* Rounded corners for bottom-left and bottom-right */
+table tbody tr:last-child td:first-child {
+  border-bottom-left-radius: 10px;
+}
+
+table tbody tr:last-child td:last-child {
+  border-bottom-right-radius: 10px;
 }

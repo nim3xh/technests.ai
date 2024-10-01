@@ -8,11 +8,7 @@ const usersRouter = require("./routes/users.route");
 const accountDetailRouter = require("./routes/accountDetail.route");
 
 // Use CORS middleware to allow requests from your frontend
-app.use(
-  cors({
-    origin: "http://localhost:5173", // Allow requests from this origin
-  })
-);
+app.use(cors());
 
 // Middleware to parse JSON requests
 app.use(bodyParser.json());
