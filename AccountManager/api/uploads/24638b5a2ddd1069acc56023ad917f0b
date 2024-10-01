@@ -1,0 +1,7 @@
+Account,Account Balance,Status,Auto Liquidate Threshold Value,P&L
+PA-123-456,"1,200.50",active,500,100
+PA-234-567,"3,400.75",inactive,,200
+PA-345-678,"5,600.00",active,,
+,"7,800.25",active,600,300
+PA-456-789,0,,0,0
+789-101,"8,900.00",active,,
