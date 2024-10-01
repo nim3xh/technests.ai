@@ -29,7 +29,7 @@ function save(req, res) {
 
 function importFromCSV(req, res) {
   const results = [];
-  const filePath = req.file.path; 
+  const filePath = req.file.path;
 
   fs.createReadStream(filePath)
     .pipe(csv())
@@ -48,7 +48,7 @@ function importFromCSV(req, res) {
       const trailingThreshold = data["Trailing Threshold"]
         ? parseFloat(data["Trailing Threshold"].replace(/,/g, ""))
         : null;
-      
+
       const PnL = data["PnL"]
         ? parseFloat(data["PnL"].replace(/,/g, ""))
         : null; // Change to null if PnL is missing
@@ -113,7 +113,7 @@ async function importFromCSVs(req, res) {
           const accountBalance = parseFloat(
             data["Account Balance"]
               ? data["Account Balance"].replace(/,/g, "")
-              : 0
+              : 0 // Default to 0 if "Account Balance" is missing
           );
           const status = data.Status || "unknown"; // Default to 'unknown' if Status is missing
 
@@ -137,7 +137,7 @@ async function importFromCSVs(req, res) {
             // Check if there are at least two parts after the prefix is removed
             if (accountParts.length >= 2) {
               accountNumber = `${accountParts[0]}-${accountParts[1]}`; // Construct account number from the relevant parts
-              name = `${accountNumber} (Unknown)`; // Append "(Unknown)"
+              name = `${accountNumber} (Unknown)`; // Append "(Unknown)" as name
             } else {
               accountNumber = account; // Fallback to the full account if the expected format is not found
               name = `${account} (Unknown)`; // Append "(Unknown)"
@@ -148,11 +148,11 @@ async function importFromCSVs(req, res) {
             ? parseFloat(
                 data["Auto Liquidate Threshold Value"].replace(/,/g, "")
               )
-            : null; // Use null for missing values
+            : 0; // Default to 0 if missing
 
           const PnL = data["P&L"]
             ? parseFloat(data["P&L"].replace(/,/g, ""))
-            : null; // Set to null if missing
+            : 0; // Default to 0 if missing
 
           results.push({
             account,
@@ -214,8 +214,6 @@ async function importFromCSVs(req, res) {
     });
   }
 }
-
-
 
 function show(req, res) {
   const id = req.params.id;
@@ -362,8 +360,6 @@ function destroyAll(req, res) {
     });
 }
 
-
-
 module.exports = {
   save: save,
   show: show,
@@ -376,4 +372,3 @@ module.exports = {
   importFromCSV: importFromCSV,
   importFromCSVs: importFromCSVs,
 };
-
