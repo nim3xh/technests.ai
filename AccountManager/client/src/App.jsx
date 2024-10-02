@@ -47,6 +47,8 @@ function App() {
   const [isAdminOnly, setIsAdminOnly] = useState(false);
   const [isPAaccount, setIsPAaccount] = useState(false);
   const [selectedProcessRange, setSelectedProcessRange] = useState("");
+  const [paAccountsCount, setPaAccountsCount] = useState(0);
+  const [nonPaAccountsCount, setNonPaAccountsCount] = useState(0);
 
   const processRanges = [
     { label: "47000", min: 46750, max: 47249 },
@@ -110,6 +112,15 @@ function App() {
 
         setAccountColors(assignColorsToAccounts(mergedData));
         setLoading(false);
+
+        // Count PA and non-PA accounts
+        const paCount = mergedData.filter((item) =>
+          item.account.startsWith("PA")
+        ).length;
+        const nonPaCount = mergedData.length - paCount;
+
+        setPaAccountsCount(paCount);
+        setNonPaAccountsCount(nonPaCount);
       } catch (err) {
         setError("Something went wrong while fetching data.");
         setLoading(false);
@@ -189,7 +200,7 @@ function App() {
       window.location.reload();
     } catch (error) {
       console.error("Error uploading CSVs:", error);
-      alert("Failed to upload CSV files.");
+      alert("Failed to upload CSV files.",error	);
     }
   };
 
@@ -220,14 +231,41 @@ function App() {
           <Navbar.Brand href="#home">Account Details</Navbar.Brand>
           <Navbar.Toggle aria-controls="basic-navbar-nav" />
           <Navbar.Collapse id="basic-navbar-nav">
-            <Nav className="me-auto">
-            </Nav>
+            <Nav className="me-auto"></Nav>
           </Navbar.Collapse>
         </Container>
       </Navbar>
 
+      {/* Summary Section */}
+      <div
+        id="summary"
+        className="summary-container"
+        style={{ marginTop: "30px", display: "flex", gap: "10px" }}
+      >
+        <div className="summary-box">
+          <h4>Total Rows Displayed: {totalRows}</h4>
+        </div>
+        <div className="summary-box">
+          <h4>
+            Total Unique Accounts Displayed: {totalUniqueAccountsDisplayed}
+          </h4>
+        </div>
+        <div className="summary-box">
+          <h4>Total PA Rows: {paAccountsCount}</h4>
+        </div>
+        <div className="summary-box">
+          <h4>Total Non-PA Rows: {nonPaAccountsCount}</h4>
+        </div>
+        <button
+          onClick={deleteAllAccounts}
+          style={{ marginTop: "10px", backgroundColor: "red", color: "white" }}
+        >
+          Clear all
+        </button>
+      </div>
+
       {/* Main Content */}
-      <Container style={{ marginTop: '20px' }}>
+      <Container style={{ marginTop: "20px" }}>
         {/* <h1>Account Details</h1> */}
 
         <div className="filter-container">
@@ -236,7 +274,7 @@ function App() {
             id="accountFilter"
             value={accountFilter}
             onChange={(e) => setAccountFilter(e.target.value)}
-            style={{ marginRight: '10px' }}
+            style={{ marginRight: "10px" }}
           >
             <option value="">All</option>
             {uniqueAccountNumbers.map((account) => (
@@ -251,7 +289,7 @@ function App() {
             id="processCsv"
             value={selectedProcessRange}
             onChange={(e) => setSelectedProcessRange(e.target.value)}
-            style={{ marginLeft: '10px' }}
+            style={{ marginLeft: "10px" }}
           >
             <option value="">Select Range</option>
             {processRanges.map((range) => (
@@ -263,50 +301,43 @@ function App() {
         </div>
 
         {/* Checkboxes */}
-        <div className="checkbox-container" style={{ marginTop: '20px' }}>
+        <div className="checkbox-container" style={{ marginTop: "20px" }}>
           <label>
             <input
               type="checkbox"
               checked={isAdminOnly}
               onChange={(e) => setIsAdminOnly(e.target.checked)}
-              style={{ marginRight: '5px' }}
+              style={{ marginRight: "5px" }}
             />
             Show Admin Only
           </label>
 
-          <label style={{ marginLeft: '20px' }}>
+          <label style={{ marginLeft: "20px" }}>
             <input
               type="checkbox"
               checked={isPAaccount}
               onChange={(e) => setIsPAaccount(e.target.checked)}
-              style={{ marginRight: '5px' }}
+              style={{ marginRight: "5px" }}
             />
             Show PA Accounts
           </label>
         </div>
 
         {/* File Upload */}
-        <div className="file-upload-container" style={{ marginTop: '20px' }}>
-          <input type="file" accept=".csv" multiple onChange={handleFileChange} />
-          <button onClick={uploadCsvs} style={{ marginLeft: '10px' }}>
+        <div className="file-upload-container" style={{ marginTop: "20px" }}>
+          <input
+            type="file"
+            accept=".csv"
+            multiple
+            onChange={handleFileChange}
+          />
+          <button onClick={uploadCsvs} style={{ marginLeft: "10px" }}>
             Fetch CSVs
           </button>
         </div>
 
-        {/* Summary Section */}
-        <div id="summary" className="summary-container" style={{ marginTop: '30px' }}>
-          <h4>Total Rows Displayed: {totalRows}</h4>
-          <h4>Total Unique Accounts Displayed: {totalUniqueAccountsDisplayed}</h4>
-          <button
-            onClick={deleteAllAccounts}
-            style={{ marginTop: '10px', color: 'red' }}
-          >
-            Clear all Account Details
-          </button>
-        </div>
-
         {/* Account Details Table */}
-        <table border="1" >
+        <table border="1">
           <thead>
             <tr>
               <th>Account</th>

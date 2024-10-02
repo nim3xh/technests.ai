@@ -90,10 +90,10 @@ function importFromCSV(req, res) {
     });
 }
 
-// Function to import from multiple CSVs
 async function importFromCSVs(req, res) {
   const results = [];
   const files = req.files; // Assuming multiple files are uploaded
+  const failedFiles = []; // To keep track of files that failed
 
   // Function to process a single CSV file
   const processCSV = (filePath) => {
@@ -165,11 +165,13 @@ async function importFromCSVs(req, res) {
           });
         })
         .on("end", () => {
-          console.log("Processed Results:", results); // Log results after processing
+          console.log(`File processed successfully: ${filePath}`);
           resolve();
         })
         .on("error", (error) => {
-          reject(error);
+          console.error(`Failed to process file: ${filePath}`, error);
+          failedFiles.push(filePath); // Add the failed file to the list
+          resolve(); // Continue to the next file
         });
     });
   };
@@ -206,6 +208,7 @@ async function importFromCSVs(req, res) {
     res.status(201).json({
       message: "Accounts imported successfully",
       importedAccounts: newAccounts,
+      failedFiles, // Include the failed files in the response
     });
   } catch (error) {
     res.status(500).json({
