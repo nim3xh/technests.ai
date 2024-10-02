@@ -3,7 +3,7 @@ import axios from "axios";
 import "./App.css";
 import { Navbar, Nav, Container } from "react-bootstrap"; // Import these components
 import "bootstrap/dist/css/bootstrap.min.css";
-import { CSVLink } from "react-csv"; 
+import { CSVLink } from "react-csv";
 
 const BaseURL = import.meta.env.VITE_BASE_URL;
 
@@ -51,6 +51,7 @@ function App() {
   const [selectedProcessRange, setSelectedProcessRange] = useState("");
   const [paAccountsCount, setPaAccountsCount] = useState(0);
   const [nonPaAccountsCount, setNonPaAccountsCount] = useState(0);
+  const [setsData, setSetsData] = useState([]);
 
   const processRanges = [
     { label: "47000", min: 46750, max: 47249 },
@@ -73,7 +74,9 @@ function App() {
   ];
 
   const deleteAllAccounts = async () => {
-    if (window.confirm("Are you sure you want to delete all account details?")) {
+    if (
+      window.confirm("Are you sure you want to delete all account details?")
+    ) {
       try {
         await axios.delete(`${BaseURL}accountDetails/`); // No need to append '*'
         alert("All account details deleted successfully.");
@@ -86,6 +89,45 @@ function App() {
     }
   };
 
+  const clearSets = () => {
+    setSetsData([]); // Reset the sets data to an empty array
+  };
+
+  const makeSets = () => {
+    const groupedAccounts = {};
+
+    // Group accounts by user name
+    filteredData.forEach((account) => {
+      if (!groupedAccounts[account.name]) {
+        groupedAccounts[account.name] = [];
+      }
+      groupedAccounts[account.name].push(account);
+    });
+
+    const sets = [];
+    const numRowsPerAccount = 4; // Number of rows per account
+
+    // Get the maximum number of accounts for a user
+    const maxGroupSize = Math.max(
+      ...Object.values(groupedAccounts).map((group) => group.length)
+    );
+
+    // Create sets by appending each user's accounts in the desired order
+    for (let i = 0; i < maxGroupSize; i++) {
+      Object.keys(groupedAccounts).forEach((user) => {
+        const userAccounts = groupedAccounts[user];
+        // Add the specified number of rows for each account if available
+        for (let j = 0; j < numRowsPerAccount; j++) {
+          const accountIndex = i * numRowsPerAccount + j;
+          if (userAccounts[accountIndex]) {
+            sets.push(userAccounts[accountIndex]);
+          }
+        }
+      });
+    }
+
+    setSetsData(sets);
+  };
 
   const mergeData = (users, accountDetails) => {
     return accountDetails.map((account) => {
@@ -132,8 +174,17 @@ function App() {
     fetchData();
   }, []);
 
-  useEffect(() => {
-    let filtered = combinedData;
+  // Helper function to apply filters
+  const applyFilters = (
+    data,
+    accountFilter,
+    isAdminOnly,
+    isPAaccount,
+    isEvalAccount,
+    selectedProcessRange,
+    processRanges
+  ) => {
+    let filtered = data;
 
     // Apply account filter
     if (accountFilter) {
@@ -142,13 +193,10 @@ function App() {
       );
     }
 
-    // Filter for admin only status
+    // Filter for admin status
     if (isAdminOnly) {
       filtered = filtered.filter((item) => item.status === "admin only");
-    }
-
-    // Filter for non-admin status
-    if (!isAdminOnly) {
+    } else {
       filtered = filtered.filter((item) => item.status !== "admin only");
     }
 
@@ -157,6 +205,7 @@ function App() {
       filtered = filtered.filter((item) => item.account.startsWith("PA"));
     }
 
+    // Filter accounts that start with "APEX"
     if (isEvalAccount) {
       filtered = filtered.filter((item) => item.account.startsWith("APEX"));
     }
@@ -173,9 +222,43 @@ function App() {
       );
     }
 
-    // Update the filtered data
-    setFilteredData(filtered);
-  }, [accountFilter, selectedProcessRange, combinedData, isAdminOnly, isPAaccount,isEvalAccount,]);
+    return filtered;
+  };
+
+  // useEffect to apply filters
+  useEffect(() => {
+    // Apply filters to combinedData
+    const filteredCombinedData = applyFilters(
+      combinedData,
+      accountFilter,
+      isAdminOnly,
+      isPAaccount,
+      isEvalAccount,
+      selectedProcessRange,
+      processRanges
+    );
+    setFilteredData(filteredCombinedData);
+
+    // Apply filters to setsData
+    const filteredSetsData = applyFilters(
+      setsData,
+      accountFilter,
+      isAdminOnly,
+      isPAaccount,
+      isEvalAccount,
+      selectedProcessRange,
+      processRanges
+    );
+    setSetsData(filteredSetsData);
+  }, [
+    accountFilter,
+    selectedProcessRange,
+    combinedData,
+    isAdminOnly,
+    isPAaccount,
+    isEvalAccount,
+    setsData, // Add setsData to the dependency array
+  ]);
 
   const handleFileChange = (e) => {
     setCsvFiles(e.target.files);
@@ -206,18 +289,29 @@ function App() {
       window.location.reload();
     } catch (error) {
       console.error("Error uploading CSVs:", error);
-      alert("Failed to upload CSV files.",error	);
+      alert("Failed to upload CSV files.", error);
     }
   };
 
   if (loading) return <p>Loading...</p>;
   if (error) return <p>{error}</p>;
 
-  const uniqueAccountNumbers = [
-    ...new Set(
-      combinedData.map((item) => `${item.accountNumber} (${item.name})`)
-    ),
-  ];
+  const encounteredAccounts = new Set();
+
+  const uniqueAccountNumbers = combinedData
+    .map((item) => {
+      // Match and extract the account number pattern APEX-245360
+      const match = item.accountNumber.match(/^(APEX-\d+)/);
+      if (match) {
+        const accountNumber = match[1];
+        if (!encounteredAccounts.has(accountNumber)) {
+          encounteredAccounts.add(accountNumber);
+          return `${accountNumber} (${item.name})`;
+        }
+      }
+      return null; // Skip if already encountered or no match
+    })
+    .filter(Boolean); // Filter out null values
 
   // Calculate total number of accounts and rows
   const totalAccounts = uniqueAccountNumbers.length;
@@ -229,30 +323,33 @@ function App() {
   );
   const totalUniqueAccountsDisplayed = uniqueAccountsInFilteredData.size;
 
- const generateCsvFilename = () => {
-   let fileName = selectedProcessRange ? selectedProcessRange : "all";
+  const generateCsvFilename = () => {
+    let fileName = selectedProcessRange ? selectedProcessRange + "-all" : "all";
 
-   // Include filters in the filename
-   if (accountFilter) {
-     const accountName = accountFilter.split(" ");
-     fileName += `-${accountName}`;
-   }
+    // Include filters in the filename
+    if (accountFilter) {
+      const accountName = accountFilter.split(" ");
+      fileName += `-${accountName}`;
+    }
 
-   if (isAdminOnly) {
-     fileName += `-admin`;
-   }
-   if (isPAaccount) {
-     fileName += `-PA`;
-   }
-   if (isEvalAccount) {
-     fileName += `-eval`;
-   }
+    if (isAdminOnly) {
+      fileName += `-admin`;
+    }
+    if (isPAaccount) {
+      fileName += `-PA`;
+    }
+    if (isEvalAccount) {
+      fileName += `-eval`;
+    }
 
-   return `${fileName}.csv`;
- };
+    return `${fileName}.csv`;
+  };
 
   const exportCsv = () => {
-    const csvData = filteredData.map((account) => ({
+    // Choose between filteredData or setsData
+    const dataToExport = setsData.length > 0 ? setsData : filteredData;
+
+    const csvData = dataToExport.map((account) => ({
       Account: account.account,
       AccountBalance: account.accountBalance,
       AccountName: `${account.accountNumber} (${account.name})`,
@@ -272,7 +369,6 @@ function App() {
 
     return { data: csvData, headers, filename: generateCsvFilename() };
   };
-
 
   return (
     <div className="App">
@@ -398,17 +494,81 @@ function App() {
           </label>
         </div>
 
-        {/* File Upload */}
-        <div className="file-upload-container" style={{ marginTop: "20px" }}>
-          <input
-            type="file"
-            accept=".csv"
-            multiple
-            onChange={handleFileChange}
-          />
-          <button onClick={uploadCsvs} style={{ marginLeft: "10px" }}>
-            Fetch CSVs
-          </button>
+        {/* Container for File Upload and Set Control */}
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            padding: "20px",
+            backgroundColor: "#f5f5f5",
+            borderRadius: "8px",
+            boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
+          }}
+        >
+          {/* File Upload Section (Left) */}
+          <div
+            className="file-upload-container"
+            style={{ display: "flex", alignItems: "center" }}
+          >
+            <input
+              type="file"
+              accept=".csv"
+              multiple
+              onChange={handleFileChange}
+              style={{
+                padding: "8px",
+                borderRadius: "4px",
+                border: "1px solid #ccc",
+              }}
+            />
+            <button
+              onClick={uploadCsvs}
+              style={{
+                marginLeft: "15px",
+                padding: "8px 16px",
+                backgroundColor: "#28a745",
+                color: "white",
+                border: "none",
+                borderRadius: "4px",
+                cursor: "pointer",
+              }}
+            >
+              Fetch CSVs
+            </button>
+          </div>
+
+          {/* Set Control Section (Right) */}
+          <div
+            className="set-control-container"
+            style={{ display: "flex", alignItems: "center" }}
+          >
+            <button
+              onClick={makeSets}
+              style={{
+                padding: "8px 16px",
+                color: "white",
+                border: "none",
+                borderRadius: "4px",
+                cursor: "pointer",
+              }}
+            >
+              Make Sets
+            </button>
+            <button
+              onClick={clearSets}
+              style={{
+                padding: "8px 16px",
+                backgroundColor: "#ff5722",
+                color: "white",
+                border: "none",
+                borderRadius: "4px",
+                cursor: "pointer",
+              }}
+            >
+              Clear Sets
+            </button>
+          </div>
         </div>
 
         {/* Account Details Table */}
@@ -424,30 +584,55 @@ function App() {
             </tr>
           </thead>
           <tbody>
-            {filteredData.map((account) => {
-              const backgroundColor = accountColors[account.name];
-              const luminance = getLuminance(backgroundColor);
-              const textColor = luminance > 160 ? "#000000" : "#FFFFFF";
+            {setsData.length > 0
+              ? setsData.map((account) => {
+                  const backgroundColor = accountColors[account.name];
+                  const luminance = getLuminance(backgroundColor);
+                  const textColor = luminance > 160 ? "#000000" : "#FFFFFF";
 
-              return (
-                <tr
-                  key={account.id}
-                  style={{
-                    backgroundColor,
-                    color: textColor,
-                  }}
-                >
-                  <td>{account.account}</td>
-                  <td>{account.accountBalance}</td>
-                  <td>
-                    {account.accountNumber} ({account.name})
-                  </td>
-                  <td>{account.status}</td>
-                  <td>{account.trailingThreshold}</td>
-                  <td>{account.PnL}</td>
-                </tr>
-              );
-            })}
+                  return (
+                    <tr
+                      key={account.id}
+                      style={{
+                        backgroundColor,
+                        color: textColor,
+                      }}
+                    >
+                      <td>{account.account}</td>
+                      <td>{account.accountBalance}</td>
+                      <td>
+                        {account.accountNumber} ({account.name})
+                      </td>
+                      <td>{account.status}</td>
+                      <td>{account.trailingThreshold}</td>
+                      <td>{account.PnL}</td>
+                    </tr>
+                  );
+                })
+              : filteredData.map((account) => {
+                  const backgroundColor = accountColors[account.name];
+                  const luminance = getLuminance(backgroundColor);
+                  const textColor = luminance > 160 ? "#000000" : "#FFFFFF";
+
+                  return (
+                    <tr
+                      key={account.id}
+                      style={{
+                        backgroundColor,
+                        color: textColor,
+                      }}
+                    >
+                      <td>{account.account}</td>
+                      <td>{account.accountBalance}</td>
+                      <td>
+                        {account.accountNumber} ({account.name})
+                      </td>
+                      <td>{account.status}</td>
+                      <td>{account.trailingThreshold}</td>
+                      <td>{account.PnL}</td>
+                    </tr>
+                  );
+                })}
           </tbody>
         </table>
       </Container>
