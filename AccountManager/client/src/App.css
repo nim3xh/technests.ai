@@ -119,3 +119,88 @@ button:disabled {
   font-size: 16px; /* Set text size */
   color: #333; /* Dark color for readability */
 }
+
+/* Mobile Responsive Styles */
+@media (max-width: 1024px) {
+  #root {
+    padding: 1.5rem; /* Adjust padding */
+  }
+
+  .logo {
+    height: 5em; /* Adjust logo size */
+    padding: 1em; /* Adjust padding */
+  }
+
+  .card {
+    padding: 1.5em; /* Reduce padding in cards */
+  }
+
+  .table-container {
+    flex-direction: column; /* Stack elements vertically */
+  }
+
+  table {
+    font-size: 0.9em; /* Reduce font size in tables */
+  }
+
+  th,
+  td {
+    padding: 0.4em; /* Reduce padding in table cells */
+  }
+
+  select,
+  button {
+    width: 100%; /* Make select and button full width */
+    margin: 0.5em 0; /* Adjust margin */
+  }
+
+  .summary-container {
+    flex-direction: column; /* Stack summary elements vertically */
+    align-items: flex-start; /* Align items to start */
+  }
+
+  .summary-text {
+    font-size: 14px; /* Adjust font size for mobile */
+  }
+}
+
+@media (max-width: 768px) {
+  #root {
+    padding: 1rem; /* Reduce padding on smaller screens */
+  }
+
+  .logo {
+    height: 4em; /* Further adjust logo size */
+  }
+
+  .card {
+    padding: 1em; /* Further reduce card padding */
+  }
+
+  table {
+    font-size: 0.8em; /* Further reduce font size */
+  }
+
+  th,
+  td {
+    padding: 0.3em; /* Further reduce padding */
+  }
+
+  .summary-text {
+    font-size: 12px; /* Further adjust font size for very small screens */
+  }
+}
+
+@media (max-width: 480px) {
+  .logo {
+    height: 3em; /* Further adjust logo size for very small screens */
+  }
+
+  .summary-container {
+    padding: 5px; /* Adjust padding for summary */
+  }
+
+  .summary-text {
+    font-size: 10px; /* Further adjust font size for very small screens */
+  }
+}
