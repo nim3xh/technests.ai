@@ -3,6 +3,7 @@ import axios from "axios";
 import "./App.css";
 import { Navbar, Nav, Container } from "react-bootstrap"; // Import these components
 import "bootstrap/dist/css/bootstrap.min.css";
+import { CSVLink } from "react-csv"; 
 
 const BaseURL = import.meta.env.VITE_BASE_URL;
 
@@ -46,6 +47,7 @@ function App() {
   const [accountColors, setAccountColors] = useState({});
   const [isAdminOnly, setIsAdminOnly] = useState(false);
   const [isPAaccount, setIsPAaccount] = useState(false);
+  const [isEvalAccount, setIsEvalAccount] = useState(false);
   const [selectedProcessRange, setSelectedProcessRange] = useState("");
   const [paAccountsCount, setPaAccountsCount] = useState(0);
   const [nonPaAccountsCount, setNonPaAccountsCount] = useState(0);
@@ -155,6 +157,10 @@ function App() {
       filtered = filtered.filter((item) => item.account.startsWith("PA"));
     }
 
+    if (isEvalAccount) {
+      filtered = filtered.filter((item) => item.account.startsWith("APEX"));
+    }
+
     // Filter by selected process range
     if (selectedProcessRange) {
       const selectedRange = processRanges.find(
@@ -169,7 +175,7 @@ function App() {
 
     // Update the filtered data
     setFilteredData(filtered);
-  }, [accountFilter, selectedProcessRange, combinedData, isAdminOnly, isPAaccount,]);
+  }, [accountFilter, selectedProcessRange, combinedData, isAdminOnly, isPAaccount,isEvalAccount,]);
 
   const handleFileChange = (e) => {
     setCsvFiles(e.target.files);
@@ -223,6 +229,51 @@ function App() {
   );
   const totalUniqueAccountsDisplayed = uniqueAccountsInFilteredData.size;
 
+ const generateCsvFilename = () => {
+   let fileName = selectedProcessRange ? selectedProcessRange : "all";
+
+   // Include filters in the filename
+   if (accountFilter) {
+     const accountName = accountFilter.split(" ");
+     fileName += `-${accountName}`;
+   }
+
+   if (isAdminOnly) {
+     fileName += `-admin`;
+   }
+   if (isPAaccount) {
+     fileName += `-PA`;
+   }
+   if (isEvalAccount) {
+     fileName += `-eval`;
+   }
+
+   return `${fileName}.csv`;
+ };
+
+  const exportCsv = () => {
+    const csvData = filteredData.map((account) => ({
+      Account: account.account,
+      AccountBalance: account.accountBalance,
+      AccountName: `${account.accountNumber} (${account.name})`,
+      Status: account.status,
+      TrailingThreshold: account.trailingThreshold,
+      PnL: account.PnL,
+    }));
+
+    const headers = [
+      { label: "Account", key: "Account" },
+      { label: "Account Balance", key: "AccountBalance" },
+      { label: "Account Name", key: "AccountName" },
+      { label: "Status", key: "Status" },
+      { label: "Trailing Threshold", key: "TrailingThreshold" },
+      { label: "PnL", key: "PnL" },
+    ];
+
+    return { data: csvData, headers, filename: generateCsvFilename() };
+  };
+
+
   return (
     <div className="App">
       {/* Navbar Section */}
@@ -251,10 +302,10 @@ function App() {
           </h4>
         </div>
         <div className="summary-box">
-          <h4>Total PA Rows: {paAccountsCount}</h4>
+          <h4>Total PA Account Rows: {paAccountsCount}</h4>
         </div>
         <div className="summary-box">
-          <h4>Total Non-PA Rows: {nonPaAccountsCount}</h4>
+          <h4>Total Eval Account Rows: {nonPaAccountsCount}</h4>
         </div>
         <button
           onClick={deleteAllAccounts}
@@ -298,6 +349,20 @@ function App() {
               </option>
             ))}
           </select>
+          <CSVLink
+            {...exportCsv()}
+            className="btn"
+            style={{
+              marginTop: "10px",
+              backgroundColor: "green",
+              color: "white",
+              textDecoration: "none",
+              padding: "10px 15px",
+              borderRadius: "5px",
+            }}
+          >
+            Export CSV
+          </CSVLink>
         </div>
 
         {/* Checkboxes */}
@@ -319,7 +384,17 @@ function App() {
               onChange={(e) => setIsPAaccount(e.target.checked)}
               style={{ marginRight: "5px" }}
             />
-            Show PA Accounts
+            Show PA Accounts Only
+          </label>
+
+          <label style={{ marginLeft: "20px" }}>
+            <input
+              type="checkbox"
+              checked={isEvalAccount}
+              onChange={(e) => setIsEvalAccount(e.target.checked)}
+              style={{ marginRight: "5px" }}
+            />
+            Show Eval Accounts Only
           </label>
         </div>
 
