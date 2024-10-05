@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 import "./App.css";
 import { Navbar, Nav, Container } from "react-bootstrap"; // Import these components
 import "bootstrap/dist/css/bootstrap.min.css";
 import { CSVLink } from "react-csv";
+import { debounce } from "lodash";
 
 const BaseURL = import.meta.env.VITE_BASE_URL;
 
@@ -157,12 +158,16 @@ function App() {
         setAccountColors(assignColorsToAccounts(mergedData));
         setLoading(false);
 
-        // Count PA and non-PA accounts
-        const paCount = mergedData.filter((item) =>
-          item.account.startsWith("PA")
-        ).length;
-        const nonPaCount = mergedData.length - paCount;
-
+        // Count PA and non-PA accounts in one pass
+        let paCount = 0;
+        let nonPaCount = 0;
+        mergedData.forEach((item) => {
+          if (item.account.startsWith("PA")) {
+            paCount++;
+          } else {
+            nonPaCount++;
+          }
+        });
         setPaAccountsCount(paCount);
         setNonPaAccountsCount(nonPaCount);
       } catch (err) {
@@ -173,6 +178,46 @@ function App() {
 
     fetchData();
   }, []);
+
+
+
+  const debouncedApplyFilters = useCallback(
+    debounce(
+      () => {
+        const filteredCombinedData = applyFilters(
+          combinedData,
+          accountFilter,
+          isAdminOnly,
+          isPAaccount,
+          isEvalAccount,
+          selectedProcessRange,
+          processRanges
+        );
+        setFilteredData(filteredCombinedData);
+
+        const filteredSetsData = applyFilters(
+          setsData,
+          accountFilter,
+          isAdminOnly,
+          isPAaccount,
+          isEvalAccount,
+          selectedProcessRange,
+          processRanges
+        );
+        setSetsData(filteredSetsData);
+      },
+      300 // 300ms delay
+    ),
+    [
+      accountFilter,
+      selectedProcessRange,
+      combinedData,
+      isAdminOnly,
+      isPAaccount,
+      isEvalAccount,
+      setsData,
+    ]
+  );
 
   // Helper function to apply filters
   const applyFilters = (
@@ -225,40 +270,10 @@ function App() {
     return filtered;
   };
 
-  // useEffect to apply filters
   useEffect(() => {
-    // Apply filters to combinedData
-    const filteredCombinedData = applyFilters(
-      combinedData,
-      accountFilter,
-      isAdminOnly,
-      isPAaccount,
-      isEvalAccount,
-      selectedProcessRange,
-      processRanges
-    );
-    setFilteredData(filteredCombinedData);
-
-    // Apply filters to setsData
-    const filteredSetsData = applyFilters(
-      setsData,
-      accountFilter,
-      isAdminOnly,
-      isPAaccount,
-      isEvalAccount,
-      selectedProcessRange,
-      processRanges
-    );
-    setSetsData(filteredSetsData);
-  }, [
-    accountFilter,
-    selectedProcessRange,
-    combinedData,
-    isAdminOnly,
-    isPAaccount,
-    isEvalAccount,
-    setsData, // Add setsData to the dependency array
-  ]);
+    debouncedApplyFilters();
+    return debouncedApplyFilters.cancel; // Cleanup debounce on unmount
+  }, [debouncedApplyFilters]);
 
   const handleFileChange = (e) => {
     setCsvFiles(e.target.files);
@@ -284,14 +299,49 @@ function App() {
         }),
       ]);
       alert("CSV uploaded successfully!");
+
+      // Refetch data after uploading CSVs
+      
+
+      fetchData();
       setCsvFiles([]);
-      // refresh page
-      window.location.reload();
     } catch (error) {
       console.error("Error uploading CSVs:", error);
       alert("Failed to upload CSV files.", error);
     }
   };
+
+  const fetchData = async () => {
+    try {
+      const [usersResponse, accountDetailsResponse] = await Promise.all([
+        axios.get(`${BaseURL}users`),
+        axios.get(`${BaseURL}accountDetails`),
+      ]);
+
+      const mergedData = mergeData(
+        usersResponse.data,
+        accountDetailsResponse.data
+      );
+      setCombinedData(mergedData);
+      setFilteredData(mergedData);
+
+      setAccountColors(assignColorsToAccounts(mergedData));
+      setLoading(false);
+
+      // Count PA and non-PA accounts
+      const paCount = mergedData.filter((item) =>
+        item.account.startsWith("PA")
+      ).length;
+      const nonPaCount = mergedData.length - paCount;
+
+      setPaAccountsCount(paCount);
+      setNonPaAccountsCount(nonPaCount);
+    } catch (err) {
+      setError("Something went wrong while fetching data.");
+      setLoading(false);
+    }
+  };
+
 
   if (loading) return <p>Loading...</p>;
   if (error) return <p>{error}</p>;
@@ -545,6 +595,7 @@ function App() {
           >
             <button
               onClick={makeSets}
+              disabled={!!accountFilter} // Disable if accountFilter is not empty
               style={{
                 padding: "8px 16px",
                 color: "white",
@@ -557,6 +608,7 @@ function App() {
             </button>
             <button
               onClick={clearSets}
+              disabled={!!accountFilter} // Disable if accountFilter is not empty
               style={{
                 padding: "8px 16px",
                 backgroundColor: "#ff5722",
