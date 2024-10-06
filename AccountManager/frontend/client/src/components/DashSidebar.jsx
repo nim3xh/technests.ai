@@ -13,6 +13,8 @@ import { signoutSuccess } from "../redux/user/userSlice";
 import { useDispatch } from "react-redux";
 import { useSelector } from "react-redux";
 
+const BaseURL = import.meta.env.VITE_BASE_URL;
+
 export default function DashSidebar() {
     const location = useLocation();
     const dispatch = useDispatch();
@@ -27,9 +29,22 @@ export default function DashSidebar() {
       }
     }, [location.search]);
 
-    const handleSignout = async () => { 
+    const handleSignout = async () => {
+      try {
+        const res = await fetch(`${BaseURL}auth/signout`, {
+          method: "POST",
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          console.log(data.message);
+        } else {
+          dispatch(signoutSuccess());
+        }
+      } catch (error) {
+        console.log(error.message);
+      }
+    };
 
-    }
     return (
       <Sidebar className="w-full md:w-56">
         <Sidebar.Items>
