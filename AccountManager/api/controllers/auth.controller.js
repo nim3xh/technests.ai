@@ -177,8 +177,22 @@ function changePassword(req, res) {
     });
 }
 
+function signout(req, res) {
+  try {
+    res
+      .clearCookie("access_token")
+      .status(200)
+      .json({ success: true, message: "User signed out successfully" });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ success: false, message: "Internal Server Error", error: error });
+  }
+}
+
 module.exports = {
     signUp: signUp,
     signIn: signIn,
     changePassword: changePassword,
+    signout: signout
 };
