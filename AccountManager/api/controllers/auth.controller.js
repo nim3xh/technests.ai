@@ -100,7 +100,11 @@ function signIn(req, res) {
                 httpOnly: true, // This is secure, as it cannot be accessed via JavaScript
                 maxAge: 86400000, // Cookie expires in 1 day
               })
-              .json(rest); // Sends user details excluding the password
+              .json({
+                success: true,
+                token, // Including the token in the response
+                user: rest, // Sending user details excluding the password
+              });
           } else {
             return res.status(400).json({
               success: false,

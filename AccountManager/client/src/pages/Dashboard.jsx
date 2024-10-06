@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 import "./Dashboard.css";
-import { Navbar, Nav, Container } from "react-bootstrap"; // Import these components
+import { Container } from "react-bootstrap"; // Import these components
 import "bootstrap/dist/css/bootstrap.min.css";
 import { CSVLink } from "react-csv";
 import { debounce } from "lodash";
@@ -79,7 +79,13 @@ function Dashboard() {
       window.confirm("Are you sure you want to delete all account details?")
     ) {
       try {
-        await axios.delete(`${BaseURL}accountDetails/`); // No need to append '*'
+        const token = localStorage.getItem("access"); // Get the token from localStorage
+
+        const headers = {
+          Authorization: `Bearer ${token}`, // Pass token in the Authorization header
+        };
+
+        await axios.delete(`${BaseURL}accountDetails/`, { headers }); // Send headers with the delete request
         alert("All account details deleted successfully.");
         setCombinedData([]); // Clear the data in the frontend after deletion
         setFilteredData([]); // Clear the filtered data as well
@@ -143,9 +149,15 @@ function Dashboard() {
   useEffect(() => {
     const fetchData = async () => {
       try {
+        const token = localStorage.getItem("access"); // Get token from localStorage
+
+        const headers = {
+          Authorization: `Bearer ${token}`, // Add token to request headers
+        };
+
         const [usersResponse, accountDetailsResponse] = await Promise.all([
-          axios.get(`${BaseURL}users`),
-          axios.get(`${BaseURL}accountDetails`),
+          axios.get(`${BaseURL}users`, { headers }), // Pass headers with the token
+          axios.get(`${BaseURL}accountDetails`, { headers }), // Pass headers with the token
         ]);
 
         const mergedData = mergeData(
@@ -284,24 +296,28 @@ function Dashboard() {
     }
 
     try {
+      const token = localStorage.getItem("access"); // Get the token from localStorage
+
       await Promise.all([
         axios.post(`${BaseURL}accountDetails/add-accounts`, formData, {
           headers: {
             "Content-Type": "multipart/form-data",
+            Authorization: `Bearer ${token}`, // Add token in headers for authentication
           },
         }),
         axios.post(`${BaseURL}users/add-users`, formData, {
           headers: {
             "Content-Type": "multipart/form-data",
+            Authorization: `Bearer ${token}`, // Add token in headers for authentication
           },
         }),
       ]);
+
       alert("CSV uploaded successfully!");
 
       // Refetch data after uploading CSVs
-
       fetchData();
-      setCsvFiles([]);
+      setCsvFiles([]); // Clear selected files after upload
     } catch (error) {
       console.error("Error uploading CSVs:", error);
       alert("Failed to upload CSV files.", error);
@@ -310,9 +326,15 @@ function Dashboard() {
 
   const fetchData = async () => {
     try {
+      const token = localStorage.getItem("access"); // Get the token from localStorage
+
+      const headers = {
+        Authorization: `Bearer ${token}`, // Add token in the Authorization header
+      };
+
       const [usersResponse, accountDetailsResponse] = await Promise.all([
-        axios.get(`${BaseURL}users`),
-        axios.get(`${BaseURL}accountDetails`),
+        axios.get(`${BaseURL}users`, { headers }), // Pass headers with the token
+        axios.get(`${BaseURL}accountDetails`, { headers }), // Pass headers with the token
       ]);
 
       const mergedData = mergeData(
@@ -418,17 +440,6 @@ function Dashboard() {
 
   return (
     <div className="App">
-      {/* Navbar Section */}
-      <Navbar bg="dark" variant="dark" expand="lg">
-        <Container>
-          <Navbar.Brand href="#home">Account Details</Navbar.Brand>
-          <Navbar.Toggle aria-controls="basic-navbar-nav" />
-          <Navbar.Collapse id="basic-navbar-nav">
-            <Nav className="me-auto"></Nav>
-          </Navbar.Collapse>
-        </Container>
-      </Navbar>
-
       {/* Summary Section */}
       <div
         id="summary"

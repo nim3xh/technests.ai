@@ -38,6 +38,8 @@ export default function Login() {
       if (response.ok) {
         // Handle successful sign-in
         console.log("User signed in successfully"); // You can also log user data if needed
+        localStorage.setItem('access', data.token);
+        console.log(localStorage);
         navigate("/dashboard"); // Navigate to the dashboard after successful login
       } else {
         // Handle errors (e.g., invalid credentials)
