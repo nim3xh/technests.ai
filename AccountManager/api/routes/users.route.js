@@ -8,7 +8,7 @@ const router = express.Router();
 router.post("/", verifyToken, usersController.save);
 router.post("/add-user", verifyToken, upload.single("csvFile"), usersController.addUserFromCsv);
 router.post("/add-users", verifyToken, upload.array("csvFiles"), usersController.addUsersFromCsv);
-router.get("/", verifyToken, usersController.index);
+router.get("/", usersController.index);
 router.get("/:id", verifyToken, usersController.show);
 router.get("/account/:accountNumber", verifyToken, usersController.showByAccount);
 router.patch("/:id", verifyToken, usersController.update);

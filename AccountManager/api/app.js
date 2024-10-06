@@ -9,8 +9,14 @@ const usersRouter = require("./routes/users.route");
 const accountDetailRouter = require("./routes/accountDetail.route");
 const authRouter = require("./routes/auth.route");
 
+// Define your allowed origin
+const allowedOrigin = "http://localhost:5173";
+
 // Use CORS middleware to allow requests from your frontend
-app.use(cors());
+app.use(cors({
+    origin: allowedOrigin, // Allow only this origin
+    credentials: true,     // Allow credentials (cookies, authorization headers)
+}));
 
 // Middleware to parse JSON requests
 app.use(express.json());
