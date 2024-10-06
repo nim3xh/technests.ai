@@ -78,12 +78,16 @@ function signIn(req, res) {
                     });
                 }
                 if (result) {
-                    const token = jwt.sign({
+                    const token = jwt.sign(
+                      {
                         email: user.email,
-                        userId: user.id
-                    }, process.env.JWT_KEY, {
-                        expiresIn: "1h"
-                    });
+                        userId: user.id,
+                      },
+                      process.env.JWT_SECRET_KEY,
+                      {
+                        expiresIn: "1h",
+                      }
+                    );
                     return res.status(200).json({
                         message: "Authentication successful",
                         token: token
