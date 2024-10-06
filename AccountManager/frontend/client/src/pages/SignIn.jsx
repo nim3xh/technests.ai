@@ -1,17 +1,18 @@
 import { Alert, Button, Label, Spinner, TextInput } from "flowbite-react";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { signInStart, signInSuccess, signInFailure } from "../redux/user/userSlice";
+
 
 const BaseURL = import.meta.env.VITE_BASE_URL;
 
 export default function SignIn() {
-  const [formData, setFormData] = useState({});
-  const [errorMessage, setErrorMessage] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const {loading, error: errorMessage} = useSelector((state) => state.user);
+  const dispatch = useDispatch();
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [passwordVisible, setPasswordVisible] = useState(false);
   
    const handleChange = (e) => {
      const { id, value } = e.target;
@@ -21,9 +22,11 @@ export default function SignIn() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true); // Set loading when the submit starts
-    setErrorMessage(""); // Reset the error message before a new submission
+    if (!email || !password) {
+      return dispatch(signInFailure("Please fill in all fields"));
+    }
 
+    dispatch(signInStart());
     try {
       const response = await fetch(`${BaseURL}auth/signin`, {
         method: "POST",
@@ -41,19 +44,18 @@ export default function SignIn() {
 
       if (response.ok) {
         // Handle successful sign-in
-        console.log("User signed in successfully"); // You can also log user data if needed
+        dispatch(signInSuccess(data)); // Update the user state with the fetched user data
         localStorage.setItem("access", data.token);
-        console.log(localStorage);
         navigate("/dashboard"); // Navigate to the dashboard after successful login
       } else {
         // Handle errors (e.g., invalid credentials)
-        setErrorMessage(data.message || "Login failed");
+        dispatch(signInFailure(data.message || "Login failed"));
       }
     } catch (error) {
-      setErrorMessage("An error occurred. Please try again.");
-      console.error("Error during login:", error);
+        dispatch(signInFailure("An error occurred. Please try again."));
+        console.error("Error during login:", error);
     } finally {
-      setLoading(false); // Stop loading when the request is finished
+        setLoading(false); // Stop loading when the request is finished
     }
   };
 
