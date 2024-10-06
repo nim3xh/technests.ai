@@ -7,6 +7,7 @@ import {
   HiAnnotation,
   HiChartPie,
 } from "react-icons/hi";
+import { IoMdAnalytics } from "react-icons/io";
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { signoutSuccess } from "../redux/user/userSlice";
@@ -76,6 +77,15 @@ export default function DashSidebar() {
                 as="div"
               >
                 Users
+              </Sidebar.Item>
+            </Link>
+            <Link to="/dashboard?tab=users">
+              <Sidebar.Item
+                active={tab === "Account Details"}
+                icon={IoMdAnalytics}
+                as="div"
+              >
+                Account Details
               </Sidebar.Item>
             </Link>
             <Sidebar.Item
