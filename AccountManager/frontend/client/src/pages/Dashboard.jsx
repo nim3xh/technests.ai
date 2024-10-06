@@ -1,6 +1,10 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import DashSidebar from "../components/DashSidebar";
+import DashProfile from "../components/DashProfile";
+import DashboardComp from "../components/DashboardComp";
+import DashAccountDetails from "../components/DashAccountDetails";
+import DashUsers from "../components/DashUsers";
 
 export default function Dashboard() {
   const location = useLocation();
@@ -21,6 +25,14 @@ export default function Dashboard() {
         {/* Sidebar */}
         <DashSidebar />
       </div>
+      {/* profile */}
+      {tab === "profile" && <DashProfile />}
+      {/* dashboard comp */}
+      {tab === "dash" && <DashboardComp />}
+      {/* Account Details */}
+      {tab === "accountDetails" && <DashAccountDetails />}
+      {/* Users */}
+      {tab === "users" && <DashUsers />}
     </div>
   );
 }

@@ -79,9 +79,9 @@ export default function DashSidebar() {
                 Users
               </Sidebar.Item>
             </Link>
-            <Link to="/dashboard?tab=users">
+            <Link to="/dashboard?tab=accountDetails">
               <Sidebar.Item
-                active={tab === "Account Details"}
+                active={tab === "accountDetails"}
                 icon={IoMdAnalytics}
                 as="div"
               >
