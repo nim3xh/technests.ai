@@ -4,6 +4,7 @@ const jwt = require("jsonwebtoken");
 const dotenv = require("dotenv");
 const { errorHandler } = require("../utils/error");
 const validator = require("fastest-validator");
+const { where } = require("sequelize");
 const v = new validator();
 
 dotenv.config();
@@ -70,38 +71,43 @@ function signIn(req, res) {
             email: req.body.email
         }
     }).then((user) => {
-        if (user) {
-            bcrypt.compare(req.body.password, user.password, (err, result) => {
-                if (err) {
-                    return res.status(401).json({
-                        message: "Authentication failed"
-                    });
-                }
-                if (result) {
-                    const token = jwt.sign({
-                        email: user.email,
-                        userId: user.id
-                    }, process.env.JWT_KEY, {
-                        expiresIn: "1h"
-                    });
-                    return res.status(200).json({
-                        message: "Authentication successful",
-                        token: token
-                    });
-                }
-                res.status(401).json({
-                    message: "Authentication failed"
-                });
+        if (user === null) { 
+            return res.status(400).json({
+              success: false,
+              message: "Invalid credentials",
             });
         } else {
-            res.status(401).json({
-                message: "Authentication failed"
+            bcrypt.compare(req.body.password, user.password, (err, result) => { 
+                if (result) {
+                    const token = jwt.sign(
+                        {
+                            email: user.email,
+                            userId: user.id,
+                            role: user.role
+                        },
+                        process.env.JWT_SECRET_KEY,
+                        {
+                            expiresIn: "1h"
+                        }
+                    );
+                    const { password: pass, ...rest } = user.dataValues;
+                    
+                    res
+                        .status(200)
+                        .cookie("access_token", token, {
+                            httpOnly: true,
+                            maxAge:86400000
+                        })
+                        .json(rest);
+                } else {
+                    return res.status(400).json({
+                        success: false,
+                        message: "Invalid Password",
+                    });
+                }
             });
         }
     }).catch((error) => {
-        res.status(500).json({
-            error: error
-        });
     });
 }
 
