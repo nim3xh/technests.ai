@@ -105,13 +105,13 @@ button:disabled {
 }
 
 .summary-container {
-  display: flex;
-  justify-content: space-between; /* Align items horizontally with space in between */
-  align-items: center; /* Vertically center the text */
-  padding: 10px; /* Add padding for spacing */
-  background-color: #f5f5f5; /* Light background color for contrast */
-  border-radius: 8px; /* Rounded corners for a modern look */
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+  position: sticky; /* Makes the element stick to the top */
+  top: 0; /* Specifies the position at which the element becomes sticky */
+  background-color: white; /* Background color to cover content behind */
+  z-index: 10; /* Ensures it is on top of other content */
+  padding: 10px; /* Optional: add some padding */
+  border-bottom: 1px solid #ccc; /* Optional: add a bottom border for separation */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Optional: add a shadow for depth */
 }
 
 .summary-text {

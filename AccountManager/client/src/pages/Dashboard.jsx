@@ -439,74 +439,127 @@ function Dashboard() {
   };
 
   return (
-    <div className="App">
+    <>
+      <div></div>
       {/* Summary Section */}
       <div
         id="summary"
         className="summary-container"
-        style={{ marginTop: "30px", display: "flex", gap: "10px" }}
+        style={{
+          marginTop: "30px",
+          display: "flex",
+          flexDirection: "column",
+          gap: "20px",
+        }}
       >
-        <div className="summary-box">
-          <h4>Total Rows Displayed: {totalRows}</h4>
+        {/* Summary Boxes */}
+        <div style={{ display: "flex", gap: "10px" }}>
+          <div className="summary-box">
+            <h4>Total Rows Displayed: {totalRows}</h4>
+          </div>
+          <div className="summary-box">
+            <h4>
+              Total Unique Accounts Displayed: {totalUniqueAccountsDisplayed}
+            </h4>
+          </div>
+          <div className="summary-box">
+            <h4>Total PA Account Rows: {paAccountsCount}</h4>
+          </div>
+          <div className="summary-box">
+            <h4>Total Eval Account Rows: {nonPaAccountsCount}</h4>
+          </div>
         </div>
-        <div className="summary-box">
-          <h4>
-            Total Unique Accounts Displayed: {totalUniqueAccountsDisplayed}
-          </h4>
-        </div>
-        <div className="summary-box">
-          <h4>Total PA Account Rows: {paAccountsCount}</h4>
-        </div>
-        <div className="summary-box">
-          <h4>Total Eval Account Rows: {nonPaAccountsCount}</h4>
-        </div>
-        <button
-          onClick={deleteAllAccounts}
-          style={{ marginTop: "10px", backgroundColor: "red", color: "white" }}
-        >
-          Clear all
-        </button>
-      </div>
 
-      {/* Main Content */}
-      <Container style={{ marginTop: "20px" }}>
-        {/* <h1>Account Details</h1> */}
-
-        <div className="filter-container">
-          <label htmlFor="accountFilter">Filter by Account: </label>
-          <select
-            id="accountFilter"
-            value={accountFilter}
-            onChange={(e) => setAccountFilter(e.target.value)}
-            style={{ marginRight: "10px" }}
+        {/* Action Buttons */}
+        <div style={{ display: "flex", gap: "20px", alignItems: "center" }}>
+          <button
+            onClick={deleteAllAccounts}
+            style={{
+              backgroundColor: "red",
+              color: "white",
+              padding: "10px",
+              border: "none",
+              borderRadius: "4px",
+              cursor: "pointer",
+            }}
           >
-            <option value="">All</option>
-            {uniqueAccountNumbers.map((account) => (
-              <option key={account} value={account}>
-                {account}
-              </option>
-            ))}
-          </select>
+            Clear all
+          </button>
 
-          <label htmlFor="processCsv">Process CSV: </label>
-          <select
-            id="processCsv"
-            value={selectedProcessRange}
-            onChange={(e) => setSelectedProcessRange(e.target.value)}
-            style={{ marginLeft: "10px" }}
-          >
-            <option value="">Select Range</option>
-            {processRanges.map((range) => (
-              <option key={range.label} value={range.label}>
-                {range.label}
-              </option>
-            ))}
-          </select>
+          {/* Checkboxes */}
+          <div style={{ display: "flex", gap: "20px", alignItems: "center" }}>
+            <label>
+              <input
+                type="checkbox"
+                checked={isAdminOnly}
+                onChange={(e) => setIsAdminOnly(e.target.checked)}
+                style={{ marginRight: "5px" }}
+              />
+              Show Admin Only
+            </label>
+
+            <label>
+              <input
+                type="checkbox"
+                checked={isPAaccount}
+                onChange={(e) => setIsPAaccount(e.target.checked)}
+                style={{ marginRight: "5px" }}
+              />
+              Show PA Accounts Only
+            </label>
+
+            <label>
+              <input
+                type="checkbox"
+                checked={isEvalAccount}
+                onChange={(e) => setIsEvalAccount(e.target.checked)}
+                style={{ marginRight: "5px" }}
+              />
+              Show Eval Accounts Only
+            </label>
+          </div>
+        </div>
+
+        {/* Filter and Export Section */}
+        <div style={{ display: "flex", gap: "20px", alignItems: "center" }}>
+          <div>
+            <label htmlFor="accountFilter">Filter by Account: </label>
+            <select
+              id="accountFilter"
+              value={accountFilter}
+              onChange={(e) => setAccountFilter(e.target.value)}
+              style={{ marginRight: "10px" }}
+            >
+              <option value="">All</option>
+              {uniqueAccountNumbers.map((account) => (
+                <option key={account} value={account}>
+                  {account}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label htmlFor="processCsv">Process CSV: </label>
+            <select
+              id="processCsv"
+              value={selectedProcessRange}
+              onChange={(e) => setSelectedProcessRange(e.target.value)}
+              style={{ marginLeft: "10px" }}
+            >
+              <option value="">Select Range</option>
+              {processRanges.map((range) => (
+                <option key={range.label} value={range.label}>
+                  {range.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
           <CSVLink
             {...exportCsv()}
             className="btn"
             style={{
-              marginTop: "10px",
               backgroundColor: "green",
               color: "white",
               textDecoration: "none",
@@ -518,40 +571,7 @@ function Dashboard() {
           </CSVLink>
         </div>
 
-        {/* Checkboxes */}
-        <div className="checkbox-container" style={{ marginTop: "20px" }}>
-          <label>
-            <input
-              type="checkbox"
-              checked={isAdminOnly}
-              onChange={(e) => setIsAdminOnly(e.target.checked)}
-              style={{ marginRight: "5px" }}
-            />
-            Show Admin Only
-          </label>
-
-          <label style={{ marginLeft: "20px" }}>
-            <input
-              type="checkbox"
-              checked={isPAaccount}
-              onChange={(e) => setIsPAaccount(e.target.checked)}
-              style={{ marginRight: "5px" }}
-            />
-            Show PA Accounts Only
-          </label>
-
-          <label style={{ marginLeft: "20px" }}>
-            <input
-              type="checkbox"
-              checked={isEvalAccount}
-              onChange={(e) => setIsEvalAccount(e.target.checked)}
-              style={{ marginRight: "5px" }}
-            />
-            Show Eval Accounts Only
-          </label>
-        </div>
-
-        {/* Container for File Upload and Set Control */}
+        {/* File Upload and Set Control */}
         <div
           style={{
             display: "flex",
@@ -563,7 +583,7 @@ function Dashboard() {
             boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
           }}
         >
-          {/* File Upload Section (Left) */}
+          {/* File Upload Section */}
           <div
             className="file-upload-container"
             style={{ display: "flex", alignItems: "center" }}
@@ -595,19 +615,20 @@ function Dashboard() {
             </button>
           </div>
 
-          {/* Set Control Section (Right) */}
+          {/* Set Control Section */}
           <div
             className="set-control-container"
-            style={{ display: "flex", alignItems: "center" }}
+            style={{ display: "flex", gap: "15px", alignItems: "center" }}
           >
             <button
               onClick={makeSets}
-              disabled={!!accountFilter} // Disable if accountFilter is not empty
+              disabled={!!accountFilter}
               style={{
                 padding: "8px 16px",
                 color: "white",
                 border: "none",
                 borderRadius: "4px",
+                backgroundColor: "#007bff",
                 cursor: "pointer",
               }}
             >
@@ -615,7 +636,7 @@ function Dashboard() {
             </button>
             <button
               onClick={clearSets}
-              disabled={!!accountFilter} // Disable if accountFilter is not empty
+              disabled={!!accountFilter}
               style={{
                 padding: "8px 16px",
                 backgroundColor: "#ff5722",
@@ -629,8 +650,8 @@ function Dashboard() {
             </button>
           </div>
         </div>
-
-        {/* Account Details Table */}
+      </div>
+      <div className="App">
         <table border="1">
           <thead>
             <tr>
@@ -694,8 +715,8 @@ function Dashboard() {
                 })}
           </tbody>
         </table>
-      </Container>
-    </div>
+      </div>
+    </>
   );
 }
 
