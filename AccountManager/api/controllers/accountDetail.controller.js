@@ -34,8 +34,6 @@ function importFromCSV(req, res) {
   fs.createReadStream(filePath)
     .pipe(csv())
     .on("data", (data) => {
-      console.log(data); // Log the data for debugging
-
       const account = data.Account;
       const accountBalance = parseFloat(
         data["Account Balance"] ? data["Account Balance"].replace(/,/g, "") : 0
@@ -64,9 +62,6 @@ function importFromCSV(req, res) {
       });
     })
     .on("end", () => {
-      // Log results to check for PnL values
-      console.log("Parsed Results:", results);
-
       // Save all results to the database
       models.AccountDetail.bulkCreate(results)
         .then(() => {
@@ -196,10 +191,6 @@ async function importFromCSVs(req, res) {
     const newAccounts = results.filter(
       (result) => !existingAccountSet.has(result.account)
     );
-
-    // Log the new accounts for debugging
-    console.log("New Accounts to Import:", newAccounts);
-
     // Save all new results to the database
     if (newAccounts.length > 0) {
       await models.AccountDetail.bulkCreate(newAccounts);

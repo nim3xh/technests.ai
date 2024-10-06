@@ -8,6 +8,7 @@ import {
   HiChartPie,
 } from "react-icons/hi";
 import { IoMdAnalytics } from "react-icons/io";
+import { FaUserCheck } from "react-icons/fa";
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { signoutSuccess } from "../redux/user/userSlice";
@@ -77,6 +78,15 @@ export default function DashSidebar() {
                 as="div"
               >
                 Users
+              </Sidebar.Item>
+            </Link>
+            <Link to="/dashboard?tab=accOwners">
+              <Sidebar.Item
+                active={tab === "accOwners"}
+                icon={FaUserCheck}
+                as="div"
+              >
+                Account Owners
               </Sidebar.Item>
             </Link>
             <Link to="/dashboard?tab=accountDetails">
