@@ -66,50 +66,62 @@ function signUp(req, res) {
 }
 
 function signIn(req, res) {
-    models.UserCredentials.findOne({
-        where: {
-            email: req.body.email
-        }
-    }).then((user) => {
-        if (user === null) { 
+  models.UserCredentials.findOne({
+    where: {
+      email: req.body.email,
+    },
+  })
+    .then((user) => {
+      if (user === null) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid credentials",
+        });
+      } else {
+        bcrypt.compare(req.body.password, user.password, (err, result) => {
+          if (result) {
+            const token = jwt.sign(
+              {
+                email: user.email,
+                userId: user.id,
+                role: user.role,
+              },
+              process.env.JWT_SECRET_KEY,
+              {
+                expiresIn: "1h",
+              }
+            );
+
+            const { password: pass, ...rest } = user.dataValues;
+
+            res
+              .status(200)
+              .cookie("access_token", token, {
+                httpOnly: true, // This is secure, as it cannot be accessed via JavaScript
+                maxAge: 86400000, // Cookie expires in 1 day
+              })
+              .json({
+                success: true,
+                token, // Including the token in the response
+                user: rest, // Sending user details excluding the password
+              });
+          } else {
             return res.status(400).json({
               success: false,
-              message: "Invalid credentials",
+              message: "Invalid Password",
             });
-        } else {
-            bcrypt.compare(req.body.password, user.password, (err, result) => { 
-                if (result) {
-                    const token = jwt.sign(
-                        {
-                            email: user.email,
-                            userId: user.id,
-                            role: user.role
-                        },
-                        process.env.JWT_SECRET_KEY,
-                        {
-                            expiresIn: "1h"
-                        }
-                    );
-                    const { password: pass, ...rest } = user.dataValues;
-                    
-                    res
-                        .status(200)
-                        .cookie("access_token", token, {
-                            httpOnly: true,
-                            maxAge:86400000
-                        })
-                        .json(rest);
-                } else {
-                    return res.status(400).json({
-                        success: false,
-                        message: "Invalid Password",
-                    });
-                }
-            });
-        }
-    }).catch((error) => {
+          }
+        });
+      }
+    })
+    .catch((error) => {
+      // You may want to handle the error here as well
+      res
+        .status(500)
+        .json({ success: false, message: "Internal server error", error });
     });
 }
+
 
 function changePassword(req, res) {
     var { email, oldPassword, newPassword } = req.body;
