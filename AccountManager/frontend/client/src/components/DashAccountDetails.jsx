@@ -563,10 +563,6 @@ export default function DashAccountDetails() {
           </label>
         </div>
         {/* add csvs here */}
-        {/* <Button gradientDuoTone="greenToBlue" onClick={uploadCsvs}>
-          <HiPlusCircle className="mr-2 h-4 w-4" />
-          Upload CVSs
-        </Button> */}
         <Button
           gradientDuoTone="greenToBlue"
           onClick={uploadCsvs}
