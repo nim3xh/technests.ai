@@ -7,8 +7,6 @@ dotenv.config();
 function verifyToken(req, res, next) {
   const authHeader = req.headers.authorization; // Get Authorization header
   const token = authHeader && authHeader.split(" ")[1]; // Extract token if header exists
-  console.log("Token:", token);
-
   if (!token) {
     return res.status(401).json({
       success: false,

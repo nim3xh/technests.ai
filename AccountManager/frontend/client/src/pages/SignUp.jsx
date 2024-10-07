@@ -6,17 +6,16 @@ export default function SignUp() {
   const [formData, setFormData] = useState({});
   const [errorMessage, setErrorMessage] = useState(null);
   const [loading, setLoading] = useState(false);
-    const navigate = useNavigate();
-    
+  const navigate = useNavigate();
+
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.id]: e.target.value.trim() });
-    };
-    
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    };
-    
+  };
+
   return (
     <div className="min-h-screen mt-20">
       <div className="flex p-3 max-w-3xl mx-auto flex-col md:flex-row md:items-center gap-5">
@@ -65,8 +64,7 @@ export default function SignUp() {
                 onChange={handleChange}
               />
             </div>
-                      <Button gradientMonochrome="teal"
-                          type="submit" disabled={loading}>
+            <Button gradientMonochrome="teal" type="submit" disabled={loading}>
               {loading ? (
                 <>
                   <Spinner size="sm" />
@@ -79,7 +77,7 @@ export default function SignUp() {
           </form>
           <div className="flex gap-2 text-sm mt-5">
             <span>Have an account?</span>
-            <Link to="/signIn" className="text-blue-500">
+            <Link to="/sign-in" className="text-blue-500">
               Sign In
             </Link>
           </div>
