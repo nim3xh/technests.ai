@@ -7,6 +7,7 @@ const router = express.Router();
 
 router.post("/", verifyToken, userCredentialsController.save);
 router.get("/", verifyToken, userCredentialsController.index);
-router.post("/change-password",verifyToken, userCredentialsController.changePassword);
+router.post("/change-password", verifyToken, userCredentialsController.changePassword);
+router.patch("/:email", verifyToken, userCredentialsController.updateUserByEmail);
 
 module.exports = router;

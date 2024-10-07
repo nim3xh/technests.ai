@@ -30,6 +30,7 @@ import axios from "axios";
 import { CSVLink } from "react-csv";
 
 const BaseURL = import.meta.env.VITE_BASE_URL;
+
 const generateRandomColor = () => {
   const letters = "0123456789ABCDEF";
   let color = "#";
