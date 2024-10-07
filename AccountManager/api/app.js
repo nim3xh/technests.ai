@@ -8,6 +8,7 @@ const app = express();
 const usersRouter = require("./routes/users.route");
 const accountDetailRouter = require("./routes/accountDetail.route");
 const authRouter = require("./routes/auth.route");
+const userCredentialsRouter = require("./routes/userCredentials.route");
 
 // Define your allowed origin
 const allowedOrigin = "http://localhost:5173";
@@ -27,6 +28,8 @@ app.use(cookieParser());
 app.use("/users", usersRouter);
 app.use("/accountDetails", accountDetailRouter);
 app.use("/auth", authRouter);
+app.use("/userCredentials", userCredentialsRouter);
+
 
 // Optional: A basic health check route
 app.get("/", (req, res) => {
