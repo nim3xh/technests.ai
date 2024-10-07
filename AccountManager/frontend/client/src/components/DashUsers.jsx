@@ -61,12 +61,18 @@ export default function DashUsers() {
       ) : (
         <Table hoverable className="shadow-md w-full">
           <TableHead>
-              <TableHeadCell>Email</TableHeadCell>
-              <TableHeadCell>Role</TableHeadCell>
+            <TableHeadCell>First Name</TableHeadCell>
+            <TableHeadCell>Last Name</TableHeadCell>
+            <TableHeadCell>Account Number</TableHeadCell>
+            <TableHeadCell>Email</TableHeadCell>
+            <TableHeadCell>Role</TableHeadCell>
           </TableHead>
           <TableBody>
             {userData.map((user, index) => (
               <TableRow key={index}>
+                <TableCell>{user.FirstName}</TableCell>
+                <TableCell>{user.LastName}</TableCell>
+                <TableCell>{user.ApexAccountNumber}</TableCell>
                 <TableCell>{user.email}</TableCell>
                 <TableCell>{user.role}</TableCell>
               </TableRow>

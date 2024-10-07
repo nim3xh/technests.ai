@@ -6,6 +6,8 @@ const validator = require("fastest-validator");
 const v = new validator();
 
 function save(req, res) {
+  console.log("Request Body:", req.body);
+
   models.UserCredentials.findOne({
     where: {
       email: req.body.email,
@@ -25,6 +27,9 @@ function save(req, res) {
             });
           } else {
             const UserCredentials = {
+              FirstName: req.body.firstName,
+              LastName: req.body.lastName,
+              ApexAccountNumber: req.body.apexAccountNumber,
               email: req.body.email,
               password: hash,
               role: req.body.role,
@@ -32,6 +37,9 @@ function save(req, res) {
 
             // Validation schema
             const schema = {
+              FirstName: { type: "string", empty: false },
+              LastName: { type: "string", empty: false },
+              ApexAccountNumber: { type: "string", empty: true },
               email: { type: "email", empty: false },
               password: { type: "string", empty: false },
               role: { type: "string", empty: false },
@@ -72,16 +80,17 @@ function save(req, res) {
     });
 }
 
-function index(req, res) { 
-    models.UserCredentials.findAll()
+function index(req, res) {
+  models.UserCredentials.findAll()
     .then((data) => {
-        res.status(200).json(data);
+      res.status(200).json(data);
     })
     .catch((err) => {
-        res.status(500).json({
-            message:
-                err.message || "Some error occurred while retrieving UserCredentials.",
-        });
+      res.status(500).json({
+        message:
+          err.message ||
+          "Some error occurred while retrieving UserCredentials.",
+      });
     });
 }
 
@@ -155,10 +164,8 @@ function changePassword(req, res) {
     });
 }
 
-
 module.exports = {
-    save: save,
-    index: index,
-    changePassword: changePassword,
+  save: save,
+  index: index,
+  changePassword: changePassword,
 };
-
