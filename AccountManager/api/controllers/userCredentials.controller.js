@@ -6,6 +6,8 @@ const validator = require("fastest-validator");
 const v = new validator();
 
 function save(req, res) {
+  console.log("Request Body:", req.body);
+
   models.UserCredentials.findOne({
     where: {
       email: req.body.email,
@@ -25,6 +27,9 @@ function save(req, res) {
             });
           } else {
             const UserCredentials = {
+              FirstName: req.body.firstName,
+              LastName: req.body.lastName,
+              ApexAccountNumber: req.body.apexAccountNumber,
               email: req.body.email,
               password: hash,
               role: req.body.role,
@@ -32,6 +37,9 @@ function save(req, res) {
 
             // Validation schema
             const schema = {
+              FirstName: { type: "string", empty: false },
+              LastName: { type: "string", empty: false },
+              ApexAccountNumber: { type: "string", empty: true },
               email: { type: "email", empty: false },
               password: { type: "string", empty: false },
               role: { type: "string", empty: false },
@@ -72,16 +80,17 @@ function save(req, res) {
     });
 }
 
-function index(req, res) { 
-    models.UserCredentials.findAll()
+function index(req, res) {
+  models.UserCredentials.findAll()
     .then((data) => {
-        res.status(200).json(data);
+      res.status(200).json(data);
     })
     .catch((err) => {
-        res.status(500).json({
-            message:
-                err.message || "Some error occurred while retrieving UserCredentials.",
-        });
+      res.status(500).json({
+        message:
+          err.message ||
+          "Some error occurred while retrieving UserCredentials.",
+      });
     });
 }
 
@@ -155,10 +164,100 @@ function changePassword(req, res) {
     });
 }
 
+function updateUserByEmail(req, res) {
+  const email = req.params.email;
+
+  // Check if user exists
+  models.UserCredentials.findOne({
+    where: { email: email },
+  })
+    .then((user) => {
+      if (!user) {
+        return res.status(404).json({
+          message: `Cannot find UserCredentials with email=${email}.`,
+        });
+      }
+
+      // Prepare fields for update
+      const updatedFields = {
+        FirstName: req.body.firstName || user.FirstName,
+        LastName: req.body.lastName || user.LastName,
+        ApexAccountNumber: req.body.apexAccountNumber || user.ApexAccountNumber,
+        email: req.body.email || user.email,
+        role: req.body.role || user.role,
+      };
+
+      // Validation schema
+      const schema = {
+        FirstName: { type: "string", empty: false },
+        LastName: { type: "string", empty: false },
+        ApexAccountNumber: { type: "string", empty: true },
+        email: { type: "email", empty: false },
+        role: { type: "string", empty: false },
+      };
+
+      // Validate input
+      const validationResponse = v.validate(updatedFields, schema);
+      if (validationResponse !== true) {
+        return res.status(400).json({
+          message: "Validation failed",
+          errors: validationResponse,
+        });
+      }
+
+      // Check if password is being updated
+      if (req.body.password) {
+        bcrypt.hash(req.body.password, 10, (err, hash) => {
+          if (err) {
+            return res.status(500).json({
+              error: err,
+            });
+          }
+
+          updatedFields.password = hash;
+
+          // Proceed with update
+          performUpdate();
+        });
+      } else {
+        // If no password update, proceed with the rest of the fields
+        performUpdate();
+      }
+
+      // Function to update user credentials
+      function performUpdate() {
+        models.UserCredentials.update(updatedFields, {
+          where: { email: email },
+        })
+          .then((num) => {
+            if (num == 1) {
+              res.status(200).json({
+                message: "UserCredentials was updated successfully.",
+              });
+            } else {
+              res.status(404).json({
+                message: `Cannot update UserCredentials with email=${email}. Maybe UserCredentials was not found or req.body is empty!`,
+              });
+            }
+          })
+          .catch((err) => {
+            res.status(500).json({
+              message: "Error updating UserCredentials with email=" + email,
+            });
+          });
+      }
+    })
+    .catch((error) => {
+      res.status(500).json({
+        error: error.message || "An error occurred while retrieving user data.",
+      });
+    });
+}
+
 
 module.exports = {
-    save: save,
-    index: index,
-    changePassword: changePassword,
+  save: save,
+  index: index,
+  changePassword: changePassword,
+  updateUserByEmail: updateUserByEmail,
 };
-

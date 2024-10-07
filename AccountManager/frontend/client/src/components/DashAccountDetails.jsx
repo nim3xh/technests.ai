@@ -31,24 +31,14 @@ import { CSVLink } from "react-csv";
 
 const BaseURL = import.meta.env.VITE_BASE_URL;
 
-const flowbiteColors = [
-  "#BFDBFE", // Blue 200
-  "#A7F3D0", // Green 200
-  "#FDE68A", // Yellow 200
-  "#FCA5A5", // Red 200
-  "#C7D2FE", // Indigo 200
-  "#FBCFE8", // Pink 200
-  "#DDD6FE", // Purple 200
-  "#FEE2E2", // Rose 200
-  "#99F6E4", // Teal 200
-];
-
-
-const generateFlowbiteColor = () => {
-  const randomIndex = Math.floor(Math.random() * flowbiteColors.length);
-  return flowbiteColors[randomIndex];
+const generateRandomColor = () => {
+  const letters = "0123456789ABCDEF";
+  let color = "#";
+  for (let i = 0; i < 6; i++) {
+    color += letters[Math.floor(Math.random() * 16)];
+  }
+  return color;
 };
-
 
 const getLuminance = (hex) => {
   const rgb = parseInt(hex.substring(1), 16);
@@ -60,19 +50,16 @@ const getLuminance = (hex) => {
   return luminance;
 };
 
-
 const assignColorsToAccounts = (data) => {
   const accountColors = {};
   data.forEach((item) => {
     const accountName = item.name;
     if (!accountColors[accountName]) {
-      accountColors[accountName] = generateFlowbiteColor();
+      accountColors[accountName] = generateRandomColor();
     }
   });
   return accountColors;
 };
-
-
 
 export default function DashAccountDetails() {
   const [createLoding, setCreateLoding] = useState(false);
@@ -125,6 +112,7 @@ export default function DashAccountDetails() {
 
         await axios.delete(`${BaseURL}accountDetails/`, { headers }); // Send headers with the delete request
         alert("All account details deleted successfully.");
+        
         setCombinedData([]); // Clear the data in the frontend after deletion
         setFilteredData([]); // Clear the filtered data as well
       } catch (error) {
@@ -340,6 +328,7 @@ export default function DashAccountDetails() {
       for (const file of csvFiles) {
         formData.append("csvFiles", file);
       }
+      setCreateLoding(true);
 
       try {
         const token = currentUser.token; // Get the token from the currentUser object
@@ -359,6 +348,7 @@ export default function DashAccountDetails() {
           }),
         ]);
 
+        setCreateLoding(false);
         alert("CSV uploaded successfully!");
 
         // Refetch data after uploading CSVs
@@ -367,12 +357,12 @@ export default function DashAccountDetails() {
       } catch (error) {
         console.error("Error uploading CSVs:", error);
         alert("Failed to upload CSV files.");
+        setCreateLoding(false);
       }
     };
 
     input.click(); // Trigger the file input dialog
   };
-
 
   const fetchData = async () => {
     try {
@@ -517,7 +507,7 @@ export default function DashAccountDetails() {
         </div>
       </div>
 
-      <div className="flex gap-3 justify">
+      <div className="flex gap-3 justify mt-4">
         <select
           id="accountFilter"
           value={accountFilter}
@@ -573,9 +563,22 @@ export default function DashAccountDetails() {
           </label>
         </div>
         {/* add csvs here */}
-        <Button gradientDuoTone="greenToBlue" onClick={uploadCsvs}>
-          <HiPlusCircle className="mr-2 h-4 w-4" />
-          Upload CVSs
+        <Button
+          gradientDuoTone="greenToBlue"
+          onClick={uploadCsvs}
+          disabled={createLoding}
+        >
+          {createLoding ? (
+            <>
+              <Spinner size="sm" />
+              <span className="pl-3">Loading...</span>
+            </>
+          ) : (
+            <>
+              <HiPlusCircle className="mr-2 h-4 w-4" />
+              Upload CVSs
+            </>
+          )}
         </Button>
         <CSVLink
           {...exportCsv()}
@@ -608,7 +611,7 @@ export default function DashAccountDetails() {
         </div>
       ) : (
         <>
-          <Table hoverable className="shadow-md w-full">
+          <Table hoverable className="shadow-md w-full mt-4">
             <TableHead>
               <TableHeadCell>Account</TableHeadCell>
               <TableHeadCell>Account Balance</TableHeadCell>

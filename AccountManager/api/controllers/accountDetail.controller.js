@@ -1,6 +1,7 @@
 const models = require("../models");
 const fs = require("fs");
 const csv = require("csv-parser");
+const deleteUploads = require("../delete-uploads");
 
 function save(req, res) {
   const accountDetail = {
@@ -340,18 +341,19 @@ function destroyAll(req, res) {
     where: {}, // No condition means all records will be deleted
     truncate: true, // This will delete all records and reset auto-increment keys
   })
-    .then((result) => {
-      res.status(200).json({
-        message: "All account details deleted successfully",
-        deletedRecords: result, // Number of records deleted
+      deleteUploads()
+      .then((result) => {
+        res.status(200).json({
+          message: "All account details deleted successfully",
+          deletedRecords: result, // Number of records deleted
+        });
+      })
+      .catch((error) => {
+        res.status(500).json({
+          message: "Something went wrong",
+          error: error,
+        });
       });
-    })
-    .catch((error) => {
-      res.status(500).json({
-        message: "Something went wrong",
-        error: error,
-      });
-    });
 }
 
 module.exports = {
