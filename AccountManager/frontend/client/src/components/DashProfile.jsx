@@ -1,7 +1,22 @@
-import { TextInput, Button } from "flowbite-react";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeadCell,
+  TableRow,
+  Spinner,
+  Breadcrumb,
+  Button,
+  Modal,
+  Label,
+  TextInput,
+  Select,
+} from "flowbite-react";
 import React, { useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import axios from "axios";
+import { HiHome } from "react-icons/hi";
 
 const BaseURL = import.meta.env.VITE_BASE_URL;
 
@@ -29,7 +44,7 @@ export default function DashProfile() {
       apexAccountNumber,
       email,
       password,
-      role
+      role,
     };
 
     const token = currentUser.token; // Get the token from the currentUser object
@@ -45,7 +60,6 @@ export default function DashProfile() {
         { headers }
       );
 
-   
       // Dispatch action to update user state if necessary
       console.log("Profile updated successfully", response.data);
       setIsLoading(false);
@@ -58,60 +72,68 @@ export default function DashProfile() {
   };
 
   return (
-    <div className="max-w-lg mx-auto p-3 w-full">
-      <h1 className="my-7 text-center font-semibold text-3xl">Profile</h1>
-      <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
-        <div className="w-32 h-32 self-center cursor-pointer shadow-md overflow-hidden rounded-full">
-          <img
-            src={currentUser.profilePicture}
-            alt="user"
-            className="rounded-full w-full h-full object-cover border-8 border-[lightgray]"
+    <div className="p-3 w-full">
+      <Breadcrumb aria-label="Default breadcrumb example">
+        <Breadcrumb.Item href="#" icon={HiHome}>
+          Home
+        </Breadcrumb.Item>
+        <Breadcrumb.Item>Profile</Breadcrumb.Item>
+      </Breadcrumb>
+      <div className="max-w-lg mx-auto p-3 w-full">
+        <h1 className="my-7 text-center font-semibold text-3xl">Profile</h1>
+        <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
+          <div className="w-32 h-32 self-center cursor-pointer shadow-md overflow-hidden rounded-full">
+            <img
+              src={currentUser.profilePicture}
+              alt="user"
+              className="rounded-full w-full h-full object-cover border-8 border-[lightgray]"
+            />
+          </div>
+          <TextInput
+            type="text"
+            id="firstName"
+            placeholder="First Name"
+            value={firstName}
+            onChange={(e) => setFirstName(e.target.value)}
           />
-        </div>
-        <TextInput
-          type="text"
-          id="firstName"
-          placeholder="First Name"
-          value={firstName}
-          onChange={(e) => setFirstName(e.target.value)}
-        />
-        <TextInput
-          type="text"
-          id="lastName"
-          placeholder="Last Name"
-          value={lastName}
-          onChange={(e) => setLastName(e.target.value)}
-        />
-        <TextInput
-          type="text"
-          id="ApexAccountNumber"
-          placeholder="Account Number"
-          value={apexAccountNumber}
-          onChange={(e) => setApexAccountNumber(e.target.value)}
-        />
-        <TextInput
-          type="email"
-          id="email"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-        />
-        <TextInput
-          type="password"
-          id="password"
-          placeholder="New Password (Leave empty if not changing)"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
-        {errorMessage && <p className="text-red-500">{errorMessage}</p>}
-        <Button
-          type="submit"
-          gradientDuoTone="greenToBlue"
-          disabled={isLoading}
-        >
-          {isLoading ? "Loading..." : "Update"}
-        </Button>
-      </form>
+          <TextInput
+            type="text"
+            id="lastName"
+            placeholder="Last Name"
+            value={lastName}
+            onChange={(e) => setLastName(e.target.value)}
+          />
+          <TextInput
+            type="text"
+            id="ApexAccountNumber"
+            placeholder="Account Number"
+            value={apexAccountNumber}
+            onChange={(e) => setApexAccountNumber(e.target.value)}
+          />
+          <TextInput
+            type="email"
+            id="email"
+            placeholder="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+          <TextInput
+            type="password"
+            id="password"
+            placeholder="New Password (Leave empty if not changing)"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+          {errorMessage && <p className="text-red-500">{errorMessage}</p>}
+          <Button
+            type="submit"
+            gradientDuoTone="greenToBlue"
+            disabled={isLoading}
+          >
+            {isLoading ? "Loading..." : "Update"}
+          </Button>
+        </form>
+      </div>
     </div>
   );
 }
