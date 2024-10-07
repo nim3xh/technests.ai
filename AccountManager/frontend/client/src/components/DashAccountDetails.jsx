@@ -60,7 +60,6 @@ const assignColorsToAccounts = (data) => {
   return accountColors;
 };
 
-
 export default function DashAccountDetails() {
   const [createLoding, setCreateLoding] = useState(false);
   const { currentUser } = useSelector((state) => state.user);
@@ -112,6 +111,7 @@ export default function DashAccountDetails() {
 
         await axios.delete(`${BaseURL}accountDetails/`, { headers }); // Send headers with the delete request
         alert("All account details deleted successfully.");
+        
         setCombinedData([]); // Clear the data in the frontend after deletion
         setFilteredData([]); // Clear the filtered data as well
       } catch (error) {
@@ -327,9 +327,9 @@ export default function DashAccountDetails() {
       for (const file of csvFiles) {
         formData.append("csvFiles", file);
       }
+      setCreateLoding(true);
 
       try {
-        setCreateLoding(true);
         const token = currentUser.token; // Get the token from the currentUser object
 
         await Promise.all([
@@ -349,7 +349,7 @@ export default function DashAccountDetails() {
 
         setCreateLoding(false);
         alert("CSV uploaded successfully!");
-        
+
         // Refetch data after uploading CSVs
         fetchData();
         setCsvFiles([]); // Clear selected files after upload
@@ -362,7 +362,6 @@ export default function DashAccountDetails() {
 
     input.click(); // Trigger the file input dialog
   };
-
 
   const fetchData = async () => {
     try {
