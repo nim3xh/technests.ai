@@ -5,8 +5,8 @@ const userCredentialsController = require("../controllers/userCredentials.contro
 const verifyToken = require("../utils/verifyUser");
 const router = express.Router();
 
-router.post("/", userCredentialsController.save);
-router.get("/", userCredentialsController.index);
-router.post("/change-password", userCredentialsController.changePassword);
+router.post("/", verifyToken, userCredentialsController.save);
+router.get("/", verifyToken, userCredentialsController.index);
+router.post("/change-password",verifyToken, userCredentialsController.changePassword);
 
 module.exports = router;
