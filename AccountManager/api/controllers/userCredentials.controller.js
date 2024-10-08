@@ -254,10 +254,34 @@ function updateUserByEmail(req, res) {
     });
 }
 
+function destroy(req, res) {
+  const id = req.params.id;
+
+  models.UserCredentials.destroy({
+    where: { id: id },
+  })
+    .then((num) => {
+      if (num == 1) {
+        res.status(200).json({
+          message: "UserCredentials was deleted successfully!",
+        });
+      } else {
+        res.status(404).json({
+          message: `Cannot delete UserCredentials with id=${id}. Maybe UserCredentials was not found!`,
+        });
+      }
+    })
+    .catch((err) => {
+      res.status(500).json({
+        message: "Could not delete UserCredentials with id=" + id,
+      });
+    });
+}
 
 module.exports = {
   save: save,
   index: index,
   changePassword: changePassword,
   updateUserByEmail: updateUserByEmail,
+  destroy: destroy,
 };

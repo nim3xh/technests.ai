@@ -83,6 +83,33 @@ export default function DashUsers() {
     });
   };
 
+  const handleDeleteUser = async (id) => {
+    try {
+      const token = currentUser.token;
+      const headers = {
+        Authorization: `Bearer ${token}`,
+      };
+      await axios.delete(`${BaseURL}userCredentials/${id}`, { headers });
+      // Refresh user data after deletion
+      fetchData();
+    } catch (err) {
+      setError("Error deleting user.");
+    }
+  };
+  
+  function getUserRoleDisplay(role) {
+    switch (role) {
+      case "admin":
+        return "Admin";
+      case "user":
+        return "User";
+      case "super-user":
+        return "Super User";
+      default:
+        return "Unknown Role";
+    }
+  }
+
   return (
     <div className="p-3 w-full">
       <Breadcrumb aria-label="Default breadcrumb example">
@@ -127,7 +154,18 @@ export default function DashUsers() {
                 <TableCell>{user.LastName}</TableCell>
                 <TableCell>{user.ApexAccountNumber}</TableCell>
                 <TableCell>{user.email}</TableCell>
-                <TableCell>{user.role}</TableCell>
+                <TableCell>{getUserRoleDisplay(user.role)}</TableCell>
+                <TableCell>
+                  {currentUser.user.role === "admin" && (
+                    <Button
+                      gradientMonochrome="failure"
+                      onClick={() => handleDeleteUser(user.id)}
+                      disabled={!!(currentUser.user.email === user.email)}
+                    >
+                      Delete
+                    </Button>
+                  )}
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>
@@ -200,6 +238,7 @@ export default function DashUsers() {
               >
                 <option value="admin">Admin</option>
                 <option value="user">User</option>
+                <option value="super-user">Super User</option>
               </Select>
             </div>
           </div>

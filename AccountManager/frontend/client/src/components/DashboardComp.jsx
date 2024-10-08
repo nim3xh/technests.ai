@@ -89,9 +89,6 @@ export default function DashboardComp() {
     fetchData();
   }, [BaseURL, currentUser]);
 
-  if (loading) return <p>Loading...</p>;
-  if (error) return <p>{error}</p>;
-
   const encounteredAccounts = new Set();
 
   const uniqueAccountNumbers = combinedData
@@ -127,84 +124,98 @@ export default function DashboardComp() {
         </Breadcrumb.Item>
         <Breadcrumb.Item></Breadcrumb.Item>
       </Breadcrumb>
-      <div className="flex-wrap flex gap-4 justify-center">
-        <div className="flex flex-col p-3 dark:bg-slate-800 gap-4 md:w-72 w-full rounded-md shadow-md">
-          <div className="flex justify-between">
-            <div className="">
-              <h3 className="text-gray-500 text-md uppercase">
-                Total Rows Displayed:
-              </h3>
-              <p className="text-2xl">{totalRows}</p>
+      {currentUser.user.role !== "user" && (
+        <>
+          {loading ? (
+            <div className="flex justify-center items-center h-96">
+              <Spinner size="xl" />
             </div>
-            <MdTableRows className="bg-teal-600  text-white rounded-full text-5xl p-3 shadow-lg" />
-          </div>
-        </div>
-        <div className="flex flex-col p-3 dark:bg-slate-800 gap-4 md:w-72 w-full rounded-md shadow-md">
-          <div className="flex justify-between">
-            <div className="">
-              <h3 className="text-gray-500 text-md uppercase">
-                Total Unique Accounts{" "}
-              </h3>
-              <p className="text-2xl">{totalUniqueAccountsDisplayed}</p>
-            </div>
-            <MdAccountBalance className="bg-teal-600  text-white rounded-full text-5xl p-3 shadow-lg" />
-          </div>
-        </div>
-        <div className="flex flex-col p-3 dark:bg-slate-800 gap-4 md:w-72 w-full rounded-md shadow-md">
-          <div className="flex justify-between">
-            <div className="">
-              <h3 className="text-gray-500 text-md uppercase">
-                Total PA Account Rows:
-              </h3>
-              <p className="text-2xl">{paAccountsCount}</p>
-            </div>
-            <CiMemoPad className="bg-teal-600  text-white rounded-full text-5xl p-3 shadow-lg" />
-          </div>
-        </div>
-        <div className="flex flex-col p-3 dark:bg-slate-800 gap-4 md:w-72 w-full rounded-md shadow-md">
-          <div className="flex justify-between">
-            <div className="">
-              <h3 className="text-gray-500 text-md uppercase">
-                Total Eval Account Rows:
-              </h3>
-              <p className="text-2xl">{nonPaAccountsCount}</p>
-            </div>
-            <GiMedievalGate className="bg-teal-600  text-white rounded-full text-5xl p-3 shadow-lg" />
-          </div>
-        </div>
-        <div className="flex flex-col p-3">
-          <Link
-            to="/dashboard?tab=accountDetails"
-            className="self-center whitespace-nowrap text-sm sm:text-xl font-semibold dark:text-white"
-          >
-            <Button gradientDuoTone="greenToBlue">
-              Filter Account Details
-            </Button>
-          </Link>
-        </div>
-      </div>
-      <Table hoverable className="shadow-md w-full mt-6">
-        <TableHead>
-          <TableHeadCell>Account</TableHeadCell>
-          <TableHeadCell>Account Balance</TableHeadCell>
-          <TableHeadCell>Account Name</TableHeadCell>
-          <TableHeadCell>Status</TableHeadCell>
-          <TableHeadCell>Trailing Threshold</TableHeadCell>
-          <TableHeadCell>PnL</TableHeadCell>
-        </TableHead>
-        <TableBody>
-          {combinedData.map((data, index) => (
-            <TableRow key={index}>
-              <TableCell>{data.accountNumber}</TableCell>
-              <TableCell>{data.accountBalance}</TableCell>
-              <TableCell>{data.name}</TableCell>
-              <TableCell>{data.status}</TableCell>
-              <TableCell>{data.trailingThreshold}</TableCell>
-              <TableCell>{data.PnL}</TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          ) : error ? (
+            <div className="text-red-600">{error}</div>
+          ) : (
+            <>
+              <div className="flex-wrap flex gap-4 justify-center mt-4">
+                <div className="flex flex-col p-3 dark:bg-slate-800 gap-4 md:w-72 w-full rounded-md shadow-md">
+                  <div className="flex justify-between">
+                    <div className="">
+                      <h3 className="text-gray-500 text-md uppercase">
+                        Total Rows Displayed:
+                      </h3>
+                      <p className="text-2xl">{totalRows}</p>
+                    </div>
+                    <MdTableRows className="bg-teal-600  text-white rounded-full text-5xl p-3 shadow-lg" />
+                  </div>
+                </div>
+                <div className="flex flex-col p-3 dark:bg-slate-800 gap-4 md:w-72 w-full rounded-md shadow-md">
+                  <div className="flex justify-between">
+                    <div className="">
+                      <h3 className="text-gray-500 text-md uppercase">
+                        Total Unique Accounts{" "}
+                      </h3>
+                      <p className="text-2xl">{totalUniqueAccountsDisplayed}</p>
+                    </div>
+                    <MdAccountBalance className="bg-teal-600  text-white rounded-full text-5xl p-3 shadow-lg" />
+                  </div>
+                </div>
+                <div className="flex flex-col p-3 dark:bg-slate-800 gap-4 md:w-72 w-full rounded-md shadow-md">
+                  <div className="flex justify-between">
+                    <div className="">
+                      <h3 className="text-gray-500 text-md uppercase">
+                        Total PA Account Rows:
+                      </h3>
+                      <p className="text-2xl">{paAccountsCount}</p>
+                    </div>
+                    <CiMemoPad className="bg-teal-600  text-white rounded-full text-5xl p-3 shadow-lg" />
+                  </div>
+                </div>
+                <div className="flex flex-col p-3 dark:bg-slate-800 gap-4 md:w-72 w-full rounded-md shadow-md">
+                  <div className="flex justify-between">
+                    <div className="">
+                      <h3 className="text-gray-500 text-md uppercase">
+                        Total Eval Account Rows:
+                      </h3>
+                      <p className="text-2xl">{nonPaAccountsCount}</p>
+                    </div>
+                    <GiMedievalGate className="bg-teal-600  text-white rounded-full text-5xl p-3 shadow-lg" />
+                  </div>
+                </div>
+                <div className="flex flex-col p-3">
+                  <Link
+                    to="/dashboard?tab=accountDetails"
+                    className="self-center whitespace-nowrap text-sm sm:text-xl font-semibold dark:text-white"
+                  >
+                    <Button gradientDuoTone="greenToBlue">
+                      Filter Account Details
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+              <Table hoverable className="shadow-md w-full mt-6">
+                <TableHead>
+                  <TableHeadCell>Account</TableHeadCell>
+                  <TableHeadCell>Account Balance</TableHeadCell>
+                  <TableHeadCell>Account Name</TableHeadCell>
+                  <TableHeadCell>Status</TableHeadCell>
+                  <TableHeadCell>Trailing Threshold</TableHeadCell>
+                  <TableHeadCell>PnL</TableHeadCell>
+                </TableHead>
+                <TableBody>
+                  {combinedData.map((data, index) => (
+                    <TableRow key={index}>
+                      <TableCell>{data.accountNumber}</TableCell>
+                      <TableCell>{data.accountBalance}</TableCell>
+                      <TableCell>{data.name}</TableCell>
+                      <TableCell>{data.status}</TableCell>
+                      <TableCell>{data.trailingThreshold}</TableCell>
+                      <TableCell>{data.PnL}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </>
+          )}
+        </>
+      )}
     </div>
   );
 }

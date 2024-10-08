@@ -21,7 +21,7 @@ import { HiHome } from "react-icons/hi";
 const BaseURL = import.meta.env.VITE_BASE_URL;
 
 export default function DashProfile() {
-  const { currentUser, error, loading } = useSelector((state) => state.user);
+  const { currentUser } = useSelector((state) => state.user);
   const [firstName, setFirstName] = useState(currentUser.user.FirstName);
   const [lastName, setLastName] = useState(currentUser.user.LastName);
   const [apexAccountNumber, setApexAccountNumber] = useState(
@@ -70,6 +70,7 @@ export default function DashProfile() {
       console.error("Error updating profile:", error);
     }
   };
+  
 
   return (
     <div className="p-3 w-full">
