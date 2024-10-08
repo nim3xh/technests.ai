@@ -46,7 +46,7 @@ export default function SignIn() {
         // Handle successful sign-in
         dispatch(signInSuccess(data)); // Update the user state with the fetched user data
         localStorage.setItem("access", data.token);
-        navigate("/dashboard"); // Navigate to the dashboard after successful login
+        navigate("/dashboard?tab=dash"); // Navigate to the dashboard after successful login
       } else {
         // Handle errors (e.g., invalid credentials)
         dispatch(signInFailure(data.message || "Login failed"));
@@ -55,7 +55,8 @@ export default function SignIn() {
         dispatch(signInFailure("An error occurred. Please try again."));
         console.error("Error during login:", error);
     } finally {
-        setLoading(false); // Stop loading when the request is finished
+        //setLoading(false); // Stop loading when the request is finished
+        dispatch(signInFailure(null)); // Clear any previous error messages
     }
   };
 

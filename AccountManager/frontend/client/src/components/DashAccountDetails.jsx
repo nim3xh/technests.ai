@@ -78,6 +78,7 @@ export default function DashAccountDetails() {
   const [paAccountsCount, setPaAccountsCount] = useState(0);
   const [nonPaAccountsCount, setNonPaAccountsCount] = useState(0);
   const [setsData, setSetsData] = useState([]);
+  const [createdDateTime, setCreatedDateTime] = useState("");
 
   const processRanges = [
     { label: "47000", min: 46750, max: 47249 },
@@ -191,6 +192,13 @@ export default function DashAccountDetails() {
         );
 
         setCombinedData(mergedData);
+        // Check if mergedData is not empty and set createdDateTime from the first item's createdAt
+        if (mergedData.length > 0) {
+          setCreatedDateTime(mergedData[0].createdAt);
+        } else {
+          // Handle the case when mergedData is empty, if needed
+          setCreatedDateTime(null); // or set it to a default value
+        }
         setFilteredData(mergedData);
 
         setAccountColors(assignColorsToAccounts(mergedData));
@@ -382,6 +390,13 @@ export default function DashAccountDetails() {
         accountDetailsResponse.data
       );
       setCombinedData(mergedData);
+      // Check if mergedData is not empty and set createdDateTime from the first item's createdAt
+      if (mergedData.length > 0) {
+        setCreatedDateTime(mergedData[0].createdAt);
+      } else {
+        // Handle the case when mergedData is empty, if needed
+        setCreatedDateTime(null); // or set it to a default value
+      }
       setFilteredData(mergedData);
 
       setAccountColors(assignColorsToAccounts(mergedData));
@@ -401,8 +416,6 @@ export default function DashAccountDetails() {
     }
   };
 
-  if (loading) return <p>Loading...</p>;
-  if (error) return <p>{error}</p>;
 
   const encounteredAccounts = new Set();
 
@@ -478,6 +491,10 @@ export default function DashAccountDetails() {
     return { data: csvData, headers, filename: generateCsvFilename() };
   };
 
+  const formattedDateTime = createdDateTime
+    ? new Date(createdDateTime).toLocaleString()
+    : "";
+
   return (
     <div className="p-3 w-full">
       <Breadcrumb aria-label="Default breadcrumb example">
@@ -486,244 +503,264 @@ export default function DashAccountDetails() {
         </Breadcrumb.Item>
         <Breadcrumb.Item>Account Details</Breadcrumb.Item>
       </Breadcrumb>
+
       <h1 className="mt-3 mb-3 text-left font-semibold text-xl">
-        All Account Details
+        All Account Details | Updated At: {formattedDateTime && `(${formattedDateTime})`}
       </h1>
-
-      <div className="flex gap-2 justify-start">
-        <div className="flex flex-col p-3 dark:bg-slate-800 gap-4 md:w-56 w-full rounded-md shadow-md">
-          <h4>Total Rows Displayed: {totalRows}</h4>
-        </div>
-        <div className="flex flex-col p-3 dark:bg-slate-800 gap-4 md:w-72 w-full rounded-md shadow-md">
-          <h4>
-            Total Unique Accounts Displayed: {totalUniqueAccountsDisplayed}
-          </h4>
-        </div>
-        <div className="flex flex-col p-3 dark:bg-slate-800 gap-4 md:w-56 w-full rounded-md shadow-md">
-          <h4>Total PA Account Rows: {paAccountsCount}</h4>
-        </div>
-        <div className="flex flex-col p-3 dark:bg-slate-800 gap-4 md:w-64 w-full rounded-md shadow-md">
-          <h4>Total Eval Account Rows: {nonPaAccountsCount}</h4>
-        </div>
-      </div>
-
-      <div className="flex gap-3 justify mt-4">
-        <select
-          id="accountFilter"
-          value={accountFilter}
-          onChange={(e) => setAccountFilter(e.target.value)}
-          className="block w-1/6 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm dark:bg-gray-800 dark:text-gray-200"
-        >
-          <option value="">Select Account</option>
-          {uniqueAccountNumbers.map((account) => (
-            <option key={account} value={account}>
-              {account}
-            </option>
-          ))}
-        </select>
-        <select
-          id="processCsv"
-          value={selectedProcessRange}
-          onChange={(e) => setSelectedProcessRange(e.target.value)}
-          className="block w-1/8 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm dark:bg-gray-800 dark:text-gray-200"
-        >
-          <option value="">Select Range</option>
-          {processRanges.map((range) => (
-            <option key={range.label} value={range.label}>
-              {range.label}
-            </option>
-          ))}
-        </select>
-        <div className="flex gap-5 items-center">
-          <label className="flex items-center">
-            <Checkbox
-              checked={isAdminOnly}
-              onChange={(e) => setIsAdminOnly(e.target.checked)}
-              className="mr-2"
-            />
-            Show Admin Only
-          </label>
-
-          <label className="flex items-center">
-            <Checkbox
-              checked={isPAaccount}
-              onChange={(e) => setIsPAaccount(e.target.checked)}
-              className="mr-2"
-            />
-            Show PA Accounts Only
-          </label>
-
-          <label className="flex items-center">
-            <Checkbox
-              checked={isEvalAccount}
-              onChange={(e) => setIsEvalAccount(e.target.checked)}
-              className="mr-2"
-            />
-            Show Eval Accounts Only
-          </label>
-        </div>
-        {/* add csvs here */}
-        <Button
-          gradientDuoTone="greenToBlue"
-          onClick={uploadCsvs}
-          disabled={createLoding}
-        >
-          {createLoding ? (
-            <>
-              <Spinner size="sm" />
-              <span className="pl-3">Loading...</span>
-            </>
-          ) : (
-            <>
-              <HiPlusCircle className="mr-2 h-4 w-4" />
-              Upload CVSs
-            </>
-          )}
-        </Button>
-        <CSVLink
-          {...exportCsv()}
-          className="bg-gradient-to-r from-teal-400 via-teal-500 to-teal-600 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-teal-300 text-white rounded-md px-4 py-2 hover:bg-green-600"
-        >
-          Export CSV
-        </CSVLink>
-        <Button
-          gradientDuoTone="purpleToBlue"
-          onClick={makeSets}
-          disabled={!!accountFilter}
-        >
-          Make Sets
-        </Button>
-        <Button
-          gradientDuoTone="purpleToPink"
-          onClick={clearSets}
-          disabled={!!accountFilter}
-        >
-          Clear Sets
-        </Button>
-        <Button gradientMonochrome="failure" onClick={deleteAllAccounts}>
-          Delete All
-        </Button>
-      </div>
-
-      {createLoding ? (
+      {loading ? (
         <div className="flex justify-center items-center h-96">
           <Spinner size="xl" />
         </div>
+      ) : error ? (
+        <div className="text-red-600">{error}</div>
       ) : (
         <>
-          <Table hoverable className="shadow-md w-full mt-4">
-            <TableHead>
-              <TableHeadCell>Account</TableHeadCell>
-              <TableHeadCell>Account Balance</TableHeadCell>
-              <TableHeadCell>Account Name</TableHeadCell>
-              <TableHeadCell>Status</TableHeadCell>
-              <TableHeadCell>Trailing Threshold</TableHeadCell>
-              <TableHeadCell>PnL</TableHeadCell>
-            </TableHead>
-            <TableBody>
-              {setsData.length > 0
-                ? setsData.map((account, index) => {
-                    const backgroundColor = accountColors[account.name];
-                    const luminance = getLuminance(backgroundColor);
-                    const textColor = luminance > 160 ? "#000000" : "#FFFFFF";
+          <div className="flex gap-2 justify-start">
+            <div className="flex flex-col p-3 dark:bg-slate-800 gap-4 md:w-56 w-full rounded-md shadow-md">
+              <h4>Total Rows Displayed: {totalRows}</h4>
+            </div>
+            <div className="flex flex-col p-3 dark:bg-slate-800 gap-4 md:w-72 w-full rounded-md shadow-md">
+              <h4>
+                Total Unique Accounts Displayed: {totalUniqueAccountsDisplayed}
+              </h4>
+            </div>
+            <div className="flex flex-col p-3 dark:bg-slate-800 gap-4 md:w-56 w-full rounded-md shadow-md">
+              <h4>Total PA Account Rows: {paAccountsCount}</h4>
+            </div>
+            <div className="flex flex-col p-3 dark:bg-slate-800 gap-4 md:w-64 w-full rounded-md shadow-md">
+              <h4>Total Eval Account Rows: {nonPaAccountsCount}</h4>
+            </div>
+          </div>
 
-                    return (
-                      <TableRow
-                        key={account.id}
-                        style={{
-                          backgroundColor,
-                          color: textColor,
-                        }}
-                      >
-                        <TableCell>
-                          <div className="flex items-center gap-3">
-                            <Avatar
-                              size="sm"
-                              src={account.profilePicture}
-                              alt={account.name}
-                            />
-                            <div>
-                              <p className="font-semibold">{account.account}</p>
-                              <p className="text-xs text-gray-500">
-                                {account.email}
-                              </p>
-                            </div>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <p className="font-semibold">
-                            $ {account.accountBalance}
-                          </p>
-                        </TableCell>
-                        <TableCell>
-                          <p className="font-semibold">{account.name}</p>
-                        </TableCell>
-                        <TableCell>
-                          <p className="font-semibold">{account.status}</p>
-                        </TableCell>
-                        <TableCell>
-                          <p className="font-semibold">
-                            {account.trailingThreshold}
-                          </p>
-                        </TableCell>
-                        <TableCell>
-                          <p className="font-semibold">{account.PnL}</p>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })
-                : filteredData.map((account, index) => {
-                    const backgroundColor = accountColors[account.name];
-                    const luminance = getLuminance(backgroundColor);
-                    const textColor = luminance > 160 ? "#000000" : "#FFFFFF";
+          <div className="flex gap-3 justify mt-4">
+            <select
+              id="accountFilter"
+              value={accountFilter}
+              onChange={(e) => setAccountFilter(e.target.value)}
+              className="block w-1/6 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm dark:bg-gray-800 dark:text-gray-200"
+            >
+              <option value="">Select Account</option>
+              {uniqueAccountNumbers.map((account) => (
+                <option key={account} value={account}>
+                  {account}
+                </option>
+              ))}
+            </select>
+            <select
+              id="processCsv"
+              value={selectedProcessRange}
+              onChange={(e) => setSelectedProcessRange(e.target.value)}
+              className="block w-1/8 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm dark:bg-gray-800 dark:text-gray-200"
+            >
+              <option value="">Select Range</option>
+              {processRanges.map((range) => (
+                <option key={range.label} value={range.label}>
+                  {range.label}
+                </option>
+              ))}
+            </select>
+            <div className="flex gap-5 items-center">
+              <label className="flex items-center">
+                <Checkbox
+                  checked={isAdminOnly}
+                  onChange={(e) => setIsAdminOnly(e.target.checked)}
+                  className="mr-2"
+                />
+                Show Admin Only
+              </label>
 
-                    return (
-                      <TableRow
-                        key={index}
-                        style={{
-                          backgroundColor,
-                          color: textColor,
-                        }}
-                      >
-                        <TableCell>
-                          <div className="flex items-center gap-3">
-                            <Avatar
-                              size="sm"
-                              src={account.profilePicture}
-                              alt={account.name}
-                            />
-                            <div>
-                              <p className="font-semibold">{account.account}</p>
-                              <p className="text-xs text-gray-500">
-                                {account.email}
+              <label className="flex items-center">
+                <Checkbox
+                  checked={isPAaccount}
+                  onChange={(e) => setIsPAaccount(e.target.checked)}
+                  className="mr-2"
+                />
+                Show PA Accounts Only
+              </label>
+
+              <label className="flex items-center">
+                <Checkbox
+                  checked={isEvalAccount}
+                  onChange={(e) => setIsEvalAccount(e.target.checked)}
+                  className="mr-2"
+                />
+                Show Eval Accounts Only
+              </label>
+            </div>
+                {/* add csvs here */}
+            {currentUser.user.role === "admin" && (
+              <Button
+                gradientDuoTone="greenToBlue"
+                onClick={uploadCsvs}
+                disabled={createLoding}
+              >
+                {createLoding ? (
+                  <>
+                    <Spinner size="sm" />
+                    <span className="pl-3">Loading...</span>
+                  </>
+                ) : (
+                  <>
+                    <HiPlusCircle className="mr-2 h-4 w-4" />
+                    Upload CVSs
+                  </>
+                )}
+              </Button>
+            )}
+            <CSVLink
+              {...exportCsv()}
+              className="bg-gradient-to-r from-teal-400 via-teal-500 to-teal-600 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-teal-300 text-white rounded-md px-4 py-2 hover:bg-green-600"
+            >
+              Export CSV
+            </CSVLink>
+            <Button
+              gradientDuoTone="purpleToBlue"
+              onClick={makeSets}
+              disabled={!!accountFilter}
+            >
+              Make Sets
+            </Button>
+            <Button
+              gradientDuoTone="purpleToPink"
+              onClick={clearSets}
+              disabled={!!accountFilter}
+            >
+              Clear Sets
+                </Button>
+                {currentUser.user.role === "admin" && (
+                <Button gradientMonochrome="failure" onClick={deleteAllAccounts}>
+                  Delete All
+                </Button>
+                )}
+          </div>
+
+          {createLoding ? (
+            <div className="flex justify-center items-center h-96">
+              <Spinner size="xl" />
+            </div>
+          ) : (
+            <>
+              <Table hoverable className="shadow-md w-full mt-4">
+                <TableHead>
+                  <TableHeadCell>Account</TableHeadCell>
+                  <TableHeadCell>Account Balance</TableHeadCell>
+                  <TableHeadCell>Account Name</TableHeadCell>
+                  <TableHeadCell>Status</TableHeadCell>
+                  <TableHeadCell>Trailing Threshold</TableHeadCell>
+                  <TableHeadCell>PnL</TableHeadCell>
+                </TableHead>
+                <TableBody>
+                  {setsData.length > 0
+                    ? setsData.map((account, index) => {
+                        const backgroundColor = accountColors[account.name];
+                        const luminance = getLuminance(backgroundColor);
+                        const textColor =
+                          luminance > 160 ? "#000000" : "#FFFFFF";
+
+                        return (
+                          <TableRow
+                            key={account.id}
+                            style={{
+                              backgroundColor,
+                              color: textColor,
+                            }}
+                          >
+                            <TableCell>
+                              <div className="flex items-center gap-3">
+                                <Avatar
+                                  size="sm"
+                                  src={account.profilePicture}
+                                  alt={account.name}
+                                />
+                                <div>
+                                  <p className="font-semibold">
+                                    {account.account}
+                                  </p>
+                                  <p className="text-xs text-gray-500">
+                                    {account.email}
+                                  </p>
+                                </div>
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <p className="font-semibold">
+                                $ {account.accountBalance}
                               </p>
-                            </div>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <p className="font-semibold">
-                            $ {account.accountBalance}
-                          </p>
-                        </TableCell>
-                        <TableCell>
-                          <p className="font-semibold">{account.name}</p>
-                        </TableCell>
-                        <TableCell>
-                          <p className="font-semibold">{account.status}</p>
-                        </TableCell>
-                        <TableCell>
-                          <p className="font-semibold">
-                            $ {account.trailingThreshold}
-                          </p>
-                        </TableCell>
-                        <TableCell>
-                          <p className="font-semibold">{account.PnL}</p>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-            </TableBody>
-          </Table>
+                            </TableCell>
+                            <TableCell>
+                              <p className="font-semibold">{account.name}</p>
+                            </TableCell>
+                            <TableCell>
+                              <p className="font-semibold">{account.status}</p>
+                            </TableCell>
+                            <TableCell>
+                              <p className="font-semibold">
+                                {account.trailingThreshold}
+                              </p>
+                            </TableCell>
+                            <TableCell>
+                              <p className="font-semibold">{account.PnL}</p>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })
+                    : filteredData.map((account, index) => {
+                        const backgroundColor = accountColors[account.name];
+                        const luminance = getLuminance(backgroundColor);
+                        const textColor =
+                          luminance > 160 ? "#000000" : "#FFFFFF";
+
+                        return (
+                          <TableRow
+                            key={index}
+                            style={{
+                              backgroundColor,
+                              color: textColor,
+                            }}
+                          >
+                            <TableCell>
+                              <div className="flex items-center gap-3">
+                                <Avatar
+                                  size="sm"
+                                  src={account.profilePicture}
+                                  alt={account.name}
+                                />
+                                <div>
+                                  <p className="font-semibold">
+                                    {account.account}
+                                  </p>
+                                  <p className="text-xs text-gray-500">
+                                    {account.email}
+                                  </p>
+                                </div>
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <p className="font-semibold">
+                                $ {account.accountBalance}
+                              </p>
+                            </TableCell>
+                            <TableCell>
+                              <p className="font-semibold">{account.name}</p>
+                            </TableCell>
+                            <TableCell>
+                              <p className="font-semibold">{account.status}</p>
+                            </TableCell>
+                            <TableCell>
+                              <p className="font-semibold">
+                                $ {account.trailingThreshold}
+                              </p>
+                            </TableCell>
+                            <TableCell>
+                              <p className="font-semibold">{account.PnL}</p>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                </TableBody>
+              </Table>
+            </>
+          )}
         </>
       )}
     </div>
