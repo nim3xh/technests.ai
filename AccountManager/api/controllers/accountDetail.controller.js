@@ -99,6 +99,16 @@ async function importFromCSVs(req, res) {
         .on("data", (data) => {
           console.log(data); // Log the data for debugging
 
+          // Skip lines that start with "Updated:"
+          if (
+            Object.values(data).some((value) => value.startsWith("Updated:"))
+          ) {
+            console.log(
+              `Skipping line starting with 'Updated:' in file: ${filePath}`
+            );
+            return; // Skip this row
+          }
+
           const account = data.Account || ""; // Safely access Account, default to empty string if undefined
 
           // Skip processing if Account is NULL or empty
@@ -340,20 +350,20 @@ function destroyAll(req, res) {
   models.AccountDetail.destroy({
     where: {}, // No condition means all records will be deleted
     truncate: true, // This will delete all records and reset auto-increment keys
-  })
-      deleteUploads()
-      .then((result) => {
-        res.status(200).json({
-          message: "All account details deleted successfully",
-          deletedRecords: result, // Number of records deleted
-        });
-      })
-      .catch((error) => {
-        res.status(500).json({
-          message: "Something went wrong",
-          error: error,
-        });
+  });
+  deleteUploads()
+    .then((result) => {
+      res.status(200).json({
+        message: "All account details deleted successfully",
+        deletedRecords: result, // Number of records deleted
       });
+    })
+    .catch((error) => {
+      res.status(500).json({
+        message: "Something went wrong",
+        error: error,
+      });
+    });
 }
 
 module.exports = {
