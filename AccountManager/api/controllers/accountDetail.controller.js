@@ -86,110 +86,111 @@ function importFromCSV(req, res) {
     });
 }
 
-async function importFromCSVs(req, res) {
-  const results = [];
-  const files = req.files; // Assuming multiple files are uploaded
-  const failedFiles = []; // To keep track of files that failed
+const processCSV = (filePath) => {
+  return new Promise((resolve, reject) => {
+    const accountNameMap = new Map(); // Map to store base account numbers and their corresponding names
+    const results = [];
 
-  // Function to process a single CSV file
-  const processCSV = (filePath) => {
-    return new Promise((resolve, reject) => {
-      fs.createReadStream(filePath)
-        .pipe(csv())
-        .on("data", (data) => {
-          console.log(data); // Log the data for debugging
+    fs.createReadStream(filePath)
+      .pipe(csv())
+      .on("data", (data) => {
+        // Skip lines that start with "Updated:"
+        if (Object.values(data).some((value) => value.startsWith("Updated:"))) {
+          return; // Skip this row
+        }
 
-          // Skip lines that start with "Updated:"
-          if (
-            Object.values(data).some((value) => value.startsWith("Updated:"))
-          ) {
-            console.log(
-              `Skipping line starting with 'Updated:' in file: ${filePath}`
-            );
-            return; // Skip this row
+        const account = data.Account || ""; // Get the Account field
+        if (!account) return; // Skip rows with no account
+
+        // Extract base account number (removing the last segment after the last dash)
+        const accountParts = account.split("-");
+        let baseAccountNumber = accountParts.slice(0, -1).join("-"); // Base account number (e.g., APEX-182660)
+
+        const isPAAccount = accountParts[0] === "PA"; // Check if the account starts with PA
+        if (isPAAccount) {
+          baseAccountNumber = accountParts.slice(1, -1).join("-"); // Treat PA-APEX-XXXX as APEX-XXXX
+        }
+
+        const accountBalance = parseFloat(
+          data["Account Balance"]
+            ? data["Account Balance"].replace(/,/g, "")
+            : 0
+        );
+        const status = data.Status || "unknown";
+        const trailingThreshold = data["Auto Liquidate Threshold Value"]
+          ? parseFloat(data["Auto Liquidate Threshold Value"].replace(/,/g, ""))
+          : 0;
+        const PnL = data["P&L"] ? parseFloat(data["P&L"].replace(/,/g, "")) : 0;
+
+        // Extract account name
+        let name = "Unknown"; // Default name
+        if (data["Account Name"]) {
+          const accountName = data["Account Name"];
+          const nameParts = accountName.match(/\((.*?)\)/); // Extract name from parenthesis, e.g., "(Kiran Gururaj)"
+          if (nameParts) {
+            name = nameParts[1]; // Set the extracted name
+            accountNameMap.set(baseAccountNumber, name); // Store base account number and name in map
           }
+        }
 
-          const account = data.Account || ""; // Safely access Account, default to empty string if undefined
+        // If a name exists for this base account number, use it
+        if (accountNameMap.has(baseAccountNumber)) {
+          name = accountNameMap.get(baseAccountNumber);
+        }
 
-          // Skip processing if Account is NULL or empty
-          if (!account) {
-            return; // Skip this row if Account is missing or empty
-          }
+        // If the account is prefixed with 'PA-', replace name with the base account's name
+        if (
+          isPAAccount &&
+          accountNameMap.has(baseAccountNumber.replace("PA-", ""))
+        ) {
+          name = accountNameMap.get(baseAccountNumber.replace("PA-", ""));
+        }
 
-          const accountBalance = parseFloat(
-            data["Account Balance"]
-              ? data["Account Balance"].replace(/,/g, "")
-              : 0 // Default to 0 if "Account Balance" is missing
-          );
-          const status = data.Status || "unknown"; // Default to 'unknown' if Status is missing
+        // Prepare the output format
+        const outputAccountNumber = isPAAccount ? account : baseAccountNumber; // Full account number
+        const outputName = baseAccountNumber + " " + name; // Base account name
 
-          // Safely extract account number and name
-          let accountNumber = "";
-          let name = "";
-
-          if (data["Account Name"]) {
-            const accountNameParts = data["Account Name"].split(" (");
-            accountNumber = accountNameParts[0];
-            name = accountNameParts[1] ? accountNameParts[1].slice(0, -1) : ""; // Remove the closing parenthesis
-          } else {
-            // Handle missing "Account Name" by constructing a name from the Account column
-            let accountParts = account.split("-"); // Split Account by hyphen
-
-            // If the first part is "PA", skip it
-            if (accountParts[0] === "PA") {
-              accountParts = accountParts.slice(1); // Ignore the first part
-            }
-
-            // Check if there are at least two parts after the prefix is removed
-            if (accountParts.length >= 2) {
-              accountNumber = `${accountParts[0]}-${accountParts[1]}`; // Construct account number from the relevant parts
-              name = `${accountNumber} (Unknown)`; // Append "(Unknown)" as name
-            } else {
-              accountNumber = account; // Fallback to the full account if the expected format is not found
-              name = `${account} (Unknown)`; // Append "(Unknown)"
-            }
-          }
-
-          const trailingThreshold = data["Auto Liquidate Threshold Value"]
-            ? parseFloat(
-                data["Auto Liquidate Threshold Value"].replace(/,/g, "")
-              )
-            : 0; // Default to 0 if missing
-
-          const PnL = data["P&L"]
-            ? parseFloat(data["P&L"].replace(/,/g, ""))
-            : 0; // Default to 0 if missing
-
-          results.push({
-            account,
-            accountBalance,
-            status,
-            accountNumber,
-            name,
-            trailingThreshold,
-            PnL,
-          });
-        })
-        .on("end", () => {
-          console.log(`File processed successfully: ${filePath}`);
-          resolve();
-        })
-        .on("error", (error) => {
-          console.error(`Failed to process file: ${filePath}`, error);
-          failedFiles.push(filePath); // Add the failed file to the list
-          resolve(); // Continue to the next file
+        results.push({
+          account: account, // Keep the original account number (e.g., PA-APEX-182660-07 or APEX-182660-07)
+          accountBalance,
+          status,
+          accountNumber: baseAccountNumber, // Base account number (e.g., APEX-182660)
+          name: outputName, // Base account name
+          trailingThreshold,
+          PnL,
         });
-    });
-  };
+      })
+      .on("end", () => {
+        console.log(`File processed successfully: ${filePath}`);
+        resolve(results);
+      })
+      .on("error", (error) => {
+        console.error(`Failed to process file: ${filePath}`, error);
+        resolve([]); // In case of error, return an empty result
+      });
+  });
+};
 
-  // Create an array of promises for each file
-  const promises = files.map((file) => processCSV(file.path)); // Adjust based on how you upload files
 
-  // Wait for all files to be processed
-  await Promise.all(promises);
+
+// Main function to import data from multiple CSVs
+async function importFromCSVs(req, res) {
+  const files = req.files;
+  const failedFiles = [];
+  const allResults = [];
+
+  // Process each CSV file and collect results
+  for (const file of files) {
+    try {
+      const results = await processCSV(file.path);
+      allResults.push(...results); // Merge results from all files
+    } catch (error) {
+      failedFiles.push(file.path); // Track failed files
+    }
+  }
 
   try {
-    // Retrieve existing accounts from the database to avoid duplicates
+    // Retrieve existing accounts to avoid duplicates
     const existingAccounts = await models.AccountDetail.findAll({
       attributes: ["account"], // Adjust according to your model
       raw: true,
@@ -199,10 +200,11 @@ async function importFromCSVs(req, res) {
     );
 
     // Filter results to only include new accounts
-    const newAccounts = results.filter(
+    const newAccounts = allResults.filter(
       (result) => !existingAccountSet.has(result.account)
     );
-    // Save all new results to the database
+
+    // Save new accounts to the database
     if (newAccounts.length > 0) {
       await models.AccountDetail.bulkCreate(newAccounts);
     }
@@ -210,7 +212,7 @@ async function importFromCSVs(req, res) {
     res.status(201).json({
       message: "Accounts imported successfully",
       importedAccounts: newAccounts,
-      failedFiles, // Include the failed files in the response
+      failedFiles,
     });
   } catch (error) {
     res.status(500).json({
@@ -219,6 +221,7 @@ async function importFromCSVs(req, res) {
     });
   }
 }
+
 
 function show(req, res) {
   const id = req.params.id;
