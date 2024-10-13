@@ -113,9 +113,11 @@ export default function DashAccountDetails() {
 
         await axios.delete(`${BaseURL}accountDetails/`, { headers }); // Send headers with the delete request
         alert("All account details deleted successfully.");
-        
+
         setCombinedData([]); // Clear the data in the frontend after deletion
         setFilteredData([]); // Clear the filtered data as well
+        setPaAccountsCount(0);
+        setNonPaAccountsCount(0);
       } catch (error) {
         console.error("Error deleting all accounts:", error);
         alert("Failed to delete all accounts.");
@@ -416,7 +418,6 @@ export default function DashAccountDetails() {
     }
   };
 
-
   const encounteredAccounts = new Set();
 
   const uniqueAccountNumbers = combinedData
@@ -505,7 +506,8 @@ export default function DashAccountDetails() {
       </Breadcrumb>
 
       <h1 className="mt-3 mb-3 text-left font-semibold text-xl">
-        All Account Details | Updated At: {formattedDateTime && `(${formattedDateTime})`}
+        All Account Details | Updated At:{" "}
+        {formattedDateTime && `(${formattedDateTime})`}
       </h1>
       {loading ? (
         <div className="flex justify-center items-center h-96">
@@ -587,7 +589,7 @@ export default function DashAccountDetails() {
                 Show Eval Accounts Only
               </label>
             </div>
-                {/* add csvs here */}
+            {/* add csvs here */}
             {currentUser.user.role === "admin" && (
               <Button
                 gradientDuoTone="greenToBlue"
@@ -626,12 +628,12 @@ export default function DashAccountDetails() {
               disabled={!!accountFilter}
             >
               Clear Sets
-                </Button>
-                {currentUser.user.role === "admin" && (
-                <Button gradientMonochrome="failure" onClick={deleteAllAccounts}>
-                  Delete All
-                </Button>
-                )}
+            </Button>
+            {currentUser.user.role === "admin" && (
+              <Button gradientMonochrome="failure" onClick={deleteAllAccounts}>
+                Delete All
+              </Button>
+            )}
           </div>
 
           {createLoding ? (

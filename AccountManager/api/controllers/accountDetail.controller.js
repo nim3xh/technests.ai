@@ -117,6 +117,10 @@ const processCSV = (filePath) => {
             : 0
         );
         const status = data.Status || "unknown";
+
+        // Skip rows where status is "unknown"
+        if (status.toLowerCase() === "unknown") return; // Skip this row
+
         const trailingThreshold = data["Auto Liquidate Threshold Value"]
           ? parseFloat(data["Auto Liquidate Threshold Value"].replace(/,/g, ""))
           : 0;
@@ -170,7 +174,6 @@ const processCSV = (filePath) => {
       });
   });
 };
-
 
 
 // Main function to import data from multiple CSVs
