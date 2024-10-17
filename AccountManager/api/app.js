@@ -9,6 +9,7 @@ const usersRouter = require("./routes/users.route");
 const accountDetailRouter = require("./routes/accountDetail.route");
 const authRouter = require("./routes/auth.route");
 const userCredentialsRouter = require("./routes/userCredentials.route");
+const tradeRouter = require("./routes/trade.route");
 
 // Define your allowed origin
 const allowedOrigin = "http://localhost:5173";
@@ -29,6 +30,7 @@ app.use("/users", usersRouter);
 app.use("/accountDetails", accountDetailRouter);
 app.use("/auth", authRouter);
 app.use("/userCredentials", userCredentialsRouter);
+app.use("/trades", tradeRouter);
 
 
 // Optional: A basic health check route
