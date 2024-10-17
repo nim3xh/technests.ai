@@ -62,7 +62,11 @@ export default function Header() {
             }
           >
             <Dropdown.Header>
-              <span className="block text-sm">@{currentUser.username}</span>
+              <span className="block text-sm">
+                @{currentUser.user.FirstName + " " + currentUser.user.LastName}
+                <br></br>
+                <i>{currentUser.user.email }</i>
+              </span>
               <span className="block text-sm font-medium truncate">
                 {currentUser.email}
               </span>
