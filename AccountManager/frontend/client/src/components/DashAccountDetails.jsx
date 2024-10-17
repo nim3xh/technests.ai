@@ -52,12 +52,17 @@ const getLuminance = (hex) => {
 
 const assignColorsToAccounts = (data) => {
   const accountColors = {};
+  const colors = ["#808080", "#D3D3D3"]; // Gray and light gray
+  let colorIndex = 0;
+
   data.forEach((item) => {
     const accountName = item.name;
     if (!accountColors[accountName]) {
-      accountColors[accountName] = generateRandomColor();
+      accountColors[accountName] = colors[colorIndex];
+      colorIndex = (colorIndex + 1) % colors.length; // Alternate between gray and light gray
     }
   });
+
   return accountColors;
 };
 
@@ -142,22 +147,38 @@ export default function DashAccountDetails() {
 
     const sets = [];
     const numRowsPerAccount = 4; // Number of rows per account
+    const colors = ["#808080", "#D3D3D3", "#A9A9A9", "#C0C0C0"]; // List of colors to choose from
 
     // Get the maximum number of accounts for a user
     const maxGroupSize = Math.max(
       ...Object.values(groupedAccounts).map((group) => group.length)
     );
 
+    // Color index to keep track of which color to use next
+    let colorIndex = 0;
+
     // Create sets by appending each user's accounts in the desired order
     for (let i = 0; i < maxGroupSize; i++) {
       Object.keys(groupedAccounts).forEach((user) => {
         const userAccounts = groupedAccounts[user];
-        // Add the specified number of rows for each account if available
-        for (let j = 0; j < numRowsPerAccount; j++) {
-          const accountIndex = i * numRowsPerAccount + j;
-          if (userAccounts[accountIndex]) {
-            sets.push(userAccounts[accountIndex]);
-          }
+
+        // Get only available accounts for the current iteration
+        const availableAccounts = userAccounts.slice(
+          i * numRowsPerAccount,
+          (i + 1) * numRowsPerAccount
+        );
+
+        // If there are available accounts, assign color and add them to sets
+        if (availableAccounts.length > 0) {
+          // Assign the current color to all available accounts
+          const color = colors[colorIndex % colors.length]; // Get the color for the current set
+
+          availableAccounts.forEach((account) => {
+            const accountWithColor = { ...account, color }; // Assign color to account
+            sets.push(accountWithColor);
+          });
+
+          colorIndex++; // Move to the next color for the next set
         }
       });
     }
@@ -654,17 +675,17 @@ export default function DashAccountDetails() {
                 <TableBody>
                   {setsData.length > 0
                     ? setsData.map((account, index) => {
-                        const backgroundColor = accountColors[account.name];
-                        const luminance = getLuminance(backgroundColor);
+                        const backgroundColor = account.color; // Use the assigned color from account
+                        const luminance = getLuminance(backgroundColor); // Calculate luminance for text color
                         const textColor =
-                          luminance > 160 ? "#000000" : "#FFFFFF";
+                          luminance > 160 ? "#000000" : "#FFFFFF"; // Determine text color based on luminance
 
                         return (
                           <TableRow
-                            key={account.id}
+                            key={account.id} // Unique key for each row
                             style={{
-                              backgroundColor,
-                              color: textColor,
+                              backgroundColor: backgroundColor, // Ensure the color is applied correctly
+                              color: textColor, // Apply the calculated text color
                             }}
                           >
                             <TableCell>
@@ -686,7 +707,7 @@ export default function DashAccountDetails() {
                             </TableCell>
                             <TableCell>
                               <p className="font-semibold">
-                                $ {account.accountBalance}
+                                ${account.accountBalance}
                               </p>
                             </TableCell>
                             <TableCell>
