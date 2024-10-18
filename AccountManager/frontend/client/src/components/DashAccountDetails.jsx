@@ -32,7 +32,7 @@ import {
   HiUserAdd,
 } from "react-icons/hi";
 import { useSelector } from "react-redux";
-import { debounce } from "lodash";
+import { debounce, set } from "lodash";
 import axios from "axios";
 import { CSVLink } from "react-csv";
 import { CiViewList } from "react-icons/ci";
@@ -98,6 +98,7 @@ export default function DashAccountDetails() {
   const [isAdminOnlyCus, setIsAdminOnlyCus] = useState(false);
   const [isPAaccountCus, setIsPAaccountCus] = useState(false);
   const [isEvalAccountCus, setIsEvalAccountCus] = useState(false);
+  const [showSetsData, setShowSetsData] = useState(false); // State to control the visibility of setsData table
 
   const processRanges = [
     { label: "47000", min: 46750, max: 47249 },
@@ -147,6 +148,7 @@ export default function DashAccountDetails() {
   const clearSets = () => {
     setSetsMade(false); // Switch back to show the Make Sets button
     setSetsData([]); // Reset the sets data to an empty array
+    setShowSetsData(false); // Hide the setsData table
   };
 
   const makeSets = () => {
@@ -200,6 +202,7 @@ export default function DashAccountDetails() {
     }
 
     setSetsData(sets);
+    setShowSetsData(true); // Show setsData table
   };
 
   const mergeData = (users, accountDetails) => {
@@ -648,8 +651,6 @@ export default function DashAccountDetails() {
     }
   }, [showModal]);
 
-  
-
   return (
     <div className="p-3 w-full">
       <Breadcrumb aria-label="Default breadcrumb example">
@@ -808,125 +809,165 @@ export default function DashAccountDetails() {
             </div>
           ) : (
             <>
-              <Table hoverable className="shadow-md w-full mt-4">
-                <TableHead>
-                  <TableHeadCell>Account</TableHeadCell>
-                  <TableHeadCell>Account Balance</TableHeadCell>
-                  <TableHeadCell>Account Name</TableHeadCell>
-                  <TableHeadCell>Status</TableHeadCell>
-                  <TableHeadCell>Trailing Threshold</TableHeadCell>
-                  <TableHeadCell>PnL</TableHeadCell>
-                </TableHead>
-                <TableBody>
-                  {setsData.length > 0
-                    ? setsData.map((account, index) => {
-                        const backgroundColor = account.color; // Use the assigned color from account
-                        const luminance = getLuminance(backgroundColor); // Calculate luminance for text color
-                        const textColor =
-                          luminance > 160 ? "#000000" : "#FFFFFF"; // Determine text color based on luminance
+              <div className="tables-container">
+                {/* Show setsData table if showSetsData is true */}
+                {showSetsData && (
+                  <Table hoverable className="shadow-md w-full mt-4">
+                    <TableHead>
+                      <TableHeadCell>Account</TableHeadCell>
+                      <TableHeadCell>Account Balance</TableHeadCell>
+                      <TableHeadCell>Account Name</TableHeadCell>
+                      <TableHeadCell>Status</TableHeadCell>
+                      <TableHeadCell>Trailing Threshold</TableHeadCell>
+                      <TableHeadCell>PnL</TableHeadCell>
+                    </TableHead>
+                    <TableBody>
+                      {setsData.length > 0 ? (
+                        setsData.map((account) => {
+                          const backgroundColor = account.color;
+                          const luminance = getLuminance(backgroundColor);
+                          const textColor =
+                            luminance > 160 ? "#000000" : "#FFFFFF";
 
-                        return (
-                          <TableRow
-                            key={account.id} // Unique key for each row
-                            style={{
-                              backgroundColor: backgroundColor, // Ensure the color is applied correctly
-                              color: textColor, // Apply the calculated text color
-                            }}
-                          >
-                            <TableCell>
-                              <div className="flex items-center gap-3">
-                                <Avatar
-                                  size="sm"
-                                  src={account.profilePicture}
-                                  alt={account.name}
-                                />
-                                <div>
-                                  <p className="font-semibold">
-                                    {account.account}
-                                  </p>
-                                  <p className="text-xs text-gray-500">
-                                    {account.email}
-                                  </p>
+                          return (
+                            <TableRow
+                              key={account.id}
+                              style={{
+                                backgroundColor,
+                                color: textColor,
+                              }}
+                            >
+                              <TableCell>
+                                <div className="flex items-center gap-3">
+                                  <Avatar
+                                    size="sm"
+                                    src={account.profilePicture}
+                                    alt={account.name}
+                                  />
+                                  <div>
+                                    <p className="font-semibold">
+                                      {account.account}
+                                    </p>
+                                    <p className="text-xs text-gray-500">
+                                      {account.email}
+                                    </p>
+                                  </div>
                                 </div>
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <p className="font-semibold">
-                                $ {account.accountBalance}
-                              </p>
-                            </TableCell>
-                            <TableCell>
-                              <p className="font-semibold">{account.name}</p>
-                            </TableCell>
-                            <TableCell>
-                              <p className="font-semibold">{account.status}</p>
-                            </TableCell>
-                            <TableCell>
-                              <p className="font-semibold">
-                                $ {account.trailingThreshold}
-                              </p>
-                            </TableCell>
-                            <TableCell>
-                              <p className="font-semibold">{account.PnL}</p>
-                            </TableCell>
-                          </TableRow>
-                        );
-                      })
-                    : filteredData.map((account, index) => {
-                        const backgroundColor = accountColors[account.name];
-                        const luminance = getLuminance(backgroundColor);
-                        const textColor =
-                          luminance > 160 ? "#000000" : "#FFFFFF";
+                              </TableCell>
+                              <TableCell>
+                                <p className="font-semibold">
+                                  ${account.accountBalance}
+                                </p>
+                              </TableCell>
+                              <TableCell>
+                                <p className="font-semibold">{account.name}</p>
+                              </TableCell>
+                              <TableCell>
+                                <p className="font-semibold">
+                                  {account.status}
+                                </p>
+                              </TableCell>
+                              <TableCell>
+                                <p className="font-semibold">
+                                  ${account.trailingThreshold}
+                                </p>
+                              </TableCell>
+                              <TableCell>
+                                <p className="font-semibold">{account.PnL}</p>
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })
+                      ) : (
+                        <TableRow>
+                          <TableCell colSpan={6} className="text-center">
+                            No data available for setsData.
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                )}
 
-                        return (
-                          <TableRow
-                            key={index}
-                            style={{
-                              backgroundColor,
-                              color: textColor,
-                            }}
-                          >
-                            <TableCell>
-                              <div className="flex items-center gap-3">
-                                <Avatar
-                                  size="sm"
-                                  src={account.profilePicture}
-                                  alt={account.name}
-                                />
-                                <div>
-                                  <p className="font-semibold">
-                                    {account.account}
-                                  </p>
-                                  <p className="text-xs text-gray-500">
-                                    {account.email}
-                                  </p>
+                {/* Show filteredData table if setsData is not displayed */}
+                {!showSetsData && (
+                  <Table hoverable className="shadow-md w-full mt-4">
+                    <TableHead>
+                      <TableHeadCell>Account</TableHeadCell>
+                      <TableHeadCell>Account Balance</TableHeadCell>
+                      <TableHeadCell>Account Name</TableHeadCell>
+                      <TableHeadCell>Status</TableHeadCell>
+                      <TableHeadCell>Trailing Threshold</TableHeadCell>
+                      <TableHeadCell>PnL</TableHeadCell>
+                    </TableHead>
+                    <TableBody>
+                      {filteredData.length > 0 ? (
+                        filteredData.map((account, index) => {
+                          const backgroundColor = accountColors[account.name];
+                          const luminance = getLuminance(backgroundColor);
+                          const textColor =
+                            luminance > 160 ? "#000000" : "#FFFFFF";
+
+                          return (
+                            <TableRow
+                              key={index}
+                              style={{
+                                backgroundColor,
+                                color: textColor,
+                              }}
+                            >
+                              <TableCell>
+                                <div className="flex items-center gap-3">
+                                  <Avatar
+                                    size="sm"
+                                    src={account.profilePicture}
+                                    alt={account.name}
+                                  />
+                                  <div>
+                                    <p className="font-semibold">
+                                      {account.account}
+                                    </p>
+                                    <p className="text-xs text-gray-500">
+                                      {account.email}
+                                    </p>
+                                  </div>
                                 </div>
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <p className="font-semibold">
-                                $ {account.accountBalance}
-                              </p>
-                            </TableCell>
-                            <TableCell>
-                              <p className="font-semibold">{account.name}</p>
-                            </TableCell>
-                            <TableCell>
-                              <p className="font-semibold">{account.status}</p>
-                            </TableCell>
-                            <TableCell>
-                              <p className="font-semibold">
-                                $ {account.trailingThreshold}
-                              </p>
-                            </TableCell>
-                            <TableCell>
-                              <p className="font-semibold">{account.PnL}</p>
-                            </TableCell>
-                          </TableRow>
-                        );
-                      })}
-                </TableBody>
-              </Table>
+                              </TableCell>
+                              <TableCell>
+                                <p className="font-semibold">
+                                  ${account.accountBalance}
+                                </p>
+                              </TableCell>
+                              <TableCell>
+                                <p className="font-semibold">{account.name}</p>
+                              </TableCell>
+                              <TableCell>
+                                <p className="font-semibold">
+                                  {account.status}
+                                </p>
+                              </TableCell>
+                              <TableCell>
+                                <p className="font-semibold">
+                                  ${account.trailingThreshold}
+                                </p>
+                              </TableCell>
+                              <TableCell>
+                                <p className="font-semibold">{account.PnL}</p>
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })
+                      ) : (
+                        <TableRow>
+                          <TableCell colSpan={6} className="text-center">
+                            No data available for filteredData.
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                )}
+              </div>
             </>
           )}
         </>
