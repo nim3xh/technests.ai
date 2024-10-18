@@ -1,4 +1,11 @@
-import { React, useState, useRef, useEffect, useCallback } from "react";
+import {
+  React,
+  useState,
+  useRef,
+  useEffect,
+  useCallback,
+  useMemo,
+} from "react";
 import { HiHome } from "react-icons/hi";
 import {
   Table,
@@ -25,7 +32,7 @@ import {
   HiUserAdd,
 } from "react-icons/hi";
 import { useSelector } from "react-redux";
-import { debounce } from "lodash";
+import { debounce, set } from "lodash";
 import axios from "axios";
 import { CSVLink } from "react-csv";
 import { CiViewList } from "react-icons/ci";
@@ -91,6 +98,7 @@ export default function DashAccountDetails() {
   const [isAdminOnlyCus, setIsAdminOnlyCus] = useState(false);
   const [isPAaccountCus, setIsPAaccountCus] = useState(false);
   const [isEvalAccountCus, setIsEvalAccountCus] = useState(false);
+  const [showSetsData, setShowSetsData] = useState(false); // State to control the visibility of setsData table
 
   const processRanges = [
     { label: "47000", min: 46750, max: 47249 },
@@ -140,6 +148,7 @@ export default function DashAccountDetails() {
   const clearSets = () => {
     setSetsMade(false); // Switch back to show the Make Sets button
     setSetsData([]); // Reset the sets data to an empty array
+    setShowSetsData(false); // Hide the setsData table
   };
 
   const makeSets = () => {
@@ -193,6 +202,7 @@ export default function DashAccountDetails() {
     }
 
     setSetsData(sets);
+    setShowSetsData(true); // Show setsData table
   };
 
   const mergeData = (users, accountDetails) => {
@@ -527,103 +537,119 @@ export default function DashAccountDetails() {
     : "";
 
   /* Customized Csv part */
-  const columns = [
-    { label: "Account", value: "account" },
-    { label: "Account Balance", value: "accountBalance" },
-    { label: "Account Name", value: "accountName" },
-    { label: "Status", value: "status" },
-    { label: "Trailing Threshold", value: "trailingThreshold" },
-    { label: "PnL", value: "pnl" },
-  ];
-
-  const handleCheckboxChange = (value) => {
-    setSelectedColumns((prevSelectedColumns) =>
-      prevSelectedColumns.includes(value)
-        ? prevSelectedColumns.filter((col) => col !== value)
-        : [...prevSelectedColumns, value]
-    );
-  };
-
-  const customExports = (selectedColumns) => {
-    // Choose between filteredData or setsData
-    const dataToExport = setsData.length > 0 ? setsData : filteredData;
-
-    // Define mappings for the columns
-    const columnMappings = {
-      account: { label: "Account", key: "Account" },
-      accountBalance: { label: "Account Balance", key: "AccountBalance" },
-      accountName: { label: "Account Name", key: "AccountName" },
-      status: { label: "Status", key: "Status" },
-      trailingThreshold: {
-        label: "Trailing Threshold",
-        key: "TrailingThreshold",
-      },
-      pnl: { label: "PnL", key: "PnL" },
-    };
-
-    // Filter headers based on selected columns
-    const headers = selectedColumns.map((col) => columnMappings[col]);
-
-    // Filter data based on selected columns
-    const csvData = dataToExport.map((account) => {
-      const row = {};
-      selectedColumns.forEach((col) => {
-        if (col === "accountName") {
-          row[
-            columnMappings[col].key
-          ] = `${account.accountNumber} (${account.name})`; // Handle special case for accountName
-        } else {
-          row[columnMappings[col].key] = account[col];
-        }
-      });
-      return row;
-    });
-
-    return { data: csvData, headers, filename: generateCsvFilename() };
-  };
-
-  const handleExport = (exportData) => {
-    const { data, headers, filename } = exportData;
-
-    // Convert data to CSV format
-    const csvContent = [
-      headers.map((header) => header.label).join(","), // CSV headers
-      ...data.map(
-        (row) =>
-          headers
-            .map((header) => JSON.stringify(row[header.key] || ""))
-            .join(",") // CSV rows
-      ),
-    ].join("\n");
-
-    // Create a blob and a link to download the CSV
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    const link = document.createElement("a");
-    const url = URL.createObjectURL(blob);
-
-    link.setAttribute("href", url);
-    link.setAttribute("download", filename);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link); // Clean up
-  };
-
-  // Reset selection when modal is closed
-  useEffect(() => {
-    if (!showModal) {
-      resetSelections();
-    }
-  }, [showModal]);
+  // Column definitions for the table
+  const columns = useMemo(
+    () => [
+      { label: "Account", value: "account" },
+      { label: "Account Balance", value: "accountBalance" },
+      { label: "Account Name", value: "accountName" },
+      { label: "Status", value: "status" },
+      { label: "Trailing Threshold", value: "trailingThreshold" },
+      { label: "PnL", value: "pnl" },
+    ],
+    []
+  );
 
   // Function to reset all selections
-  const resetSelections = () => {
+  const resetSelections = useCallback(() => {
     setSelectedColumns([]); // Reset column selections
     setAccountFilter(""); // Reset account filter
     setSelectedProcessRange(""); // Reset process range selection
     setIsAdminOnlyCus(false); // Reset Admin Only checkbox
     setIsPAaccountCus(false); // Reset PA Accounts Only checkbox
     setIsEvalAccountCus(false); // Reset Eval Accounts Only checkbox
-  };
+  }, []);
+
+  // Handle checkbox changes for column selections
+  const handleCheckboxChange = useCallback((value) => {
+    setSelectedColumns((prevSelectedColumns) => {
+      const isSelected = prevSelectedColumns.includes(value);
+      return isSelected
+        ? prevSelectedColumns.filter((col) => col !== value)
+        : [...prevSelectedColumns, value];
+    });
+  }, []);
+
+  // Function to prepare data for export based on selected columns
+  const customExports = useCallback(
+    (selectedColumns) => {
+      // Choose between filteredData or setsData
+      const dataToExport = setsData.length > 0 ? setsData : filteredData;
+
+      // Define mappings for the columns
+      const columnMappings = {
+        account: { label: "Account", key: "Account" },
+        accountBalance: { label: "Account Balance", key: "AccountBalance" },
+        accountName: { label: "Account Name", key: "AccountName" },
+        status: { label: "Status", key: "Status" },
+        trailingThreshold: {
+          label: "Trailing Threshold",
+          key: "TrailingThreshold",
+        },
+        pnl: { label: "PnL", key: "PnL" },
+      };
+
+      // Filter headers based on selected columns
+      const headers = selectedColumns.map((col) => columnMappings[col]);
+
+      // Filter data based on selected columns
+      const csvData = dataToExport.map((account) => {
+        const row = {};
+        selectedColumns.forEach((col) => {
+          if (col === "accountName") {
+            row[
+              columnMappings[col].key
+            ] = `${account.accountNumber} (${account.name})`; // Handle special case for accountName
+          } else {
+            row[columnMappings[col].key] = account[col];
+          }
+        });
+        return row;
+      });
+
+      return { data: csvData, headers, filename: generateCsvFilename() };
+    },
+    [setsData, filteredData]
+  );
+
+  // Handle exporting of the data
+  const handleExport = useCallback(
+    (exportData) => {
+      const { data, headers, filename } = exportData;
+
+      // Convert data to CSV format
+      const csvContent = [
+        headers.map((header) => header.label).join(","), // CSV headers
+        ...data.map(
+          (row) =>
+            headers
+              .map((header) => JSON.stringify(row[header.key] || ""))
+              .join(",") // CSV rows
+        ),
+      ].join("\n");
+
+      // Create a blob and a link to download the CSV
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const link = document.createElement("a");
+      const url = URL.createObjectURL(blob);
+
+      link.setAttribute("href", url);
+      link.setAttribute("download", filename);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link); // Clean up
+      resetSelections();
+      setShowModal(false);
+    },
+    [resetSelections]
+  );
+
+  // Reset selection when modal is closed
+  useEffect(() => {
+    if (!showModal) {
+      // resetSelections();
+    }
+  }, [showModal]);
 
   return (
     <div className="p-3 w-full">
@@ -783,125 +809,165 @@ export default function DashAccountDetails() {
             </div>
           ) : (
             <>
-              <Table hoverable className="shadow-md w-full mt-4">
-                <TableHead>
-                  <TableHeadCell>Account</TableHeadCell>
-                  <TableHeadCell>Account Balance</TableHeadCell>
-                  <TableHeadCell>Account Name</TableHeadCell>
-                  <TableHeadCell>Status</TableHeadCell>
-                  <TableHeadCell>Trailing Threshold</TableHeadCell>
-                  <TableHeadCell>PnL</TableHeadCell>
-                </TableHead>
-                <TableBody>
-                  {setsData.length > 0
-                    ? setsData.map((account, index) => {
-                        const backgroundColor = account.color; // Use the assigned color from account
-                        const luminance = getLuminance(backgroundColor); // Calculate luminance for text color
-                        const textColor =
-                          luminance > 160 ? "#000000" : "#FFFFFF"; // Determine text color based on luminance
+              <div className="tables-container">
+                {/* Show setsData table if showSetsData is true */}
+                {showSetsData && (
+                  <Table hoverable className="shadow-md w-full mt-4">
+                    <TableHead>
+                      <TableHeadCell>Account</TableHeadCell>
+                      <TableHeadCell>Account Balance</TableHeadCell>
+                      <TableHeadCell>Account Name</TableHeadCell>
+                      <TableHeadCell>Status</TableHeadCell>
+                      <TableHeadCell>Trailing Threshold</TableHeadCell>
+                      <TableHeadCell>PnL</TableHeadCell>
+                    </TableHead>
+                    <TableBody>
+                      {setsData.length > 0 ? (
+                        setsData.map((account) => {
+                          const backgroundColor = account.color;
+                          const luminance = getLuminance(backgroundColor);
+                          const textColor =
+                            luminance > 160 ? "#000000" : "#FFFFFF";
 
-                        return (
-                          <TableRow
-                            key={account.id} // Unique key for each row
-                            style={{
-                              backgroundColor: backgroundColor, // Ensure the color is applied correctly
-                              color: textColor, // Apply the calculated text color
-                            }}
-                          >
-                            <TableCell>
-                              <div className="flex items-center gap-3">
-                                <Avatar
-                                  size="sm"
-                                  src={account.profilePicture}
-                                  alt={account.name}
-                                />
-                                <div>
-                                  <p className="font-semibold">
-                                    {account.account}
-                                  </p>
-                                  <p className="text-xs text-gray-500">
-                                    {account.email}
-                                  </p>
+                          return (
+                            <TableRow
+                              key={account.id}
+                              style={{
+                                backgroundColor,
+                                color: textColor,
+                              }}
+                            >
+                              <TableCell>
+                                <div className="flex items-center gap-3">
+                                  <Avatar
+                                    size="sm"
+                                    src={account.profilePicture}
+                                    alt={account.name}
+                                  />
+                                  <div>
+                                    <p className="font-semibold">
+                                      {account.account}
+                                    </p>
+                                    <p className="text-xs text-gray-500">
+                                      {account.email}
+                                    </p>
+                                  </div>
                                 </div>
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <p className="font-semibold">
-                                $ {account.accountBalance}
-                              </p>
-                            </TableCell>
-                            <TableCell>
-                              <p className="font-semibold">{account.name}</p>
-                            </TableCell>
-                            <TableCell>
-                              <p className="font-semibold">{account.status}</p>
-                            </TableCell>
-                            <TableCell>
-                              <p className="font-semibold">
-                                $ {account.trailingThreshold}
-                              </p>
-                            </TableCell>
-                            <TableCell>
-                              <p className="font-semibold">{account.PnL}</p>
-                            </TableCell>
-                          </TableRow>
-                        );
-                      })
-                    : filteredData.map((account, index) => {
-                        const backgroundColor = accountColors[account.name];
-                        const luminance = getLuminance(backgroundColor);
-                        const textColor =
-                          luminance > 160 ? "#000000" : "#FFFFFF";
+                              </TableCell>
+                              <TableCell>
+                                <p className="font-semibold">
+                                  ${account.accountBalance}
+                                </p>
+                              </TableCell>
+                              <TableCell>
+                                <p className="font-semibold">{account.name}</p>
+                              </TableCell>
+                              <TableCell>
+                                <p className="font-semibold">
+                                  {account.status}
+                                </p>
+                              </TableCell>
+                              <TableCell>
+                                <p className="font-semibold">
+                                  ${account.trailingThreshold}
+                                </p>
+                              </TableCell>
+                              <TableCell>
+                                <p className="font-semibold">{account.PnL}</p>
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })
+                      ) : (
+                        <TableRow>
+                          <TableCell colSpan={6} className="text-center">
+                            No data available for setsData.
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                )}
 
-                        return (
-                          <TableRow
-                            key={index}
-                            style={{
-                              backgroundColor,
-                              color: textColor,
-                            }}
-                          >
-                            <TableCell>
-                              <div className="flex items-center gap-3">
-                                <Avatar
-                                  size="sm"
-                                  src={account.profilePicture}
-                                  alt={account.name}
-                                />
-                                <div>
-                                  <p className="font-semibold">
-                                    {account.account}
-                                  </p>
-                                  <p className="text-xs text-gray-500">
-                                    {account.email}
-                                  </p>
+                {/* Show filteredData table if setsData is not displayed */}
+                {!showSetsData && (
+                  <Table hoverable className="shadow-md w-full mt-4">
+                    <TableHead>
+                      <TableHeadCell>Account</TableHeadCell>
+                      <TableHeadCell>Account Balance</TableHeadCell>
+                      <TableHeadCell>Account Name</TableHeadCell>
+                      <TableHeadCell>Status</TableHeadCell>
+                      <TableHeadCell>Trailing Threshold</TableHeadCell>
+                      <TableHeadCell>PnL</TableHeadCell>
+                    </TableHead>
+                    <TableBody>
+                      {filteredData.length > 0 ? (
+                        filteredData.map((account, index) => {
+                          const backgroundColor = accountColors[account.name];
+                          const luminance = getLuminance(backgroundColor);
+                          const textColor =
+                            luminance > 160 ? "#000000" : "#FFFFFF";
+
+                          return (
+                            <TableRow
+                              key={index}
+                              style={{
+                                backgroundColor,
+                                color: textColor,
+                              }}
+                            >
+                              <TableCell>
+                                <div className="flex items-center gap-3">
+                                  <Avatar
+                                    size="sm"
+                                    src={account.profilePicture}
+                                    alt={account.name}
+                                  />
+                                  <div>
+                                    <p className="font-semibold">
+                                      {account.account}
+                                    </p>
+                                    <p className="text-xs text-gray-500">
+                                      {account.email}
+                                    </p>
+                                  </div>
                                 </div>
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <p className="font-semibold">
-                                $ {account.accountBalance}
-                              </p>
-                            </TableCell>
-                            <TableCell>
-                              <p className="font-semibold">{account.name}</p>
-                            </TableCell>
-                            <TableCell>
-                              <p className="font-semibold">{account.status}</p>
-                            </TableCell>
-                            <TableCell>
-                              <p className="font-semibold">
-                                $ {account.trailingThreshold}
-                              </p>
-                            </TableCell>
-                            <TableCell>
-                              <p className="font-semibold">{account.PnL}</p>
-                            </TableCell>
-                          </TableRow>
-                        );
-                      })}
-                </TableBody>
-              </Table>
+                              </TableCell>
+                              <TableCell>
+                                <p className="font-semibold">
+                                  ${account.accountBalance}
+                                </p>
+                              </TableCell>
+                              <TableCell>
+                                <p className="font-semibold">{account.name}</p>
+                              </TableCell>
+                              <TableCell>
+                                <p className="font-semibold">
+                                  {account.status}
+                                </p>
+                              </TableCell>
+                              <TableCell>
+                                <p className="font-semibold">
+                                  ${account.trailingThreshold}
+                                </p>
+                              </TableCell>
+                              <TableCell>
+                                <p className="font-semibold">{account.PnL}</p>
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })
+                      ) : (
+                        <TableRow>
+                          <TableCell colSpan={6} className="text-center">
+                            No data available for filteredData.
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                )}
+              </div>
             </>
           )}
         </>
