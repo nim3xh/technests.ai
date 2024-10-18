@@ -25,6 +25,7 @@ import {
   Select,
   Spinner,
   Pagination,
+  Dropdown,
 } from "flowbite-react";
 import {
   HiOutlineExclamationCircle,
@@ -99,6 +100,7 @@ export default function DashAccountDetails() {
   const [isPAaccountCus, setIsPAaccountCus] = useState(false);
   const [isEvalAccountCus, setIsEvalAccountCus] = useState(false);
   const [showSetsData, setShowSetsData] = useState(false); // State to control the visibility of setsData table
+  const [tradesData, setTradesData] = useState([]);
 
   const processRanges = [
     { label: "47000", min: 46750, max: 47249 },
@@ -644,6 +646,24 @@ export default function DashAccountDetails() {
     [resetSelections]
   );
 
+  const fetchTradeData = async () => {
+    try {
+      const token = currentUser.token;
+      const headers = {
+        Authorization: `Bearer ${token}`,
+      };
+
+      const tradesResponse = await axios.get(`${BaseURL}trades`, {
+        headers,
+      });
+      setTradesData(tradesResponse.data);
+      setLoading(false);
+    } catch (err) {
+      setError("Something went wrong while fetching data.");
+      setLoading(false);
+    }
+  };
+
   // Reset selection when modal is closed
   useEffect(() => {
     if (!showModal) {
@@ -651,6 +671,47 @@ export default function DashAccountDetails() {
     }
   }, [showModal]);
 
+  useEffect(() => {
+    fetchTradeData();
+  }, []); // Assuming you're using useEffect to call fetchData when the component mounts
+
+ const [runningAccountId, setRunningAccountId] = useState(null);
+ const [timeElapsed, setTimeElapsed] = useState(0);
+
+ useEffect(() => {
+   let interval = null;
+
+   if (runningAccountId) {
+     interval = setInterval(() => {
+       setTimeElapsed((prev) => prev + 1); // Increment the timer every second
+     }, 1000);
+   } else {
+     clearInterval(interval);
+   }
+
+   return () => clearInterval(interval); // Cleanup on unmount
+ }, [runningAccountId]);
+
+ const handleStart = (id) => {
+   if (runningAccountId !== null && runningAccountId !== id) {
+     // Optionally, you could stop the previous timer or handle it differently
+     alert("Another account is already running.");
+     return;
+   }
+   setRunningAccountId(id);
+   setTimeElapsed(0); // Reset the timer for the new account
+ };
+
+ const handleStop = () => {
+   setRunningAccountId(null);
+ };
+
+ const formatTime = (timeInSeconds) => {
+   const minutes = String(Math.floor(timeInSeconds / 60)).padStart(2, "0");
+   const seconds = String(timeInSeconds % 60).padStart(2, "0");
+   return `${minutes}:${seconds}`;
+ };
+  
   return (
     <div className="p-3 w-full">
       <Breadcrumb aria-label="Default breadcrumb example">
@@ -690,38 +751,49 @@ export default function DashAccountDetails() {
           </div>
 
           <div className="flex gap-3 justify mt-4">
-            <select
-              id="accountFilter"
-              value={accountFilter}
-              onChange={(e) => setAccountFilter(e.target.value)}
-              className="block w-1/6 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm dark:bg-gray-800 dark:text-gray-200"
+            <Dropdown
+              label={accountFilter || "Select Account"}
+              disabled={setsMade}
+              className="block w-1/6 dark:bg-gray-800 dark:text-gray-200"
+              inline
             >
-              <option value="">Select Account</option>
+              <Dropdown.Item onClick={() => setAccountFilter("")}>
+                Select Account
+              </Dropdown.Item>
               {uniqueAccountNumbers.map((account) => (
-                <option key={account} value={account}>
+                <Dropdown.Item
+                  key={account}
+                  onClick={() => setAccountFilter(account)}
+                >
                   {account}
-                </option>
+                </Dropdown.Item>
               ))}
-            </select>
-            <select
-              id="processCsv"
-              value={selectedProcessRange}
-              onChange={(e) => setSelectedProcessRange(e.target.value)}
-              className="block w-1/8 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm dark:bg-gray-800 dark:text-gray-200"
+            </Dropdown>
+            <Dropdown
+              label={selectedProcessRange || "Select Range"}
+              disabled={setsMade}
+              className="block w-1/8 dark:bg-gray-800 dark:text-gray-200"
+              inline
             >
-              <option value="">Select Range</option>
+              <Dropdown.Item onClick={() => setSelectedProcessRange("")}>
+                Select Range
+              </Dropdown.Item>
               {processRanges.map((range) => (
-                <option key={range.label} value={range.label}>
+                <Dropdown.Item
+                  key={range.label}
+                  onClick={() => setSelectedProcessRange(range.label)}
+                >
                   {range.label}
-                </option>
+                </Dropdown.Item>
               ))}
-            </select>
+            </Dropdown>
             <div className="flex gap-5 items-center">
               <label className="flex items-center">
                 <Checkbox
                   checked={isAdminOnly}
                   onChange={(e) => setIsAdminOnly(e.target.checked)}
                   className="mr-2"
+                  disabled={setsMade || isPAaccount || isEvalAccount}
                 />
                 Show Admin Only
               </label>
@@ -731,6 +803,7 @@ export default function DashAccountDetails() {
                   checked={isPAaccount}
                   onChange={(e) => setIsPAaccount(e.target.checked)}
                   className="mr-2"
+                  disabled={setsMade || isAdminOnly || isEvalAccount}
                 />
                 Show PA Accounts Only
               </label>
@@ -740,6 +813,7 @@ export default function DashAccountDetails() {
                   checked={isEvalAccount}
                   onChange={(e) => setIsEvalAccount(e.target.checked)}
                   className="mr-2"
+                  disabled={setsMade || isAdminOnly || isPAaccount}
                 />
                 Show Eval Accounts Only
               </label>
@@ -749,7 +823,7 @@ export default function DashAccountDetails() {
               <Button
                 gradientDuoTone="greenToBlue"
                 onClick={uploadCsvs}
-                disabled={createLoding}
+                disabled={createLoding || setsMade}
               >
                 {createLoding ? (
                   <>
@@ -773,6 +847,7 @@ export default function DashAccountDetails() {
             <Button
               gradientDuoTone="greenToBlue"
               onClick={() => setShowModal(true)}
+              disabled={setsMade}
             >
               <CiViewList className="mr-3 h-4 w-4" />
               Customize CSV Export
@@ -797,7 +872,11 @@ export default function DashAccountDetails() {
               )}
             </>
             {currentUser.user.role === "admin" && (
-              <Button gradientMonochrome="failure" onClick={deleteAllAccounts}>
+              <Button
+                disabled={setsMade}
+                gradientMonochrome="failure"
+                onClick={deleteAllAccounts}
+              >
                 Delete All
               </Button>
             )}
@@ -816,10 +895,11 @@ export default function DashAccountDetails() {
                     <TableHead>
                       <TableHeadCell>Account</TableHeadCell>
                       <TableHeadCell>Account Balance</TableHeadCell>
-                      <TableHeadCell>Account Name</TableHeadCell>
                       <TableHeadCell>Status</TableHeadCell>
-                      <TableHeadCell>Trailing Threshold</TableHeadCell>
-                      <TableHeadCell>PnL</TableHeadCell>
+                      <TableHeadCell>Trade Name</TableHeadCell>
+                      <TableHeadCell>Direction</TableHeadCell>
+                      <TableHeadCell>Trade Time</TableHeadCell>
+                      <TableHeadCell>Action</TableHeadCell>
                     </TableHead>
                     <TableBody>
                       {setsData.length > 0 ? (
@@ -860,27 +940,89 @@ export default function DashAccountDetails() {
                                 </p>
                               </TableCell>
                               <TableCell>
-                                <p className="font-semibold">{account.name}</p>
-                              </TableCell>
-                              <TableCell>
                                 <p className="font-semibold">
                                   {account.status}
                                 </p>
                               </TableCell>
-                              <TableCell>
-                                <p className="font-semibold">
-                                  ${account.trailingThreshold}
-                                </p>
+
+                              {/* Trade Name Dropdown */}
+                              <TableCell
+                                style={{
+                                  color: "#000000",
+                                }}
+                              >
+                                <select className="border border-gray-300 rounded-md p-2">
+                                  {tradesData.map((trade) => (
+                                    <option key={trade.id} value={trade.id}>
+                                      {"Trade 0"}
+                                      {trade.id}
+                                      {/* e.g., Trade 01, Trade 02 */}
+                                    </option>
+                                  ))}
+                                </select>
                               </TableCell>
+
+                              {/* Direction Drop-Down */}
+                              <TableCell
+                                style={{
+                                  color: "#000000",
+                                }}
+                              >
+                                <select className="border border-gray-300 rounded-md p-2">
+                                  <option value="LONG">LONG</option>
+                                  <option value="SHORT">SHORT</option>
+                                </select>
+                              </TableCell>
+
+                              {/* Duration (Time Input) */}
+                              <TableCell
+                                style={{
+                                  color: "#000000",
+                                }}
+                              >
+                                <input
+                                  type="time"
+                                  className="border border-gray-300 rounded-md p-2"
+                                />
+                              </TableCell>
+
+                              {/* Action Button */}
                               <TableCell>
-                                <p className="font-semibold">{account.PnL}</p>
+                                {runningAccountId === account.id ? (
+                                  <div
+                                    style={{
+                                      display: "flex",
+                                      alignItems: "center",
+                                    }}
+                                  >
+                                    <span style={{ marginRight: "8px" }}>
+                                      In Progress
+                                    </span>
+                                    <span style={{ marginRight: "8px" }}>
+                                      {formatTime(timeElapsed)}
+                                    </span>
+                                    <Button
+                                      gradientMonochrome="failure"
+                                      onClick={handleStop}
+                                    >
+                                      Stop
+                                    </Button>
+                                  </div>
+                                ) : (
+                                  <Button
+                                    gradientMonochrome="purple"
+                                    onClick={() => handleStart(account.id)}
+                                  >
+                                    Start
+                                  </Button>
+                                )}
                               </TableCell>
                             </TableRow>
                           );
                         })
                       ) : (
                         <TableRow>
-                          <TableCell colSpan={6} className="text-center">
+                          <TableCell colSpan={7} className="text-center">
                             No data available for setsData.
                           </TableCell>
                         </TableRow>
@@ -973,96 +1115,142 @@ export default function DashAccountDetails() {
         </>
       )}
       <Modal show={showModal} onClose={() => setShowModal(false)}>
-        <Modal.Header>Select Options</Modal.Header>
-        <Modal.Body className="flex flex-col md:flex-row">
-          <div className="flex-1 ">
-            <h3>Select Columns:</h3>
-            {columns.map((col) => (
-              <label key={col.value} className="flex items-center">
-                <Checkbox
-                  checked={selectedColumns.includes(col.value)}
-                  onChange={(e) => handleCheckboxChange(col.value)}
-                  className="mr-2"
-                />
-                {col.label}
-              </label>
-            ))}
-          </div>
+        {/* Modal Header */}
+        <Modal.Header>
+          <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100">
+            Select Options
+          </h2>
+        </Modal.Header>
+
+        {/* Modal Body */}
+        <Modal.Body className="flex flex-col md:flex-row gap-6 p-4">
+          {/* Columns Section */}
           <div className="flex-1">
-            <h3>Filters:</h3>
-            <div className="flex gap-3 flex-col">
-              <select
-                id="accountFilter"
-                value={accountFilter}
-                onChange={(e) => setAccountFilter(e.target.value)}
-                className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm dark:bg-gray-800 dark:text-gray-200"
-              >
-                <option value="">Select Account</option>
-                {uniqueAccountNumbers.map((account) => (
-                  <option key={account} value={account}>
-                    {account}
-                  </option>
-                ))}
-              </select>
-              <select
-                id="processCsv"
-                value={selectedProcessRange}
-                onChange={(e) => setSelectedProcessRange(e.target.value)}
-                className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm dark:bg-gray-800 dark:text-gray-200"
-              >
-                <option value="">Select Range</option>
-                {processRanges.map((range) => (
-                  <option key={range.label} value={range.label}>
-                    {range.label}
-                  </option>
-                ))}
-              </select>
+            <h3 className="text-lg font-medium text-gray-700 dark:text-gray-200 mb-3">
+              Select Columns:
+            </h3>
+            <div className="space-y-2">
+              {columns.map((col) => (
+                <label key={col.value} className="flex items-center space-x-2">
+                  <Checkbox
+                    checked={selectedColumns.includes(col.value)}
+                    onChange={() => handleCheckboxChange(col.value)}
+                    className="focus:ring-blue-500"
+                  />
+                  <span className="text-gray-700 dark:text-gray-200">
+                    {col.label}
+                  </span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          {/* Filters Section */}
+          <div className="flex-1 p-6 bg-white dark:bg-gray-900 rounded-lg shadow-lg w-full max-w-3xl">
+            <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-200 mb-4">
+              Filters:
+            </h3>
+
+            {/* Dropdowns */}
+            <div className="flex flex-col gap-4 sm:flex-row items-start">
+              {/* Account Dropdown */}
+              <div className="w-full sm:w-1/2">
+                <Dropdown
+                  label={accountFilter || "Select Account"}
+                  className="w-full text-left dark:bg-gray-800 dark:text-gray-200"
+                  inline
+                >
+                  <Dropdown.Item onClick={() => setAccountFilter("")}>
+                    Select Account
+                  </Dropdown.Item>
+                  {uniqueAccountNumbers.map((account) => (
+                    <Dropdown.Item
+                      key={account}
+                      onClick={() => setAccountFilter(account)}
+                    >
+                      {account}
+                    </Dropdown.Item>
+                  ))}
+                </Dropdown>
+              </div>
+
+              {/* Process Range Dropdown */}
+              <div className="w-full sm:w-1/2">
+                <Dropdown
+                  label={selectedProcessRange || "Select Range"}
+                  className="w-full text-left dark:bg-gray-800 dark:text-gray-200"
+                  inline
+                >
+                  <Dropdown.Item onClick={() => setSelectedProcessRange("")}>
+                    Select Range
+                  </Dropdown.Item>
+                  {processRanges.map((range) => (
+                    <Dropdown.Item
+                      key={range.label}
+                      onClick={() => setSelectedProcessRange(range.label)}
+                    >
+                      {range.label}
+                    </Dropdown.Item>
+                  ))}
+                </Dropdown>
+              </div>
             </div>
 
-            <div className="flex flex-col gap-5">
-              <label className="flex items-center">
-                <Checkbox
-                  checked={isAdminOnlyCus}
-                  onChange={(e) => setIsAdminOnlyCus(e.target.checked)}
-                  className="mr-2"
-                />
-                Admin Only
-              </label>
+            {/* Checkbox Filters */}
+            <div className="mt-6">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <label className="flex items-center gap-2 text-gray-700 dark:text-gray-200">
+                  <Checkbox
+                    checked={isAdminOnlyCus}
+                    onChange={(e) => setIsAdminOnlyCus(e.target.checked)}
+                    className="focus:ring-blue-500"
+                    disabled={isPAaccountCus || isEvalAccountCus} // Disable if other checkboxes are checked
+                  />
+                  Admin Only
+                </label>
 
-              <label className="flex items-center">
-                <Checkbox
-                  checked={isPAaccountCus}
-                  onChange={(e) => setIsPAaccountCus(e.target.checked)}
-                  className="mr-2"
-                />
-                PA Accounts Only
-              </label>
+                <label className="flex items-center gap-2 text-gray-700 dark:text-gray-200">
+                  <Checkbox
+                    checked={isPAaccountCus}
+                    onChange={(e) => setIsPAaccountCus(e.target.checked)}
+                    className="focus:ring-blue-500"
+                    disabled={isAdminOnlyCus || isEvalAccountCus} // Disable if other checkboxes are checked
+                  />
+                  PA Accounts Only
+                </label>
 
-              <label className="flex items-center">
-                <Checkbox
-                  checked={isEvalAccountCus}
-                  onChange={(e) => setIsEvalAccountCus(e.target.checked)}
-                  className="mr-2"
-                />
-                Eval Accounts Only
-              </label>
+                <label className="flex items-center gap-2 text-gray-700 dark:text-gray-200">
+                  <Checkbox
+                    checked={isEvalAccountCus}
+                    onChange={(e) => setIsEvalAccountCus(e.target.checked)}
+                    className="focus:ring-blue-500"
+                    disabled={isAdminOnlyCus || isPAaccountCus} // Disable if other checkboxes are checked
+                  />
+                  Eval Accounts Only
+                </label>
+              </div>
             </div>
           </div>
         </Modal.Body>
-        <Modal.Footer>
-          <Button
-            gradientDuoTone="greenToBlue"
-            onClick={() => {
-              const exportData = customExports(selectedColumns); // Generate export data
-              handleExport(exportData); // Call the export function
 
-              // Clear all selections and close the modal
-              resetSelections(); // Reset selections
-              setShowModal(false); // Close the modal
-            }}
-          >
-            Export
-          </Button>
+        {/* Modal Footer */}
+        <Modal.Footer>
+          <div className="flex justify-end w-full">
+            <Button
+              gradientDuoTone="greenToBlue"
+              onClick={() => {
+                const exportData = customExports(selectedColumns); // Generate export data
+                handleExport(exportData); // Call the export function
+
+                // Clear all selections and close the modal
+                resetSelections(); // Reset selections
+                setShowModal(false); // Close the modal
+              }}
+              className="w-full sm:w-auto"
+            >
+              Export
+            </Button>
+          </div>
         </Modal.Footer>
       </Modal>
     </div>
