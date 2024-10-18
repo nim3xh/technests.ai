@@ -2,10 +2,9 @@ import { Sidebar } from "flowbite-react";
 import {
   HiUser,
   HiArrowSmRight,
-  HiDocumentText,
   HiOutlineUserGroup,
-  HiAnnotation,
   HiChartPie,
+  HiBriefcase,
 } from "react-icons/hi";
 import { IoMdAnalytics } from "react-icons/io";
 import { FaUserCheck } from "react-icons/fa";
@@ -89,6 +88,15 @@ export default function DashSidebar() {
                     as="div"
                   >
                     Users
+                  </Sidebar.Item>
+                </Link>
+                <Link to="/dashboard?tab=trades">
+                  <Sidebar.Item
+                    active={tab === "trades"}
+                    icon={HiBriefcase}
+                    as="div"
+                  >
+                    Trades
                   </Sidebar.Item>
                 </Link>
               </>
