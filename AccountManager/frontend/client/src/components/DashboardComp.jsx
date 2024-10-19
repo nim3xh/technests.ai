@@ -1,15 +1,6 @@
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
-import {
-  HiAnnotation,
-  HiArrowNarrowUp,
-  HiDocumentText,
-  HiOutlineUserGroup,
-} from "react-icons/hi";
-import { MdTableRows } from "react-icons/md";
-import { MdAccountBalance } from "react-icons/md";
-import { GiMedievalGate } from "react-icons/gi";
-import { CiMemoPad } from "react-icons/ci";
+import { HiHome } from "react-icons/hi";
 import {
   Table,
   TableBody,
@@ -20,14 +11,13 @@ import {
   Spinner,
   Breadcrumb,
   Button,
-  Modal,
-  Label,
-  TextInput,
-  Select,
 } from "flowbite-react";
-import { Link } from "react-router-dom";
+import { MdAccountBalance, MdTableRows } from "react-icons/md";
+import { CiMemoPad } from "react-icons/ci";
+import { GiMedievalGate } from "react-icons/gi";
 import axios from "axios";
-import { HiHome } from "react-icons/hi";
+import { Link } from "react-router-dom"; 
+import ReactApexChart from "react-apexcharts";
 
 const BaseURL = import.meta.env.VITE_BASE_URL;
 
@@ -36,9 +26,9 @@ export default function DashboardComp() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const { currentUser } = useSelector((state) => state.user);
-  const [paAccountsCount, setPaAccountsCount] = useState(0);
-  const [nonPaAccountsCount, setNonPaAccountsCount] = useState(0);
-
+  const [userStats, setUserStats] = useState([]);
+  const [chartData, setChartData] = useState({});
+  
   // Function to merge users and account details data
   const mergeData = (users, accountDetails) => {
     return accountDetails.map((account) => {
@@ -68,17 +58,70 @@ export default function DashboardComp() {
           accountDetailsResponse.data
         );
 
-        // Count PA and non-PA accounts
-        const paCount = mergedData.filter((item) =>
-          item.account.startsWith("PA")
-        ).length;
-        const nonPaCount = mergedData.length - paCount;
-
         setCombinedData(mergedData);
         setLoading(false);
 
-        setPaAccountsCount(paCount);
-        setNonPaAccountsCount(nonPaCount);
+        // Calculate statistics for each user
+        const stats = {};
+        let totalEvalActive = 0;
+        let totalPAActive = 0;
+        let totalEvalAdminOnly = 0;
+        let totalPAAdminOnly = 0;
+
+        mergedData.forEach((item) => {
+          const userName = item.name;
+          const isPA = item.account.startsWith("PA");
+          const isActive = item.status === "active";
+          const isEval = item.account.startsWith("APEX");
+          const isAdmin = item.status === "admin only";
+
+          // Initialize user stats if not already done
+          if (!stats[userName]) {
+            stats[userName] = {
+              evalActive: 0,
+              paActive: 0,
+              evalAdminOnly: 0,
+              paAdminOnly: 0,
+            };
+          }
+
+          // Increment counts based on conditions
+          if (isEval && isActive) {
+            stats[userName].evalActive++;
+            totalEvalActive++;
+          }
+          if (isPA && isActive) {
+            stats[userName].paActive++;
+            totalPAActive++;
+          }
+          if (isAdmin && isEval) {
+            stats[userName].evalAdminOnly++;
+            totalEvalAdminOnly++;
+          }
+          if (isAdmin && isPA) {
+            stats[userName].paAdminOnly++;
+            totalPAAdminOnly++;
+          }
+        });
+
+        // Transform stats into an array for rendering
+        const userStatsArray = Object.keys(stats).map((userName) => ({
+          userName,
+          ...stats[userName],
+          totalAccounts: stats[userName].evalActive + stats[userName].paActive,
+        }));
+
+        setUserStats(userStatsArray);
+
+        // Set chart data
+        setChartData({
+          series: [
+            totalEvalActive,
+            totalPAActive,
+            totalEvalAdminOnly + totalPAAdminOnly,
+          ],
+          labels: ["EVAL Active", "PA Active", "Admin Only"],
+        });
       } catch (err) {
         console.error("Error fetching data:", err);
         setError("Something went wrong while fetching data.");
@@ -88,27 +131,6 @@ export default function DashboardComp() {
 
     fetchData();
   }, [BaseURL, currentUser]);
-
-  const encounteredAccounts = new Set();
-
-  const uniqueAccountNumbers = combinedData
-    .map((item) => {
-      // Match and extract the account number pattern APEX-245360
-      const match = item.accountNumber.match(/^(APEX-\d+)/);
-      if (match) {
-        const accountNumber = match[1];
-        if (!encounteredAccounts.has(accountNumber)) {
-          encounteredAccounts.add(accountNumber);
-          return `${accountNumber} (${item.name})`;
-        }
-      }
-      return null; // Skip if already encountered or no match
-    })
-    .filter(Boolean); // Filter out null values
-
-  // Calculate total number of accounts and rows
-  const totalAccounts = uniqueAccountNumbers.length;
-  const totalRows = combinedData.length;
 
   // Calculate unique accounts from filteredData
   const uniqueAccountsInFilteredData = new Set(
@@ -139,17 +161,6 @@ export default function DashboardComp() {
                   <div className="flex justify-between">
                     <div className="">
                       <h3 className="text-gray-500 text-md uppercase">
-                        Total Rows Displayed:
-                      </h3>
-                      <p className="text-2xl">{totalRows}</p>
-                    </div>
-                    <MdTableRows className="bg-teal-600  text-white rounded-full text-5xl p-3 shadow-lg" />
-                  </div>
-                </div>
-                <div className="flex flex-col p-3 dark:bg-slate-800 gap-4 md:w-72 w-full rounded-md shadow-md">
-                  <div className="flex justify-between">
-                    <div className="">
-                      <h3 className="text-gray-500 text-md uppercase">
                         Total Unique Accounts{" "}
                       </h3>
                       <p className="text-2xl">{totalUniqueAccountsDisplayed}</p>
@@ -157,26 +168,70 @@ export default function DashboardComp() {
                     <MdAccountBalance className="bg-teal-600  text-white rounded-full text-5xl p-3 shadow-lg" />
                   </div>
                 </div>
+
                 <div className="flex flex-col p-3 dark:bg-slate-800 gap-4 md:w-72 w-full rounded-md shadow-md">
                   <div className="flex justify-between">
-                    <div className="">
+                    <div>
                       <h3 className="text-gray-500 text-md uppercase">
-                        Total PA Account Rows:
+                        Total EVAL Active:
                       </h3>
-                      <p className="text-2xl">{paAccountsCount}</p>
+                      <p className="text-2xl">
+                        {userStats.reduce(
+                          (acc, user) => acc + user.evalActive,
+                          0
+                        )}
+                      </p>
                     </div>
-                    <CiMemoPad className="bg-teal-600  text-white rounded-full text-5xl p-3 shadow-lg" />
+                    <MdTableRows className="bg-teal-600 text-white rounded-full text-5xl p-3 shadow-lg" />
+                  </div>
+                </div>
+
+                <div className="flex flex-col p-3 dark:bg-slate-800 gap-4 md:w-72 w-full rounded-md shadow-md">
+                  <div className="flex justify-between">
+                    <div>
+                      <h3 className="text-gray-500 text-md uppercase">
+                        Total PA Active:
+                      </h3>
+                      <p className="text-2xl">
+                        {userStats.reduce(
+                          (acc, user) => acc + user.paActive,
+                          0
+                        )}
+                      </p>
+                    </div>
+                    <MdAccountBalance className="bg-teal-600 text-white rounded-full text-5xl p-3 shadow-lg" />
                   </div>
                 </div>
                 <div className="flex flex-col p-3 dark:bg-slate-800 gap-4 md:w-72 w-full rounded-md shadow-md">
                   <div className="flex justify-between">
-                    <div className="">
+                    <div>
                       <h3 className="text-gray-500 text-md uppercase">
-                        Total Eval Account Rows:
+                        Total Eval Admin Only:
                       </h3>
-                      <p className="text-2xl">{nonPaAccountsCount}</p>
+                      <p className="text-2xl">
+                        {userStats.reduce(
+                          (acc, user) => acc + user.evalAdminOnly,
+                          0
+                        )}
+                      </p>
                     </div>
-                    <GiMedievalGate className="bg-teal-600  text-white rounded-full text-5xl p-3 shadow-lg" />
+                    <CiMemoPad className="bg-teal-600 text-white rounded-full text-5xl p-3 shadow-lg" />
+                  </div>
+                </div>
+                <div className="flex flex-col p-3 dark:bg-slate-800 gap-4 md:w-72 w-full rounded-md shadow-md">
+                  <div className="flex justify-between">
+                    <div>
+                      <h3 className="text-gray-500 text-md uppercase">
+                        Total PA Admin Only:
+                      </h3>
+                      <p className="text-2xl">
+                        {userStats.reduce(
+                          (acc, user) => acc + user.paAdminOnly,
+                          0
+                        )}
+                      </p>
+                    </div>
+                    <GiMedievalGate className="bg-teal-600 text-white rounded-full text-5xl p-3 shadow-lg" />
                   </div>
                 </div>
                 <div className="flex flex-col p-3">
@@ -190,28 +245,78 @@ export default function DashboardComp() {
                   </Link>
                 </div>
               </div>
-              <Table hoverable className="shadow-md w-full mt-6">
-                <TableHead>
-                  <TableHeadCell>Account</TableHeadCell>
-                  <TableHeadCell>Account Balance</TableHeadCell>
-                  <TableHeadCell>Account Name</TableHeadCell>
-                  <TableHeadCell>Status</TableHeadCell>
-                  <TableHeadCell>Trailing Threshold</TableHeadCell>
-                  <TableHeadCell>PnL</TableHeadCell>
-                </TableHead>
-                <TableBody>
-                  {combinedData.map((data, index) => (
-                    <TableRow key={index}>
-                      <TableCell>{data.accountNumber}</TableCell>
-                      <TableCell>{data.accountBalance}</TableCell>
-                      <TableCell>{data.name}</TableCell>
-                      <TableCell>{data.status}</TableCell>
-                      <TableCell>{data.trailingThreshold}</TableCell>
-                      <TableCell>{data.PnL}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+
+              <div className="flex flex-wrap items-start">
+                {/* Pie Chart Section */}
+                <div id="pie-chart" className="w-full md:w-1/2 p-3 mt-20 ">
+                  <ReactApexChart
+                    options={{
+                      series: chartData.series,
+                      colors: ["#1C64F2", "#16BDCA", "#9061F9"],
+                      chart: {
+                        height: 420,
+                        type: "pie",
+                      },
+                      stroke: {
+                        colors: ["white"],
+                      },
+                      plotOptions: {
+                        pie: {
+                          labels: {
+                            show: true,
+                          },
+                          dataLabels: {
+                            offset: -25,
+                          },
+                        },
+                      },
+                      labels: chartData.labels,
+                      dataLabels: {
+                        enabled: true,
+                        style: {
+                          fontFamily: "Inter, sans-serif",
+                          color: "inherit",
+                        },
+                      },
+                      legend: {
+                        position: "bottom",
+                        fontFamily: "Inter, sans-serif",
+                      },
+                    }}
+                    series={chartData.series || []}
+                    type="pie"
+                    height={420}
+                  />
+                </div>
+
+                {/* Table Section */}
+                <div className="w-full md:w-1/2 p-3">
+                  <Table hoverable className="shadow-md w-full">
+                    <TableHead>
+                      <TableHeadCell>#</TableHeadCell>
+                      <TableHeadCell>User Name</TableHeadCell>
+                      <TableHeadCell>EVAL Active</TableHeadCell>
+                      <TableHeadCell>PA Active</TableHeadCell>
+                      <TableHeadCell>Eval Admin Only</TableHeadCell>
+                      <TableHeadCell>PA Admin Only</TableHeadCell>
+                      <TableHeadCell>Total Accounts</TableHeadCell>
+                    </TableHead>
+                    <TableBody>
+                      {userStats.map((user, index) => (
+                        <TableRow key={index}>
+                          <TableCell>{index + 1}</TableCell>
+                          <TableCell>{user.userName}</TableCell>
+                          <TableCell>{user.evalActive}</TableCell>
+                          <TableCell>{user.paActive}</TableCell>
+                          <TableCell>{user.evalAdminOnly}</TableCell>
+                          <TableCell>{user.paAdminOnly}</TableCell>
+                          <TableCell>{user.totalAccounts}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </div>
             </>
           )}
         </>

@@ -67,6 +67,15 @@ export default function DashTrades() {
       };
       await axios.post(`${BaseURL}trades`, newTrade, { headers });
       fetchData();
+      setNewTrade({
+        SL: "",
+        TP: "",
+        Instrument: "",
+        Quantity: "",
+        TrailingSL: "",
+        Steps: "",
+        BreakEven: "",
+      });
       setShowModal(false);
     } catch (err) { 
       setError("Something went wrong while adding trade.");
@@ -84,7 +93,7 @@ export default function DashTrades() {
   return (
     <div className="p-3 w-full">
       <Breadcrumb aria-label="Default breadcrumb example">
-        <Breadcrumb.Item href="#" icon={HiHome}>
+        <Breadcrumb.Item href="/dashboard?tab=dash" icon={HiHome}>
           Home
         </Breadcrumb.Item>
         <Breadcrumb.Item>Trades</Breadcrumb.Item>
@@ -144,37 +153,102 @@ export default function DashTrades() {
         <Modal.Body>
           <div className="space-y-6">
             <div>
-              <Label htmlFor="SL" value="SL">SL</Label>
-              <TextInput id="SL" name="SL" placeholder="SL" value={newTrade.SL} onChange={handleChange} required/>
+              <Label htmlFor="SL" value="SL">
+                SL
+              </Label>
+              <TextInput
+                id="SL"
+                name="SL"
+                placeholder="SL"
+                value={newTrade.SL}
+                onChange={handleChange}
+                required
+              />
             </div>
             <div>
-              <Label htmlFor="TP" value="TP">TP</Label>
-              <TextInput id="TP" name="TP" placeholder="TP" value={newTrade.TP} onChange={handleChange} required />
+              <Label htmlFor="TP" value="TP">
+                TP
+              </Label>
+              <TextInput
+                id="TP"
+                name="TP"
+                placeholder="TP"
+                value={newTrade.TP}
+                onChange={handleChange}
+                required
+              />
             </div>
             <div>
-              <Label htmlFor="Instrument" value="Instrument">Instrument</Label>
-              <TextInput id="Instrument" name="Instrument" placeholder="Instrument" value={newTrade.Instrument} onChange={handleChange} required />
+              <Label htmlFor="Instrument" value="Instrument">
+                Instrument
+              </Label>
+              <TextInput
+                id="Instrument"
+                name="Instrument"
+                placeholder="Instrument"
+                value={newTrade.Instrument}
+                onChange={handleChange}
+                required
+              />
             </div>
             <div>
-              <Label htmlFor="Quantity" value="Quantity">Quantity</Label>
-              <TextInput id="Quantity" name="Quantity" placeholder="Quantity" value={newTrade.Quantity} onChange={handleChange} required />
+              <Label htmlFor="Quantity" value="Quantity">
+                Quantity
+              </Label>
+              <TextInput
+                id="Quantity"
+                name="Quantity"
+                placeholder="Quantity"
+                value={newTrade.Quantity}
+                onChange={handleChange}
+                required
+              />
             </div>
             <div>
-              <Label htmlFor="TrailingSL" value="TrailingSL">TrailingSL</Label>
-              <TextInput id="TrailingSL" name="TrailingSL" placeholder="TrailingSL" value={newTrade.TrailingSL} onChange={handleChange} required />
+              <Label htmlFor="TrailingSL" value="TrailingSL">
+                TrailingSL
+              </Label>
+              <TextInput
+                id="TrailingSL"
+                name="TrailingSL"
+                placeholder="TrailingSL"
+                value={newTrade.TrailingSL}
+                onChange={handleChange}
+                required
+              />
             </div>
             <div>
-              <Label htmlFor="Steps" value="Steps">Steps</Label>
-              <TextInput id="Steps" name="Steps" placeholder="Steps" value={newTrade.Steps} onChange={handleChange} required />
+              <Label htmlFor="Steps" value="Steps">
+                Steps
+              </Label>
+              <TextInput
+                id="Steps"
+                name="Steps"
+                placeholder="Steps"
+                value={newTrade.Steps}
+                onChange={handleChange}
+                required
+              />
             </div>
             <div>
-              <Label htmlFor="BreakEven" value="BreakEven">BreakEven</Label>
-              <TextInput id="BreakEven" name="BreakEven" placeholder="BreakEven" value={newTrade.BreakEven} onChange={handleChange} required />
+              <Label htmlFor="BreakEven" value="BreakEven">
+                BreakEven
+              </Label>
+              <TextInput
+                id="BreakEven"
+                name="BreakEven"
+                placeholder="BreakEven"
+                value={newTrade.BreakEven}
+                onChange={handleChange}
+                required
+              />
             </div>
           </div>
         </Modal.Body>
         <Modal.Footer>
-          <Button gradientMonochrome="success" onClick={handleAddTrade}>Add Trade</Button>
+          <Button gradientMonochrome="success" onClick={handleAddTrade}>
+            Add Trade
+          </Button>
         </Modal.Footer>
       </Modal>
     </div>

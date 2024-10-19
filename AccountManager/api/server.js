@@ -64,6 +64,29 @@ const uploadCsvFiles = async () => {
   }
 };
 
+app.post("/upload-csv", async (req, res) => {
+  try {
+    const directoryPath = path.join(__dirname, "dashboards"); // Define the CSV folder path
+    const files = fs
+      .readdirSync(directoryPath)
+      .filter((file) => file.endsWith(".csv")); // Check for CSV files
+
+    // Check if there are any CSV files in the folder
+    if (files.length === 0) {
+      return res
+        .status(200)
+        .send("No CSV files found, skipping the upload process."); // Send response if no files found
+    }
+
+    await uploadCsvFiles(); // Call the upload function
+    res.status(200).send("CSV files uploaded successfully.");
+  } catch (error) {
+    console.error(`Error uploading CSV files: ${error.message}`);
+    res.status(500).send("Failed to upload CSV files.");
+  }
+});
+
+
 // Schedule the task to run every 1 hour
 cron.schedule("0 * * * *", () => {
   console.log("Running scheduled task to upload CSV files...");
