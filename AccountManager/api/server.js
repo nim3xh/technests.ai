@@ -6,6 +6,8 @@ const fs = require("fs");
 const path = require("path");
 const axios = require("axios");
 const FormData = require("form-data");
+const multer = require("multer");
+const upload = multer({ dest: "uploads/" });
 const deleteDashboards = require("./delete-dashboards");
 
 // Function to upload and process CSV files
@@ -24,7 +26,7 @@ const uploadCsvFiles = async () => {
     }
 
     // Clear the existing database before uploading
-    await axios.delete('http://localhost:3000/accountDetails/');
+    await axios.delete("http://localhost:3000/accountDetails/");
 
     const uploadPromises = files.map(async (file) => {
       const filePath = path.join(directoryPath, file);
@@ -41,17 +43,20 @@ const uploadCsvFiles = async () => {
           }
         );
 
-        // Post the CSV to the second endpoint
-        await axios.post(
-          "http://localhost:3000/users/add-users-auto",
-          formData,
-          {
-            headers: { "Content-Type": "multipart/form-data" },
-          }
-        );
+        // // Post the CSV to the second endpoint
+        // await axios.post(
+        //   "http://localhost:3000/users/add-users-auto",
+        //   formData,
+        //   {
+        //     headers: { "Content-Type": "multipart/form-data" },
+        //   }
+        // );
       } catch (error) {
         // Handle any errors during the upload
-        console.error(`Failed to upload ${file}: ${error.message}`);
+        console.error(
+          `Failed to upload ${file}:`,
+          error.code || error.message || error.response?.status
+        );
       }
     });
 
@@ -85,7 +90,6 @@ app.post("/upload-csv", async (req, res) => {
     res.status(500).send("Failed to upload CSV files.");
   }
 });
-
 
 // Schedule the task to run every 1 hour
 cron.schedule("0 * * * *", () => {
