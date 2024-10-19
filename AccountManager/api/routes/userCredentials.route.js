@@ -6,6 +6,7 @@ const verifyToken = require("../utils/verifyUser");
 const router = express.Router();
 
 router.post("/", verifyToken, userCredentialsController.save);
+router.patch("/:id", verifyToken, userCredentialsController.update);
 router.get("/", verifyToken, userCredentialsController.index);
 router.post("/change-password", verifyToken, userCredentialsController.changePassword);
 router.patch("/:email", verifyToken, userCredentialsController.updateUserByEmail);

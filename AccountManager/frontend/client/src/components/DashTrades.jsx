@@ -103,6 +103,11 @@ export default function DashTrades() {
     }
   };
 
+  const handleAddClick = () => { 
+    resetForm(); // Clear the form
+    setShowModal(true); // Open the modal
+  }
+  
   // Function to open the edit modal and pre-fill form
   const handleEditClick = (trade) => {
     setNewTrade(trade); // Pre-fill with existing trade data
@@ -159,7 +164,7 @@ export default function DashTrades() {
         {currentUser.user.role === "admin" && (
           <Button
             gradientDuoTone="greenToBlue"
-            onClick={() => setShowModal(true)}
+            onClick={() => handleAddClick()}
             className="ml-3"
           >
             <HiPlusCircle className="mr-2 h-6 w-4" />

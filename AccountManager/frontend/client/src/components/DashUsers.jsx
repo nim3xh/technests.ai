@@ -16,11 +16,7 @@ import {
   Select,
 } from "flowbite-react";
 import { useSelector } from "react-redux";
-import {
-  HiOutlineExclamationCircle,
-  HiPlusCircle,
-  HiUserAdd,
-} from "react-icons/hi";
+import { HiOutlineExclamationCircle, HiPlusCircle } from "react-icons/hi";
 import axios from "axios";
 import { FaUserEdit } from "react-icons/fa";
 import { MdDeleteForever } from "react-icons/md";
@@ -29,18 +25,21 @@ const BaseURL = import.meta.env.VITE_BASE_URL;
 
 export default function DashUsers() {
   const { currentUser } = useSelector((state) => state.user);
+  const [editUser, setEditUser] = useState(false);
+  const [editUserDetails, setEditUserDetails] = useState({});
   const [userData, setUserData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [showModal, setShowModal] = useState(false);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
   const [newUser, setNewUser] = useState({
-      firstName: "",
-      lastName: "",
-      apexAccountNumber: "",
-      email: "",
-      password: "",
-      role: "admin", // Default role
-    });
+    firstName: "",
+    lastName: "",
+    apexAccountNumber: "",
+    email: "",
+    password: "",
+    role: "admin", // Default role
+  });
 
   const fetchData = async () => {
     try {
@@ -71,16 +70,41 @@ export default function DashUsers() {
         Authorization: `Bearer ${token}`,
       };
       await axios.post(`${BaseURL}userCredentials`, newUser, { headers });
-      setShowModal(false); // Close modal on success
+      setShowAddModal(false); // Close modal on success
       fetchData(); // Refresh user data after adding a new user
     } catch (err) {
       setError("Error adding user.");
     }
   };
 
+  const handleEditUser = async () => {
+    try {
+      const token = currentUser.token;
+      const headers = {
+        Authorization: `Bearer ${token}`,
+      };
+      await axios.patch(
+        `${BaseURL}userCredentials/${editUserDetails.id}`,
+        editUserDetails,
+        { headers }
+      );
+      setShowEditModal(false); // Close modal on success
+      fetchData(); // Refresh user data after editing
+    } catch (err) {
+      setError("Error updating user.");
+    }
+  };
+
   const handleChange = (e) => {
     setNewUser({
       ...newUser,
+      [e.target.name]: e.target.value,
+    });
+  };
+
+  const handleEditChange = (e) => {
+    setEditUserDetails({
+      ...editUserDetails,
       [e.target.name]: e.target.value,
     });
   };
@@ -109,7 +133,6 @@ export default function DashUsers() {
     }
   };
 
-  
   function getUserRoleDisplay(role) {
     switch (role) {
       case "admin":
@@ -136,7 +159,7 @@ export default function DashUsers() {
         {currentUser.user.role === "admin" && (
           <Button
             gradientDuoTone="greenToBlue"
-            onClick={() => setShowModal(true)}
+            onClick={() => setShowAddModal(true)}
             className="ml-3"
           >
             <HiPlusCircle className="mr-2 h-6 w-4" />
@@ -172,7 +195,14 @@ export default function DashUsers() {
                 <TableCell>
                   {currentUser.user.role === "admin" && (
                     <Button.Group>
-                      <Button outline gradientDuoTone="greenToBlue">
+                      <Button
+                        outline
+                        gradientDuoTone="greenToBlue"
+                        onClick={() => {
+                          setEditUserDetails(user);
+                          setShowEditModal(true);
+                        }}
+                      >
                         <FaUserEdit className="mr-3 h-4 w-4" />
                         Edit
                       </Button>
@@ -194,7 +224,8 @@ export default function DashUsers() {
         </Table>
       )}
 
-      <Modal show={showModal} onClose={() => setShowModal(false)}>
+      {/* Modal for Adding User */}
+      <Modal show={showAddModal} onClose={() => setShowAddModal(false)}>
         <Modal.Header>Add New User</Modal.Header>
         <Modal.Body>
           <div className="space-y-6">
@@ -267,9 +298,74 @@ export default function DashUsers() {
         </Modal.Body>
         <Modal.Footer>
           <Button onClick={handleAddUser}>Add User</Button>
-          <Button color="gray" onClick={() => setShowModal(false)}>
-            Cancel
-          </Button>
+          <Button onClick={() => setShowAddModal(false)}>Close</Button>
+        </Modal.Footer>
+      </Modal>
+
+      {/* Modal for Editing User */}
+      <Modal show={showEditModal} onClose={() => setShowEditModal(false)}>
+        <Modal.Header>Edit User</Modal.Header>
+        <Modal.Body>
+          <div className="space-y-6">
+            <div>
+              <Label htmlFor="firstName" value="First Name" />
+              <TextInput
+                id="firstName"
+                name="FirstName"
+                value={editUserDetails.FirstName || ""}
+                onChange={handleEditChange}
+                required
+              />
+            </div>
+            <div>
+              <Label htmlFor="lastName" value="Last Name" />
+              <TextInput
+                id="lastName"
+                name="LastName"
+                value={editUserDetails.LastName || ""}
+                onChange={handleEditChange}
+                required
+              />
+            </div>
+            <div>
+              <Label htmlFor="apexAccountNumber" value="Apex Account Number" />
+              <TextInput
+                id="apexAccountNumber"
+                name="ApexAccountNumber"
+                value={editUserDetails.ApexAccountNumber || ""}
+                onChange={handleEditChange}
+                required
+              />
+            </div>
+            <div>
+              <Label htmlFor="email" value="Email" />
+              <TextInput
+                id="email"
+                name="email"
+                type="email"
+                value={editUserDetails.email || ""}
+                onChange={handleEditChange}
+                required
+              />
+            </div>
+            <div>
+              <Label htmlFor="role" value="Role" />
+              <Select
+                id="role"
+                name="role"
+                value={editUserDetails.role || ""}
+                onChange={handleEditChange}
+              >
+                <option value="admin">Admin</option>
+                <option value="user">User</option>
+                <option value="super-user">Super User</option>
+              </Select>
+            </div>
+          </div>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button onClick={handleEditUser}>Save Changes</Button>
+          <Button onClick={() => setShowEditModal(false)}>Close</Button>
         </Modal.Footer>
       </Modal>
     </div>
