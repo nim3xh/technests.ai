@@ -25,6 +25,8 @@ const BaseURL = import.meta.env.VITE_BASE_URL;
 export default function DashTrades() {
   const { currentUser } = useSelector((state) => state.user);
   const [showModal, setShowModal] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [selectedTradeId, setSelectedTradeId] = useState(null);
   const [tradesData, setTradesData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -38,7 +40,7 @@ export default function DashTrades() {
     BreakEven: "",
   });
 
-  const fetchData = async () => { 
+  const fetchData = async () => {
     try {
       const token = currentUser.token;
       const headers = {
@@ -54,33 +56,59 @@ export default function DashTrades() {
       setError("Something went wrong while fetching data.");
       setLoading(false);
     }
-  }
+  };
 
   useEffect(() => {
     fetchData();
   }, [currentUser]);
 
-  const handleAddTrade = async () => {
+  // Reset the form
+  const resetForm = () => {
+    setNewTrade({
+      SL: "",
+      TP: "",
+      Instrument: "",
+      Quantity: "",
+      TrailingSL: "",
+      Steps: "",
+      BreakEven: "",
+    });
+    setIsEditMode(false);
+    setSelectedTradeId(null);
+  };
+
+  // Function to handle both add and update
+  const handleSaveTrade = async () => {
     try {
       const token = currentUser.token;
       const headers = {
         Authorization: `Bearer ${token}`,
       };
-      await axios.post(`${BaseURL}trades`, newTrade, { headers });
+
+      if (isEditMode) {
+        // Update trade via PATCH
+        await axios.patch(`${BaseURL}trades/${selectedTradeId}`, newTrade, {
+          headers,
+        });
+      } else {
+        // Add new trade via POST
+        await axios.post(`${BaseURL}trades`, newTrade, { headers });
+      }
+
       fetchData();
-      setNewTrade({
-        SL: "",
-        TP: "",
-        Instrument: "",
-        Quantity: "",
-        TrailingSL: "",
-        Steps: "",
-        BreakEven: "",
-      });
       setShowModal(false);
-    } catch (err) { 
-      setError("Something went wrong while adding trade.");
+      resetForm();
+    } catch (err) {
+      setError("Something went wrong while saving trade.");
     }
+  };
+
+  // Function to open the edit modal and pre-fill form
+  const handleEditClick = (trade) => {
+    setNewTrade(trade); // Pre-fill with existing trade data
+    setSelectedTradeId(trade.id); // Save the trade ID
+    setIsEditMode(true); // Set to edit mode
+    setShowModal(true); // Open the modal
   };
 
   const handleChange = (e) => {
@@ -89,7 +117,32 @@ export default function DashTrades() {
       [e.target.name]: e.target.value,
     });
   };
-  
+
+  // Delete a trade with confirmation
+  const handleDeleteTrade = async (id) => {
+    const confirmDelete = window.confirm(
+      "Are you sure you want to delete this trade?"
+    );
+
+    if (!confirmDelete) {
+      return; // If user cancels, exit function
+    }
+
+    try {
+      const token = currentUser.token;
+      const headers = {
+        Authorization: `Bearer ${token}`,
+      };
+      await axios.delete(`${BaseURL}trades/${id}`, { headers });
+      fetchData(); // Refresh the data after deletion
+    } catch (err) {
+      console.error(
+        "Error deleting trade:",
+        err.response ? err.response.data : err.message
+      );
+      setError("Something went wrong while deleting trade.");
+    }
+  };
 
   return (
     <div className="p-3 w-full">
@@ -146,11 +199,19 @@ export default function DashTrades() {
                 <TableCell>{trade.BreakEven}</TableCell>
                 <TableCell>
                   <Button.Group>
-                    <Button outline gradientDuoTone="greenToBlue">
+                    <Button
+                      outline
+                      gradientDuoTone="greenToBlue"
+                      onClick={() => handleEditClick(trade)}
+                    >
                       <FaUserEdit className="mr-3 h-4 w-4" />
                       Edit
                     </Button>
-                    <Button outline gradientDuoTone="pinkToOrange">
+                    <Button
+                      outline
+                      gradientDuoTone="pinkToOrange"
+                      onClick={() => handleDeleteTrade(trade.id)}
+                    >
                       <MdDeleteForever className="mr-3 h-4 w-4" />
                       Delete
                     </Button>
@@ -163,7 +224,7 @@ export default function DashTrades() {
       )}
 
       <Modal show={showModal} onClose={() => setShowModal(false)}>
-        <Modal.Header>Add Trade</Modal.Header>
+        <Modal.Header>{isEditMode ? "Edit Trade" : "Add Trade"}</Modal.Header>
         <Modal.Body>
           <div className="space-y-6">
             <div>
@@ -260,8 +321,8 @@ export default function DashTrades() {
           </div>
         </Modal.Body>
         <Modal.Footer>
-          <Button gradientMonochrome="success" onClick={handleAddTrade}>
-            Add Trade
+          <Button gradientMonochrome="success" onClick={handleSaveTrade}>
+            {isEditMode ? "Save Changes" : "Add Trade"}
           </Button>
         </Modal.Footer>
       </Modal>
