@@ -17,7 +17,8 @@ import {
 import { HiHome, HiPlusCircle } from "react-icons/hi";
 import { useSelector } from "react-redux";
 import axios from "axios";
-import { FaEye } from "react-icons/fa";
+import { FaUserEdit } from "react-icons/fa";
+import { MdDeleteForever } from "react-icons/md";
 
 const BaseURL = import.meta.env.VITE_BASE_URL;
 
@@ -130,6 +131,7 @@ export default function DashTrades() {
             <TableHeadCell>TrailingSL</TableHeadCell>
             <TableHeadCell>Steps</TableHeadCell>
             <TableHeadCell>BreakEven</TableHeadCell>
+            <TableHeadCell></TableHeadCell>
           </TableHead>
           <TableBody>
             {tradesData.map((trade, index) => (
@@ -142,6 +144,18 @@ export default function DashTrades() {
                 <TableCell>{trade.TrailingSL}</TableCell>
                 <TableCell>{trade.Steps}</TableCell>
                 <TableCell>{trade.BreakEven}</TableCell>
+                <TableCell>
+                  <Button.Group>
+                    <Button outline gradientDuoTone="greenToBlue">
+                      <FaUserEdit className="mr-3 h-4 w-4" />
+                      Edit
+                    </Button>
+                    <Button outline gradientDuoTone="pinkToOrange">
+                      <MdDeleteForever className="mr-3 h-4 w-4" />
+                      Delete
+                    </Button>
+                  </Button.Group>
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>

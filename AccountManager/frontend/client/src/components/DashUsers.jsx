@@ -22,6 +22,8 @@ import {
   HiUserAdd,
 } from "react-icons/hi";
 import axios from "axios";
+import { FaUserEdit } from "react-icons/fa";
+import { MdDeleteForever } from "react-icons/md";
 
 const BaseURL = import.meta.env.VITE_BASE_URL;
 
@@ -84,18 +86,29 @@ export default function DashUsers() {
   };
 
   const handleDeleteUser = async (id) => {
+    const confirmDelete = window.confirm(
+      "Are you sure you want to delete this user?"
+    );
+
+    if (!confirmDelete) {
+      return; // If the user cancels, do nothing.
+    }
+
     try {
       const token = currentUser.token;
       const headers = {
         Authorization: `Bearer ${token}`,
       };
+
       await axios.delete(`${BaseURL}userCredentials/${id}`, { headers });
+
       // Refresh user data after deletion
       fetchData();
     } catch (err) {
       setError("Error deleting user.");
     }
   };
+
   
   function getUserRoleDisplay(role) {
     switch (role) {
@@ -146,6 +159,7 @@ export default function DashUsers() {
             <TableHeadCell>Account Number</TableHeadCell>
             <TableHeadCell>Email</TableHeadCell>
             <TableHeadCell>Role</TableHeadCell>
+            <TableHeadCell></TableHeadCell>
           </TableHead>
           <TableBody>
             {userData.map((user, index) => (
@@ -157,13 +171,21 @@ export default function DashUsers() {
                 <TableCell>{getUserRoleDisplay(user.role)}</TableCell>
                 <TableCell>
                   {currentUser.user.role === "admin" && (
-                    <Button
-                      gradientMonochrome="failure"
-                      onClick={() => handleDeleteUser(user.id)}
-                      disabled={!!(currentUser.user.email === user.email)}
-                    >
-                      Delete
-                    </Button>
+                    <Button.Group>
+                      <Button outline gradientDuoTone="greenToBlue">
+                        <FaUserEdit className="mr-3 h-4 w-4" />
+                        Edit
+                      </Button>
+                      <Button
+                        outline
+                        gradientDuoTone="pinkToOrange"
+                        onClick={() => handleDeleteUser(user.id)}
+                        disabled={!!(currentUser.user.email === user.email)}
+                      >
+                        <MdDeleteForever className="mr-3 h-4 w-4" />
+                        Delete
+                      </Button>
+                    </Button.Group>
                   )}
                 </TableCell>
               </TableRow>
