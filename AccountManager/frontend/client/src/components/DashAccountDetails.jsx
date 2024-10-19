@@ -25,6 +25,7 @@ import {
   Select,
   Spinner,
   Pagination,
+  Dropdown,
 } from "flowbite-react";
 import {
   HiOutlineExclamationCircle,
@@ -36,6 +37,10 @@ import { debounce, set } from "lodash";
 import axios from "axios";
 import { CSVLink } from "react-csv";
 import { CiViewList } from "react-icons/ci";
+import { IoMdRefresh } from "react-icons/io";
+import { FaCloudUploadAlt } from "react-icons/fa";
+import { IoMdSettings } from "react-icons/io";
+import { FaFileExport } from "react-icons/fa6";
 
 const BaseURL = import.meta.env.VITE_BASE_URL;
 
@@ -99,6 +104,7 @@ export default function DashAccountDetails() {
   const [isPAaccountCus, setIsPAaccountCus] = useState(false);
   const [isEvalAccountCus, setIsEvalAccountCus] = useState(false);
   const [showSetsData, setShowSetsData] = useState(false); // State to control the visibility of setsData table
+  const [tradesData, setTradesData] = useState([]);
 
   const processRanges = [
     { label: "47000", min: 46750, max: 47249 },
@@ -122,7 +128,7 @@ export default function DashAccountDetails() {
 
   const deleteAllAccounts = async () => {
     if (
-      window.confirm("Are you sure you want to delete all account details?")
+      window.confirm("Are you sure you want to delete all account details from database?")
     ) {
       try {
         const token = currentUser.token; // Get the token from the currentUser object
@@ -203,6 +209,9 @@ export default function DashAccountDetails() {
 
     setSetsData(sets);
     setShowSetsData(true); // Show setsData table
+
+    //for decrease cpu usage
+    setFilteredData([]); // Clear the filtered data
   };
 
   const mergeData = (users, accountDetails) => {
@@ -266,6 +275,7 @@ export default function DashAccountDetails() {
     };
 
     fetchData();
+    fetchTradeData();
   }, []);
 
   const debouncedApplyFilters = useCallback(
@@ -644,6 +654,24 @@ export default function DashAccountDetails() {
     [resetSelections]
   );
 
+  const fetchTradeData = async () => {
+    try {
+      const token = currentUser.token;
+      const headers = {
+        Authorization: `Bearer ${token}`,
+      };
+
+      const tradesResponse = await axios.get(`${BaseURL}trades`, {
+        headers,
+      });
+      setTradesData(tradesResponse.data);
+      setLoading(false);
+    } catch (err) {
+      setError("Something went wrong while fetching data.");
+      setLoading(false);
+    }
+  };
+
   // Reset selection when modal is closed
   useEffect(() => {
     if (!showModal) {
@@ -651,10 +679,117 @@ export default function DashAccountDetails() {
     }
   }, [showModal]);
 
+  const [runningTrades, setRunningTrades] = useState({}); // Stores running states for each account
+  const [elapsedTimes, setElapsedTimes] = useState({}); // Stores time elapsed for each account
+  const [selectedTrades, setSelectedTrades] = useState({}); // Store selected values for each account
+
+  useEffect(() => {
+    const intervals = {};
+
+    Object.keys(runningTrades).forEach((accountId) => {
+      if (runningTrades[accountId]) {
+        intervals[accountId] = setInterval(() => {
+          setElapsedTimes((prevTimes) => ({
+            ...prevTimes,
+            [accountId]: (prevTimes[accountId] || 0) + 1,
+          }));
+        }, 1000);
+      }
+    });
+
+    return () => {
+      Object.values(intervals).forEach(clearInterval);
+    };
+  }, [runningTrades]);
+
+  const handleTradeChange = (accountId, tradeName, field) => {
+    setSelectedTrades((prev) => ({
+      ...prev,
+      [accountId]: {
+        ...prev[accountId],
+        [field]: tradeName,
+      },
+    }));
+  };
+
+  const handleStart = (id) => {
+    const accountSelections = selectedTrades[id];
+
+    if (
+      !accountSelections ||
+      !accountSelections.tradeName ||
+      !accountSelections.direction ||
+      !accountSelections.time
+    ) {
+      alert(
+        "Please select a trade name, direction, and trade time before starting."
+      );
+      return;
+    }
+
+    setRunningTrades((prev) => ({
+      ...prev,
+      [id]: true,
+    }));
+    setElapsedTimes((prev) => ({
+      ...prev,
+      [id]: 0, // Reset timer for the new account
+    }));
+  };
+
+  const handleStop = (id) => {
+    setRunningTrades((prev) => ({
+      ...prev,
+      [id]: false,
+    }));
+  };
+
+  const formatTime = (timeInSeconds) => {
+    const minutes = String(Math.floor(timeInSeconds / 60)).padStart(2, "0");
+    const seconds = String(timeInSeconds % 60).padStart(2, "0");
+    return `${minutes}:${seconds}`;
+  };
+
+  const refreshAccounts = async () => {
+    if (
+      window.confirm("Are you sure you want to refresh and upload CSV data?")
+    ) {
+      try {
+        const token = currentUser.token; // Get the token from the currentUser object
+
+        const headers = {
+          Authorization: `Bearer ${token}`, // Pass token in the Authorization header
+          "Content-Type": "application/json", // Set content type if sending JSON
+        };
+        setLoading(true);
+
+        // Use BaseURL for the API call
+        const response = await axios.post(
+          `${BaseURL}upload-csv`, // Updated to use BaseURL
+          {}, // Sending an empty object as the request body
+          { headers }
+        );
+
+        // Log the entire response to debug
+        // console.log("Server Response:", response.data);
+        
+        // Show alert based on the server response
+        alert(response.data); // Display the message from the server
+        fetchData(); // Fetch the updated data after the refresh
+        setLoading(false);
+      } catch (error) {
+        console.error("Error refreshing and uploading CSV:", error);
+        alert(
+          "Failed to refresh and upload CSV data. Please check the console for more details."
+        );
+      }
+    }
+  };
+
   return (
     <div className="p-3 w-full">
       <Breadcrumb aria-label="Default breadcrumb example">
-        <Breadcrumb.Item href="#" icon={HiHome}>
+        <Breadcrumb.Item href="/dashboard?tab=dash" icon={HiHome}>
           Home
         </Breadcrumb.Item>
         <Breadcrumb.Item>Account Details</Breadcrumb.Item>
@@ -689,67 +824,83 @@ export default function DashAccountDetails() {
             </div>
           </div>
 
-          <div className="flex gap-3 justify mt-4">
-            <select
-              id="accountFilter"
-              value={accountFilter}
-              onChange={(e) => setAccountFilter(e.target.value)}
-              className="block w-1/6 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm dark:bg-gray-800 dark:text-gray-200"
+          <div className="flex gap-3 justify-between mt-4 overflow-x-auto flex-nowrap">
+            <Dropdown
+              label={accountFilter || "Select Account"}
+              disabled={setsMade}
+              className="w-1/4 dark:bg-gray-800 dark:text-gray-200"
+              inline
             >
-              <option value="">Select Account</option>
+              <Dropdown.Item onClick={() => setAccountFilter("")}>
+                Select Account
+              </Dropdown.Item>
               {uniqueAccountNumbers.map((account) => (
-                <option key={account} value={account}>
+                <Dropdown.Item
+                  key={account}
+                  onClick={() => setAccountFilter(account)}
+                >
                   {account}
-                </option>
+                </Dropdown.Item>
               ))}
-            </select>
-            <select
-              id="processCsv"
-              value={selectedProcessRange}
-              onChange={(e) => setSelectedProcessRange(e.target.value)}
-              className="block w-1/8 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm dark:bg-gray-800 dark:text-gray-200"
+            </Dropdown>
+
+            <Dropdown
+              label={selectedProcessRange || "Select Range"}
+              disabled={setsMade}
+              className="w-1/4 dark:bg-gray-800 dark:text-gray-200"
+              inline
             >
-              <option value="">Select Range</option>
+              <Dropdown.Item onClick={() => setSelectedProcessRange("")}>
+                Select Range
+              </Dropdown.Item>
               {processRanges.map((range) => (
-                <option key={range.label} value={range.label}>
+                <Dropdown.Item
+                  key={range.label}
+                  onClick={() => setSelectedProcessRange(range.label)}
+                >
                   {range.label}
-                </option>
+                </Dropdown.Item>
               ))}
-            </select>
-            <div className="flex gap-5 items-center">
-              <label className="flex items-center">
-                <Checkbox
-                  checked={isAdminOnly}
-                  onChange={(e) => setIsAdminOnly(e.target.checked)}
-                  className="mr-2"
-                />
-                Show Admin Only
-              </label>
+            </Dropdown>
 
-              <label className="flex items-center">
-                <Checkbox
-                  checked={isPAaccount}
-                  onChange={(e) => setIsPAaccount(e.target.checked)}
-                  className="mr-2"
-                />
-                Show PA Accounts Only
-              </label>
-
-              <label className="flex items-center">
-                <Checkbox
-                  checked={isEvalAccount}
-                  onChange={(e) => setIsEvalAccount(e.target.checked)}
-                  className="mr-2"
-                />
-                Show Eval Accounts Only
-              </label>
+            <div className="flex gap-3 items-center">
+              {[
+                {
+                  label: "Show Admin Only",
+                  checked: isAdminOnly,
+                  onChange: setIsAdminOnly,
+                  disabled: setsMade || isPAaccount || isEvalAccount,
+                },
+                {
+                  label: "Show PA Accounts Only",
+                  checked: isPAaccount,
+                  onChange: setIsPAaccount,
+                  disabled: setsMade || isAdminOnly || isEvalAccount,
+                },
+                {
+                  label: "Show Eval Accounts Only",
+                  checked: isEvalAccount,
+                  onChange: setIsEvalAccount,
+                  disabled: setsMade || isAdminOnly || isPAaccount,
+                },
+              ].map(({ label, checked, onChange, disabled }) => (
+                <label className="flex items-center" key={label}>
+                  <Checkbox
+                    checked={checked}
+                    onChange={(e) => onChange(e.target.checked)}
+                    className="mr-2"
+                    disabled={disabled}
+                  />
+                  {label}
+                </label>
+              ))}
             </div>
-            {/* add csvs here */}
+
             {currentUser.user.role === "admin" && (
               <Button
                 gradientDuoTone="greenToBlue"
                 onClick={uploadCsvs}
-                disabled={createLoding}
+                disabled={createLoding || setsMade}
               >
                 {createLoding ? (
                   <>
@@ -757,49 +908,53 @@ export default function DashAccountDetails() {
                     <span className="pl-3">Loading...</span>
                   </>
                 ) : (
-                  <>
-                    <HiPlusCircle className="mr-2 h-4 w-4" />
-                    Upload CVSs
-                  </>
+                  <>Upload CSVs</>
                 )}
               </Button>
             )}
+
             <CSVLink
               {...exportCsv()}
-              className="bg-gradient-to-r from-teal-400 via-teal-500 to-teal-600 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-teal-300 text-white rounded-md px-4 py-2 hover:bg-green-600"
+              className="bg-gradient-to-r from-teal-400 via-teal-500 to-teal-600 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-teal-300 text-white rounded-md px-4 py-2"
             >
               Export CSV
             </CSVLink>
+
             <Button
               gradientDuoTone="greenToBlue"
               onClick={() => setShowModal(true)}
+              disabled={setsMade}
             >
-              <CiViewList className="mr-3 h-4 w-4" />
+              <IoMdSettings />
               Customize CSV Export
             </Button>
-            <>
-              {setsMade ? (
-                <Button
-                  gradientDuoTone="purpleToPink"
-                  onClick={clearSets}
-                  disabled={!!accountFilter}
-                >
-                  Clear Sets
-                </Button>
-              ) : (
-                <Button
-                  gradientDuoTone="purpleToBlue"
-                  onClick={makeSets}
-                  disabled={!!accountFilter}
-                >
-                  Make Sets
-                </Button>
-              )}
-            </>
+
+            <Button
+              gradientDuoTone={setsMade ? "purpleToPink" : "purpleToBlue"}
+              onClick={setsMade ? clearSets : makeSets}
+              disabled={!!accountFilter}
+            >
+              {setsMade ? "Clear Sets" : "Make Sets"}
+            </Button>
+
             {currentUser.user.role === "admin" && (
-              <Button gradientMonochrome="failure" onClick={deleteAllAccounts}>
-                Delete All
-              </Button>
+              <>
+                <Button
+                  disabled={setsMade}
+                  gradientMonochrome="teal"
+                  onClick={refreshAccounts}
+                >
+                  {/* <IoMdRefresh /> */}
+                  Refresh
+                </Button>
+                <Button
+                  disabled={setsMade}
+                  gradientMonochrome="failure"
+                  onClick={deleteAllAccounts}
+                >
+                  Delete All
+                </Button>
+              </>
             )}
           </div>
 
@@ -816,10 +971,11 @@ export default function DashAccountDetails() {
                     <TableHead>
                       <TableHeadCell>Account</TableHeadCell>
                       <TableHeadCell>Account Balance</TableHeadCell>
-                      <TableHeadCell>Account Name</TableHeadCell>
                       <TableHeadCell>Status</TableHeadCell>
-                      <TableHeadCell>Trailing Threshold</TableHeadCell>
-                      <TableHeadCell>PnL</TableHeadCell>
+                      <TableHeadCell>Trade Name</TableHeadCell>
+                      <TableHeadCell>Direction</TableHeadCell>
+                      <TableHeadCell>Trade Time</TableHeadCell>
+                      <TableHeadCell>Action</TableHeadCell>
                     </TableHead>
                     <TableBody>
                       {setsData.length > 0 ? (
@@ -832,10 +988,7 @@ export default function DashAccountDetails() {
                           return (
                             <TableRow
                               key={account.id}
-                              style={{
-                                backgroundColor,
-                                color: textColor,
-                              }}
+                              style={{ backgroundColor, color: textColor }}
                             >
                               <TableCell>
                                 <div className="flex items-center gap-3">
@@ -860,27 +1013,118 @@ export default function DashAccountDetails() {
                                 </p>
                               </TableCell>
                               <TableCell>
-                                <p className="font-semibold">{account.name}</p>
+                                {runningTrades[account.id] ? (
+                                  <span style={{ marginRight: "8px" }}>
+                                    In Progress
+                                  </span>
+                                ) : (
+                                  <p className="font-semibold">
+                                    {account.status}
+                                  </p>
+                                )}
                               </TableCell>
-                              <TableCell>
-                                <p className="font-semibold">
-                                  {account.status}
-                                </p>
+
+                              {/* Trade Name Dropdown */}
+                              <TableCell style={{ color: "#000000" }}>
+                                <select
+                                  className="border border-gray-300 rounded-md p-2"
+                                  value={
+                                    selectedTrades[account.id]?.tradeName || ""
+                                  }
+                                  onChange={(e) =>
+                                    handleTradeChange(
+                                      account.id,
+                                      e.target.value,
+                                      "tradeName"
+                                    )
+                                  }
+                                >
+                                  <option value="" disabled>
+                                    Select Trade
+                                  </option>
+                                  {tradesData.map((trade) => (
+                                    <option key={trade.id} value={trade.id}>
+                                      {`Trade 0${trade.id}`}
+                                    </option>
+                                  ))}
+                                </select>
                               </TableCell>
-                              <TableCell>
-                                <p className="font-semibold">
-                                  ${account.trailingThreshold}
-                                </p>
+
+                              {/* Direction Drop-Down */}
+                              <TableCell style={{ color: "#000000" }}>
+                                <select
+                                  className="border border-gray-300 rounded-md p-2"
+                                  value={
+                                    selectedTrades[account.id]?.direction || ""
+                                  }
+                                  onChange={(e) =>
+                                    handleTradeChange(
+                                      account.id,
+                                      e.target.value,
+                                      "direction"
+                                    )
+                                  }
+                                >
+                                  <option value="" disabled>
+                                    Select Direction
+                                  </option>
+                                  <option value="LONG">LONG</option>
+                                  <option value="SHORT">SHORT</option>
+                                </select>
                               </TableCell>
+
+                              {/* Trade Time Input */}
+                              <TableCell style={{ color: "#000000" }}>
+                                <input
+                                  type="time"
+                                  className="border border-gray-300 rounded-md p-2"
+                                  value={selectedTrades[account.id]?.time || ""}
+                                  onChange={(e) =>
+                                    handleTradeChange(
+                                      account.id,
+                                      e.target.value,
+                                      "time"
+                                    )
+                                  }
+                                />
+                              </TableCell>
+
+                              {/* Action Button */}
                               <TableCell>
-                                <p className="font-semibold">{account.PnL}</p>
+                                {runningTrades[account.id] ? (
+                                  <div
+                                    style={{
+                                      display: "flex",
+                                      alignItems: "center",
+                                    }}
+                                  >
+                                    <span style={{ marginRight: "8px" }}>
+                                      {formatTime(
+                                        elapsedTimes[account.id] || 0
+                                      )}
+                                    </span>
+                                    <Button
+                                      gradientMonochrome="failure"
+                                      onClick={() => handleStop(account.id)}
+                                    >
+                                      Stop
+                                    </Button>
+                                  </div>
+                                ) : (
+                                  <Button
+                                    gradientMonochrome="purple"
+                                    onClick={() => handleStart(account.id)}
+                                  >
+                                    Start
+                                  </Button>
+                                )}
                               </TableCell>
                             </TableRow>
                           );
                         })
                       ) : (
                         <TableRow>
-                          <TableCell colSpan={6} className="text-center">
+                          <TableCell colSpan={7} className="text-center">
                             No data available for setsData.
                           </TableCell>
                         </TableRow>
@@ -973,96 +1217,142 @@ export default function DashAccountDetails() {
         </>
       )}
       <Modal show={showModal} onClose={() => setShowModal(false)}>
-        <Modal.Header>Select Options</Modal.Header>
-        <Modal.Body className="flex flex-col md:flex-row">
-          <div className="flex-1 ">
-            <h3>Select Columns:</h3>
-            {columns.map((col) => (
-              <label key={col.value} className="flex items-center">
-                <Checkbox
-                  checked={selectedColumns.includes(col.value)}
-                  onChange={(e) => handleCheckboxChange(col.value)}
-                  className="mr-2"
-                />
-                {col.label}
-              </label>
-            ))}
-          </div>
+        {/* Modal Header */}
+        <Modal.Header>
+          <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100">
+            Select Options
+          </h2>
+        </Modal.Header>
+
+        {/* Modal Body */}
+        <Modal.Body className="flex flex-col md:flex-row gap-6 p-4">
+          {/* Columns Section */}
           <div className="flex-1">
-            <h3>Filters:</h3>
-            <div className="flex gap-3 flex-col">
-              <select
-                id="accountFilter"
-                value={accountFilter}
-                onChange={(e) => setAccountFilter(e.target.value)}
-                className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm dark:bg-gray-800 dark:text-gray-200"
-              >
-                <option value="">Select Account</option>
-                {uniqueAccountNumbers.map((account) => (
-                  <option key={account} value={account}>
-                    {account}
-                  </option>
-                ))}
-              </select>
-              <select
-                id="processCsv"
-                value={selectedProcessRange}
-                onChange={(e) => setSelectedProcessRange(e.target.value)}
-                className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm dark:bg-gray-800 dark:text-gray-200"
-              >
-                <option value="">Select Range</option>
-                {processRanges.map((range) => (
-                  <option key={range.label} value={range.label}>
-                    {range.label}
-                  </option>
-                ))}
-              </select>
+            <h3 className="text-lg font-medium text-gray-700 dark:text-gray-200 mb-3">
+              Select Columns:
+            </h3>
+            <div className="space-y-2">
+              {columns.map((col) => (
+                <label key={col.value} className="flex items-center space-x-2">
+                  <Checkbox
+                    checked={selectedColumns.includes(col.value)}
+                    onChange={() => handleCheckboxChange(col.value)}
+                    className="focus:ring-blue-500"
+                  />
+                  <span className="text-gray-700 dark:text-gray-200">
+                    {col.label}
+                  </span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          {/* Filters Section */}
+          <div className="flex-1 p-6 bg-white dark:bg-gray-900 rounded-lg shadow-lg w-full max-w-3xl">
+            <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-200 mb-4">
+              Filters:
+            </h3>
+
+            {/* Dropdowns */}
+            <div className="flex flex-col gap-4 sm:flex-row items-start">
+              {/* Account Dropdown */}
+              <div className="w-full sm:w-1/2">
+                <Dropdown
+                  label={accountFilter || "Select Account"}
+                  className="w-full text-left dark:bg-gray-800 dark:text-gray-200"
+                  inline
+                >
+                  <Dropdown.Item onClick={() => setAccountFilter("")}>
+                    Select Account
+                  </Dropdown.Item>
+                  {uniqueAccountNumbers.map((account) => (
+                    <Dropdown.Item
+                      key={account}
+                      onClick={() => setAccountFilter(account)}
+                    >
+                      {account}
+                    </Dropdown.Item>
+                  ))}
+                </Dropdown>
+              </div>
+
+              {/* Process Range Dropdown */}
+              <div className="w-full sm:w-1/2">
+                <Dropdown
+                  label={selectedProcessRange || "Select Range"}
+                  className="w-full text-left dark:bg-gray-800 dark:text-gray-200"
+                  inline
+                >
+                  <Dropdown.Item onClick={() => setSelectedProcessRange("")}>
+                    Select Range
+                  </Dropdown.Item>
+                  {processRanges.map((range) => (
+                    <Dropdown.Item
+                      key={range.label}
+                      onClick={() => setSelectedProcessRange(range.label)}
+                    >
+                      {range.label}
+                    </Dropdown.Item>
+                  ))}
+                </Dropdown>
+              </div>
             </div>
 
-            <div className="flex flex-col gap-5">
-              <label className="flex items-center">
-                <Checkbox
-                  checked={isAdminOnlyCus}
-                  onChange={(e) => setIsAdminOnlyCus(e.target.checked)}
-                  className="mr-2"
-                />
-                Admin Only
-              </label>
+            {/* Checkbox Filters */}
+            <div className="mt-6">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <label className="flex items-center gap-2 text-gray-700 dark:text-gray-200">
+                  <Checkbox
+                    checked={isAdminOnlyCus}
+                    onChange={(e) => setIsAdminOnlyCus(e.target.checked)}
+                    className="focus:ring-blue-500"
+                    disabled={isPAaccountCus || isEvalAccountCus} // Disable if other checkboxes are checked
+                  />
+                  Admin Only
+                </label>
 
-              <label className="flex items-center">
-                <Checkbox
-                  checked={isPAaccountCus}
-                  onChange={(e) => setIsPAaccountCus(e.target.checked)}
-                  className="mr-2"
-                />
-                PA Accounts Only
-              </label>
+                <label className="flex items-center gap-2 text-gray-700 dark:text-gray-200">
+                  <Checkbox
+                    checked={isPAaccountCus}
+                    onChange={(e) => setIsPAaccountCus(e.target.checked)}
+                    className="focus:ring-blue-500"
+                    disabled={isAdminOnlyCus || isEvalAccountCus} // Disable if other checkboxes are checked
+                  />
+                  PA Accounts Only
+                </label>
 
-              <label className="flex items-center">
-                <Checkbox
-                  checked={isEvalAccountCus}
-                  onChange={(e) => setIsEvalAccountCus(e.target.checked)}
-                  className="mr-2"
-                />
-                Eval Accounts Only
-              </label>
+                <label className="flex items-center gap-2 text-gray-700 dark:text-gray-200">
+                  <Checkbox
+                    checked={isEvalAccountCus}
+                    onChange={(e) => setIsEvalAccountCus(e.target.checked)}
+                    className="focus:ring-blue-500"
+                    disabled={isAdminOnlyCus || isPAaccountCus} // Disable if other checkboxes are checked
+                  />
+                  Eval Accounts Only
+                </label>
+              </div>
             </div>
           </div>
         </Modal.Body>
-        <Modal.Footer>
-          <Button
-            gradientDuoTone="greenToBlue"
-            onClick={() => {
-              const exportData = customExports(selectedColumns); // Generate export data
-              handleExport(exportData); // Call the export function
 
-              // Clear all selections and close the modal
-              resetSelections(); // Reset selections
-              setShowModal(false); // Close the modal
-            }}
-          >
-            Export
-          </Button>
+        {/* Modal Footer */}
+        <Modal.Footer>
+          <div className="flex justify-end w-full">
+            <Button
+              gradientDuoTone="greenToBlue"
+              onClick={() => {
+                const exportData = customExports(selectedColumns); // Generate export data
+                handleExport(exportData); // Call the export function
+
+                // Clear all selections and close the modal
+                resetSelections(); // Reset selections
+                setShowModal(false); // Close the modal
+              }}
+              className="w-full sm:w-auto"
+            >
+              Export
+            </Button>
+          </div>
         </Modal.Footer>
       </Modal>
     </div>

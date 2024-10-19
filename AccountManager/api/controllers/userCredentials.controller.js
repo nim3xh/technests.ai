@@ -94,6 +94,35 @@ function index(req, res) {
     });
 }
 
+function update(req, res) { 
+  const id = req.params.id;
+  const updatedUserCredentials = {
+    FirstName: req.body.firstName,
+    LastName: req.body.lastName,
+    ApexAccountNumber: req.body.apexAccountNumber,
+    email: req.body.email,
+    role: req.body.role,
+  };
+
+  models.UserCredentials.update(updatedUserCredentials, { where: { id: id } })
+    .then((num) => {
+      if (num == 1) {
+        res.status(200).json({
+          message: "UserCredentials was updated successfully.",
+        });
+      } else {
+        res.status(404).json({
+          message: `Cannot update UserCredentials with id=${id}. Maybe UserCredentials was not found or req.body is empty!`,
+        });
+      }
+    })
+    .catch((err) => {
+      res.status(500).json({
+        message: "Error updating UserCredentials with id=" + id,
+      });
+    });
+}
+
 function changePassword(req, res) {
   // Check if required fields are provided
   if (!req.body.email || !req.body.oldPassword || !req.body.newPassword) {
@@ -284,4 +313,5 @@ module.exports = {
   changePassword: changePassword,
   updateUserByEmail: updateUserByEmail,
   destroy: destroy,
+  update: update,
 };
