@@ -105,6 +105,7 @@ export default function DashAccountDetails() {
   const [isEvalAccountCus, setIsEvalAccountCus] = useState(false);
   const [showSetsData, setShowSetsData] = useState(false); // State to control the visibility of setsData table
   const [tradesData, setTradesData] = useState([]);
+  const [selectedAccounts, setSelectedAccounts] = useState([]);
 
   const processRanges = [
     { label: "47000", min: 46750, max: 47249 },
@@ -128,7 +129,9 @@ export default function DashAccountDetails() {
 
   const deleteAllAccounts = async () => {
     if (
-      window.confirm("Are you sure you want to delete all account details from database?")
+      window.confirm(
+        "Are you sure you want to delete all account details from database?"
+      )
     ) {
       try {
         const token = currentUser.token; // Get the token from the currentUser object
@@ -279,34 +282,31 @@ export default function DashAccountDetails() {
   }, []);
 
   const debouncedApplyFilters = useCallback(
-    debounce(
-      () => {
-        const filteredCombinedData = applyFilters(
-          combinedData,
-          accountFilter,
-          isAdminOnly,
-          isPAaccount,
-          isEvalAccount,
-          selectedProcessRange,
-          processRanges
-        );
-        setFilteredData(filteredCombinedData);
+    debounce(() => {
+      const filteredCombinedData = applyFilters(
+        combinedData,
+        selectedAccounts, // Pass selectedAccounts
+        isAdminOnly,
+        isPAaccount,
+        isEvalAccount,
+        selectedProcessRange,
+        processRanges
+      );
+      setFilteredData(filteredCombinedData);
 
-        const filteredSetsData = applyFilters(
-          setsData,
-          accountFilter,
-          isAdminOnly,
-          isPAaccount,
-          isEvalAccount,
-          selectedProcessRange,
-          processRanges
-        );
-        setSetsData(filteredSetsData);
-      },
-      300 // 300ms delay
-    ),
+      const filteredSetsData = applyFilters(
+        setsData,
+        selectedAccounts, // Pass selectedAccounts
+        isAdminOnly,
+        isPAaccount,
+        isEvalAccount,
+        selectedProcessRange,
+        processRanges
+      );
+      setSetsData(filteredSetsData);
+    }, 300), // 300ms delay
     [
-      accountFilter,
+      selectedAccounts, // Update dependency
       selectedProcessRange,
       combinedData,
       isAdminOnly,
@@ -319,7 +319,7 @@ export default function DashAccountDetails() {
   // Helper function to apply filters
   const applyFilters = (
     data,
-    accountFilter,
+    selectedAccounts, // Change this to selectedAccounts
     isAdminOnly,
     isPAaccount,
     isEvalAccount,
@@ -328,10 +328,10 @@ export default function DashAccountDetails() {
   ) => {
     let filtered = data;
 
-    // Apply account filter
-    if (accountFilter) {
-      filtered = filtered.filter(
-        (item) => `${item.accountNumber} (${item.name})` === accountFilter
+    // Apply account filter for multiple accounts
+    if (selectedAccounts.length > 0) {
+      filtered = filtered.filter((item) =>
+        selectedAccounts.includes(`${item.accountNumber} (${item.name})`)
       );
     }
 
@@ -499,9 +499,9 @@ export default function DashAccountDetails() {
     let fileName = selectedProcessRange ? selectedProcessRange + "-all" : "all";
 
     // Include filters in the filename
-    if (accountFilter) {
-      const accountName = accountFilter.split(" ");
-      fileName += `-${accountName}`;
+    if (selectedAccounts.length > 0) {
+      const accountNames = selectedAccounts.join("_"); // Join selected accounts with an underscore
+      fileName += `-${accountNames}`;
     }
 
     if (isAdminOnly) {
@@ -772,7 +772,7 @@ export default function DashAccountDetails() {
 
         // Log the entire response to debug
         // console.log("Server Response:", response.data);
-        
+
         // Show alert based on the server response
         alert(response.data); // Display the message from the server
         fetchData(); // Fetch the updated data after the refresh
@@ -785,6 +785,104 @@ export default function DashAccountDetails() {
       }
     }
   };
+
+  const handleAccountSelection = (account) => {
+    if (selectedAccounts.includes(account)) {
+      setSelectedAccounts(selectedAccounts.filter((acc) => acc !== account));
+    } else {
+      setSelectedAccounts([...selectedAccounts, account]);
+    }
+  };
+
+  const handleCompare = () => {
+    // Check if exactly two accounts are selected
+    if (selectedAccounts.length !== 2) {
+      console.warn("Please select exactly two accounts for comparison.");
+      return; // Exit if the condition is not met
+    }
+
+    console.log("Comparing accounts:", selectedAccounts);
+
+    const [account1, account2] = selectedAccounts;
+
+    // Fetching account data
+    const dataForAccount1 = filteredData.filter(
+      (acc) => acc.accountNumber === account1.split(" (")[0]
+    );
+    const dataForAccount2 = filteredData.filter(
+      (acc) => acc.accountNumber === account2.split(" (")[0]
+    );
+
+    // Prepare CSV data
+    const csvData = [];
+
+    // Create a structure to ensure both accounts are represented
+    const maxRows = Math.max(dataForAccount1.length, dataForAccount2.length);
+
+    for (let i = 0; i < maxRows; i++) {
+      const acc1 = dataForAccount1[i] || {
+        name: account1.split(" (")[0],
+        accountNumber: account1.split(" (")[0],
+        accountBalance: "", // Empty balance if no data
+      };
+
+      const acc2 = dataForAccount2[i] || {
+        name: account2.split(" (")[0],
+        accountNumber: account2.split(" (")[0],
+        accountBalance: "", // Empty balance if no data
+      };
+
+      csvData.push({
+        AccountName: acc1.name,
+        AccountNumber: acc1.accountNumber,
+        AccountBalance1: acc1.accountBalance,
+        AccountBalance2: acc2.accountBalance,
+        AccountNumber2: acc2.accountNumber,
+        AccountName2: acc2.name,
+      });
+    }
+
+    // Define headers for the CSV
+    const headers = [
+      { label: "Account Name", key: "AccountName" },
+      { label: "Account Number", key: "AccountNumber" },
+      { label: "Account Balance", key: "AccountBalance1" },
+      { label: "Account Balance (Compared)", key: "AccountBalance2" },
+      { label: "Account Number (Compared)", key: "AccountNumber2" },
+      { label: "Account Name (Compared)", key: "AccountName2" },
+    ];
+
+    // Generate CSV filename
+    const filename = `compare-${account1.split(" (")[0]}-${
+      account2.split(" (")[0]
+    }.csv`;
+
+    // Generate CSV content
+    const csvContent = [
+      headers.map((header) => header.label).join(","), // CSV headers
+      ...csvData.map(
+        (row) =>
+          headers
+            .map((header) => JSON.stringify(row[header.key] || ""))
+            .join(",") // CSV rows
+      ),
+    ].join("\n");
+
+    // Create and download CSV
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+
+    link.setAttribute("href", url);
+    link.setAttribute("download", filename);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link); // Clean up
+
+    // Reset selected accounts after comparison
+    setSelectedAccounts([]);
+  };
+
 
   return (
     <div className="p-3 w-full">
@@ -826,20 +924,23 @@ export default function DashAccountDetails() {
 
           <div className="flex gap-3 justify-between mt-4 overflow-x-auto flex-nowrap">
             <Dropdown
-              label={accountFilter || "Select Account"}
-              disabled={setsMade}
-              className="w-1/4 dark:bg-gray-800 dark:text-gray-200"
+              label={
+                selectedAccounts.length > 0
+                  ? selectedAccounts.join(", ")
+                  : "Select Account"
+              }
+              className="w-full text-left dark:bg-gray-800 dark:text-gray-200"
               inline
             >
-              <Dropdown.Item onClick={() => setAccountFilter("")}>
-                Select Account
+              <Dropdown.Item onClick={() => setSelectedAccounts([])}>
+                Clear Selection
               </Dropdown.Item>
               {uniqueAccountNumbers.map((account) => (
                 <Dropdown.Item
                   key={account}
-                  onClick={() => setAccountFilter(account)}
+                  onClick={() => handleAccountSelection(account)}
                 >
-                  {account}
+                  {selectedAccounts.includes(account) ? "✓ " : ""} {account}
                 </Dropdown.Item>
               ))}
             </Dropdown>
@@ -927,6 +1028,14 @@ export default function DashAccountDetails() {
             >
               <IoMdSettings />
               Customize CSV Export
+            </Button>
+
+            <Button
+              gradientDuoTone="greenToBlue"
+              disabled={selectedAccounts.length !== 2}
+              onClick={handleCompare} // Replace with your actual compare function
+            >
+              Compare both accounts
             </Button>
 
             <Button
