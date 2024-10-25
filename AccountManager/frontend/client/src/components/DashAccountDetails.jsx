@@ -800,7 +800,9 @@ export default function DashAccountDetails() {
       console.warn("Please select exactly two accounts for comparison.");
       return; // Exit if the condition is not met
     }
-    
+
+    console.log("Comparing accounts:", selectedAccounts);
+
     const [account1, account2] = selectedAccounts;
 
     // Fetching account data
@@ -840,6 +842,12 @@ export default function DashAccountDetails() {
           ? acc2.accountBalance
           : acc2.accountBalance.toString() || "";
 
+      // Skip adding rows if both balances are null or empty
+      if (!balance1 && !balance2) {
+        continue; // Skip this iteration
+      }
+
+      // Push valid account data only
       csvData.push({
         AccountName: acc1.name,
         AccountNumber: acc1.account,
@@ -902,6 +910,7 @@ export default function DashAccountDetails() {
     // Reset selected accounts after comparison
     setSelectedAccounts([]);
   };
+
 
 
   return (
