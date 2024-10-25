@@ -800,9 +800,7 @@ export default function DashAccountDetails() {
       console.warn("Please select exactly two accounts for comparison.");
       return; // Exit if the condition is not met
     }
-
-    console.log("Comparing accounts:", selectedAccounts);
-
+    
     const [account1, account2] = selectedAccounts;
 
     // Fetching account data
@@ -832,15 +830,37 @@ export default function DashAccountDetails() {
         accountBalance: "", // Empty balance if no data
       };
 
+      // Ensure balances are treated as strings or set to empty string
+      const balance1 =
+        typeof acc1.accountBalance === "string"
+          ? acc1.accountBalance
+          : acc1.accountBalance.toString() || "";
+      const balance2 =
+        typeof acc2.accountBalance === "string"
+          ? acc2.accountBalance
+          : acc2.accountBalance.toString() || "";
+
       csvData.push({
         AccountName: acc1.name,
-        AccountNumber: acc1.accountNumber,
-        AccountBalance1: acc1.accountBalance,
-        AccountBalance2: acc2.accountBalance,
-        AccountNumber2: acc2.accountNumber,
+        AccountNumber: acc1.account,
+        AccountBalance1: balance1
+          ? parseFloat(balance1.replace(/,/g, ""))
+          : Infinity,
+        AccountBalance2: balance2
+          ? parseFloat(balance2.replace(/,/g, ""))
+          : Infinity,
+        AccountNumber2: acc2.account,
         AccountName2: acc2.name,
       });
     }
+
+    // Sort the CSV data based on both account balances
+    csvData.sort((a, b) => {
+      return (
+        Math.min(a.AccountBalance1, a.AccountBalance2) -
+        Math.min(b.AccountBalance1, b.AccountBalance2)
+      );
+    });
 
     // Define headers for the CSV
     const headers = [
