@@ -49,7 +49,7 @@ export default function SignIn() {
         navigate("/dashboard?tab=dash"); // Navigate to the dashboard after successful login
       } else {
         // Handle errors (e.g., invalid credentials)
-        dispatch(signInFailure(data.message || "Login failed"));
+        // dispatch(signInFailure(data.message || "Login failed"));
       }
     } catch (error) {
         dispatch(signInFailure("An error occurred. Please try again."));

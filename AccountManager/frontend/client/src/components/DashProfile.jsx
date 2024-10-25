@@ -55,13 +55,13 @@ export default function DashProfile() {
     console.log(userData);
     try {
       const response = await axios.patch(
-        `${BaseURL}userCredentials/${currentUser.user.email}`,
+        `${BaseURL}userCredentials/${currentUser.user.id}`,
         userData,
         { headers }
       );
 
       // Dispatch action to update user state if necessary
-      console.log("Profile updated successfully", response.data);
+      // console.log("Profile updated successfully", response.data);
       setIsLoading(false);
       setErrorMessage(null);
     } catch (error) {
@@ -70,7 +70,6 @@ export default function DashProfile() {
       console.error("Error updating profile:", error);
     }
   };
-  
 
   return (
     <div className="p-3 w-full">
@@ -118,13 +117,13 @@ export default function DashProfile() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
-          <TextInput
+          {/* <TextInput
             type="password"
             id="password"
             placeholder="New Password (Leave empty if not changing)"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-          />
+          /> */}
           {errorMessage && <p className="text-red-500">{errorMessage}</p>}
           <Button
             type="submit"
