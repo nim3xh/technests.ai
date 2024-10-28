@@ -801,83 +801,66 @@ export default function DashAccountDetails() {
       return; // Exit if the condition is not met
     }
 
-    console.log("Comparing accounts:", selectedAccounts);
-
     const [account1, account2] = selectedAccounts;
 
-    // Fetching account data
-    const dataForAccount1 = filteredData.filter(
-      (acc) => acc.accountNumber === account1.split(" (")[0]
-    );
-    const dataForAccount2 = filteredData.filter(
-      (acc) => acc.accountNumber === account2.split(" (")[0]
-    );
+    // Fetching account data for each account
+    const dataForAccount1 = filteredData
+      .filter((acc) => acc.accountNumber === account1.split(" (")[0])
+      .sort(
+        (a, b) => parseFloat(a.accountBalance) - parseFloat(b.accountBalance)
+      ); // Sort in ascending order
+
+    const dataForAccount2 = filteredData
+      .filter((acc) => acc.accountNumber === account2.split(" (")[0])
+      .sort(
+        (a, b) => parseFloat(a.accountBalance) - parseFloat(b.accountBalance)
+      ); // Sort in ascending order
 
     // Prepare CSV data
     const csvData = [];
 
-    // Create a structure to ensure both accounts are represented
+    // Determine max rows to handle interleaving
     const maxRows = Math.max(dataForAccount1.length, dataForAccount2.length);
 
+    // Interleave rows: first from account1, then from account2
     for (let i = 0; i < maxRows; i++) {
       const acc1 = dataForAccount1[i] || {
         name: account1.split(" (")[0],
-        accountNumber: account1.split(" (")[0],
-        accountBalance: "", // Empty balance if no data
+        account: account1.split(" (")[0],
+        accountBalance: "", // Keep empty if no data
       };
 
       const acc2 = dataForAccount2[i] || {
         name: account2.split(" (")[0],
-        accountNumber: account2.split(" (")[0],
-        accountBalance: "", // Empty balance if no data
+        account: account2.split(" (")[0],
+        accountBalance: "", // Keep empty if no data
       };
 
-      // Ensure balances are treated as strings or set to empty string
+      // Ensure balances are numbers or empty strings
       const balance1 =
-        typeof acc1.accountBalance === "string"
-          ? acc1.accountBalance
-          : acc1.accountBalance.toString() || "";
+        acc1.accountBalance !== "" ? parseFloat(acc1.accountBalance) : "";
       const balance2 =
-        typeof acc2.accountBalance === "string"
-          ? acc2.accountBalance
-          : acc2.accountBalance.toString() || "";
+        acc2.accountBalance !== "" ? parseFloat(acc2.accountBalance) : "";
 
-      // Skip adding rows if both balances are null or empty
-      if (!balance1 && !balance2) {
-        continue; // Skip this iteration
-      }
-
-      // Push valid account data only
+      // Push data to CSV structure
       csvData.push({
-        AccountName: acc1.name,
-        AccountNumber: acc1.account,
-        AccountBalance1: balance1
-          ? parseFloat(balance1.replace(/,/g, ""))
-          : Infinity,
-        AccountBalance2: balance2
-          ? parseFloat(balance2.replace(/,/g, ""))
-          : Infinity,
-        AccountNumber2: acc2.account,
+        AccountName1: acc1.name,
+        AccountNumber1: acc1.account,
+        AccountBalance1: balance1,
         AccountName2: acc2.name,
+        AccountNumber2: acc2.account,
+        AccountBalance2: balance2,
       });
     }
 
-    // Sort the CSV data based on both account balances
-    csvData.sort((a, b) => {
-      return (
-        Math.min(a.AccountBalance1, a.AccountBalance2) -
-        Math.min(b.AccountBalance1, b.AccountBalance2)
-      );
-    });
-
     // Define headers for the CSV
     const headers = [
-      { label: "Account Name", key: "AccountName" },
-      { label: "Account Number", key: "AccountNumber" },
-      { label: "Account Balance", key: "AccountBalance1" },
-      { label: "Account Balance (Compared)", key: "AccountBalance2" },
-      { label: "Account Number (Compared)", key: "AccountNumber2" },
-      { label: "Account Name (Compared)", key: "AccountName2" },
+      { label: "Account Name (1)", key: "AccountName1" },
+      { label: "Account Number (1)", key: "AccountNumber1" },
+      { label: "Account Balance (1)", key: "AccountBalance1" },
+      { label: "Account Balance (2)", key: "AccountBalance2" },
+      { label: "Account Number (2)", key: "AccountNumber2" },
+      { label: "Account Name (2)", key: "AccountName2" },
     ];
 
     // Generate CSV filename
@@ -885,14 +868,13 @@ export default function DashAccountDetails() {
       account2.split(" (")[0]
     }.csv`;
 
-    // Generate CSV content
+    // Prepare CSV content
     const csvContent = [
       headers.map((header) => header.label).join(","), // CSV headers
-      ...csvData.map(
-        (row) =>
-          headers
-            .map((header) => JSON.stringify(row[header.key] || ""))
-            .join(",") // CSV rows
+      ...csvData.map((row) =>
+        headers
+          .map((header) => JSON.stringify(row[header.key] || "")) // CSV rows
+          .join(",")
       ),
     ].join("\n");
 
@@ -910,7 +892,6 @@ export default function DashAccountDetails() {
     // Reset selected accounts after comparison
     setSelectedAccounts([]);
   };
-
 
 
   return (
