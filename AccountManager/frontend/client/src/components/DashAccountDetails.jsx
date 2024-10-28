@@ -893,7 +893,6 @@ export default function DashAccountDetails() {
     setSelectedAccounts([]);
   };
 
-
   return (
     <div className="p-3 w-full">
       <Breadcrumb aria-label="Default breadcrumb example">
@@ -1059,7 +1058,8 @@ export default function DashAccountDetails() {
             {currentUser.user.role === "admin" && (
               <>
                 <Button
-                  disabled={setsMade}
+                  // disabled={setsMade}
+                  disabled={true}
                   gradientMonochrome="teal"
                   onClick={refreshAccounts}
                 >
@@ -1067,7 +1067,8 @@ export default function DashAccountDetails() {
                   Refresh
                 </Button>
                 <Button
-                  disabled={setsMade}
+                  // disabled={setsMade}
+                  disabled={true}
                   gradientMonochrome="failure"
                   onClick={deleteAllAccounts}
                 >
