@@ -801,55 +801,66 @@ export default function DashAccountDetails() {
       return; // Exit if the condition is not met
     }
 
-    console.log("Comparing accounts:", selectedAccounts);
-
     const [account1, account2] = selectedAccounts;
 
-    // Fetching account data
-    const dataForAccount1 = filteredData.filter(
-      (acc) => acc.accountNumber === account1.split(" (")[0]
-    );
-    const dataForAccount2 = filteredData.filter(
-      (acc) => acc.accountNumber === account2.split(" (")[0]
-    );
+    // Fetching account data for each account
+    const dataForAccount1 = filteredData
+      .filter((acc) => acc.accountNumber === account1.split(" (")[0])
+      .sort(
+        (a, b) => parseFloat(a.accountBalance) - parseFloat(b.accountBalance)
+      ); // Sort in ascending order
+
+    const dataForAccount2 = filteredData
+      .filter((acc) => acc.accountNumber === account2.split(" (")[0])
+      .sort(
+        (a, b) => parseFloat(a.accountBalance) - parseFloat(b.accountBalance)
+      ); // Sort in ascending order
 
     // Prepare CSV data
     const csvData = [];
 
-    // Create a structure to ensure both accounts are represented
+    // Determine max rows to handle interleaving
     const maxRows = Math.max(dataForAccount1.length, dataForAccount2.length);
 
+    // Interleave rows: first from account1, then from account2
     for (let i = 0; i < maxRows; i++) {
       const acc1 = dataForAccount1[i] || {
         name: account1.split(" (")[0],
-        accountNumber: account1.split(" (")[0],
-        accountBalance: "", // Empty balance if no data
+        account: account1.split(" (")[0],
+        accountBalance: "", // Keep empty if no data
       };
 
       const acc2 = dataForAccount2[i] || {
         name: account2.split(" (")[0],
-        accountNumber: account2.split(" (")[0],
-        accountBalance: "", // Empty balance if no data
+        account: account2.split(" (")[0],
+        accountBalance: "", // Keep empty if no data
       };
 
+      // Ensure balances are numbers or empty strings
+      const balance1 =
+        acc1.accountBalance !== "" ? parseFloat(acc1.accountBalance) : "";
+      const balance2 =
+        acc2.accountBalance !== "" ? parseFloat(acc2.accountBalance) : "";
+
+      // Push data to CSV structure
       csvData.push({
-        AccountName: acc1.name,
-        AccountNumber: acc1.accountNumber,
-        AccountBalance1: acc1.accountBalance,
-        AccountBalance2: acc2.accountBalance,
-        AccountNumber2: acc2.accountNumber,
+        AccountName1: acc1.name,
+        AccountNumber1: acc1.account,
+        AccountBalance1: balance1,
         AccountName2: acc2.name,
+        AccountNumber2: acc2.account,
+        AccountBalance2: balance2,
       });
     }
 
     // Define headers for the CSV
     const headers = [
-      { label: "Account Name", key: "AccountName" },
-      { label: "Account Number", key: "AccountNumber" },
-      { label: "Account Balance", key: "AccountBalance1" },
-      { label: "Account Balance (Compared)", key: "AccountBalance2" },
-      { label: "Account Number (Compared)", key: "AccountNumber2" },
-      { label: "Account Name (Compared)", key: "AccountName2" },
+      { label: "Account Name (1)", key: "AccountName1" },
+      { label: "Account Number (1)", key: "AccountNumber1" },
+      { label: "Account Balance (1)", key: "AccountBalance1" },
+      { label: "Account Balance (2)", key: "AccountBalance2" },
+      { label: "Account Number (2)", key: "AccountNumber2" },
+      { label: "Account Name (2)", key: "AccountName2" },
     ];
 
     // Generate CSV filename
@@ -857,14 +868,13 @@ export default function DashAccountDetails() {
       account2.split(" (")[0]
     }.csv`;
 
-    // Generate CSV content
+    // Prepare CSV content
     const csvContent = [
       headers.map((header) => header.label).join(","), // CSV headers
-      ...csvData.map(
-        (row) =>
-          headers
-            .map((header) => JSON.stringify(row[header.key] || ""))
-            .join(",") // CSV rows
+      ...csvData.map((row) =>
+        headers
+          .map((header) => JSON.stringify(row[header.key] || "")) // CSV rows
+          .join(",")
       ),
     ].join("\n");
 
@@ -882,7 +892,6 @@ export default function DashAccountDetails() {
     // Reset selected accounts after comparison
     setSelectedAccounts([]);
   };
-
 
   return (
     <div className="p-3 w-full">
@@ -1049,7 +1058,8 @@ export default function DashAccountDetails() {
             {currentUser.user.role === "admin" && (
               <>
                 <Button
-                  disabled={setsMade}
+                  // disabled={setsMade}
+                  disabled={true}
                   gradientMonochrome="teal"
                   onClick={refreshAccounts}
                 >
@@ -1057,7 +1067,8 @@ export default function DashAccountDetails() {
                   Refresh
                 </Button>
                 <Button
-                  disabled={setsMade}
+                  // disabled={setsMade}
+                  disabled={true}
                   gradientMonochrome="failure"
                   onClick={deleteAllAccounts}
                 >
