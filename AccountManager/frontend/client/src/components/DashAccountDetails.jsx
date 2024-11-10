@@ -462,6 +462,7 @@ export default function DashAccountDetails() {
 
       setPaAccountsCount(paCount);
       setNonPaAccountsCount(nonPaCount);
+      
     } catch (err) {
       setError("Something went wrong while fetching data.");
       setLoading(false);
@@ -1068,7 +1069,7 @@ export default function DashAccountDetails() {
                 </Button>
                 <Button
                   // disabled={setsMade}
-                  disabled={true}
+                  disabled={false}
                   gradientMonochrome="failure"
                   onClick={deleteAllAccounts}
                 >

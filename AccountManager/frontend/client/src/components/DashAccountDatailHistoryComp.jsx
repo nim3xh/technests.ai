@@ -100,6 +100,7 @@ export default function DashTradeHistoryComp() {
       { label: "Status", value: "status" },
       { label: "Trailing Threshold", value: "trailingThreshold" },
       { label: "PnL", value: "pnl" },
+      { label: "Deleted At", value: "deletedAt" },
     ],
     []
   );
@@ -481,12 +482,6 @@ export default function DashTradeHistoryComp() {
               <h4>
                 Total Unique Accounts Displayed: {totalUniqueAccountsDisplayed}
               </h4>
-            </div>
-            <div className="flex flex-col p-3 dark:bg-slate-800 gap-4 md:w-56 w-full rounded-md shadow-md">
-              <h4>Total PA Account Rows: {paAccountsCount}</h4>
-            </div>
-            <div className="flex flex-col p-3 dark:bg-slate-800 gap-4 md:w-64 w-full rounded-md shadow-md">
-              <h4>Total Eval Account Rows: {nonPaAccountsCount}</h4>
             </div>
           </div>
 
