@@ -31,13 +31,17 @@ export default function DashTrades() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [newTrade, setNewTrade] = useState({
-    SL: "",
-    TP: "",
+    TradeName: "",
     Instrument: "",
     Quantity: "",
-    TrailingSL: "",
-    Steps: "",
-    BreakEven: "",
+    StopLoss: "",
+    Profit: "",
+    UseBreakeven: "",
+    BreakevenTrigger: "",
+    BreakevenOffset: "",
+    UseTrail: "",
+    TrailTrigger: "",
+    Trail : ""
   });
 
   const fetchData = async () => {
@@ -65,13 +69,17 @@ export default function DashTrades() {
   // Reset the form
   const resetForm = () => {
     setNewTrade({
-      SL: "",
-      TP: "",
+      TradeName: "",
       Instrument: "",
       Quantity: "",
-      TrailingSL: "",
-      Steps: "",
-      BreakEven: "",
+      StopLoss: "",
+      Profit: "",
+      UseBreakeven: "",
+      BreakevenTrigger: "",
+      BreakevenOffset: "",
+      UseTrail: "",
+      TrailTrigger: "",
+      Trail : ""
     });
     setIsEditMode(false);
     setSelectedTradeId(null);
@@ -84,7 +92,7 @@ export default function DashTrades() {
       const headers = {
         Authorization: `Bearer ${token}`,
       };
-
+      
       if (isEditMode) {
         // Update trade via PATCH
         await axios.patch(`${BaseURL}trades/${selectedTradeId}`, newTrade, {
@@ -182,26 +190,34 @@ export default function DashTrades() {
         <Table hoverable className="shadow-md w-full">
           <TableHead>
             <TableHeadCell>#</TableHeadCell>
-            <TableHeadCell>SL</TableHeadCell>
-            <TableHeadCell>TP</TableHeadCell>
+            <TableHeadCell>TradeName</TableHeadCell>
             <TableHeadCell>Instrument</TableHeadCell>
             <TableHeadCell>Quantity</TableHeadCell>
-            <TableHeadCell>TrailingSL</TableHeadCell>
-            <TableHeadCell>Steps</TableHeadCell>
-            <TableHeadCell>BreakEven</TableHeadCell>
+            <TableHeadCell>StopLoss</TableHeadCell>
+            <TableHeadCell>Profit</TableHeadCell>
+            <TableHeadCell>UseBreakeven</TableHeadCell>
+            <TableHeadCell>BreakevenTrigger</TableHeadCell>
+            <TableHeadCell>BreakevenOffset</TableHeadCell>
+            <TableHeadCell>UseTrail</TableHeadCell>
+            <TableHeadCell>TrailTrigger</TableHeadCell>
+            <TableHeadCell>Trail</TableHeadCell>
             <TableHeadCell></TableHeadCell>
           </TableHead>
           <TableBody>
             {tradesData.map((trade, index) => (
               <TableRow key={index}>
-                <TableCell>{trade.id}</TableCell>
-                <TableCell>{trade.SL}</TableCell>
-                <TableCell>{trade.TP}</TableCell>
+                <TableCell>{index + 1}</TableCell>
+                <TableCell>{trade.TradeName}</TableCell>
                 <TableCell>{trade.Instrument}</TableCell>
                 <TableCell>{trade.Quantity}</TableCell>
-                <TableCell>{trade.TrailingSL}</TableCell>
-                <TableCell>{trade.Steps}</TableCell>
-                <TableCell>{trade.BreakEven}</TableCell>
+                <TableCell>{trade.StopLoss}</TableCell>
+                <TableCell>{trade.Profit}</TableCell>
+                <TableCell>{trade.UseBreakeven ? "Yes" : "No"}</TableCell>
+                <TableCell>{trade.BreakevenTrigger}</TableCell>
+                <TableCell>{trade.BreakevenOffset}</TableCell>'
+                <TableCell>{trade.UseTrail ? "Yes" : "No"}</TableCell>
+                <TableCell>{trade.TrailTrigger}</TableCell>
+                <TableCell>{trade.Trail}</TableCell>
                 <TableCell>
                   <Button.Group>
                     <Button
@@ -233,27 +249,14 @@ export default function DashTrades() {
         <Modal.Body>
           <div className="space-y-6">
             <div>
-              <Label htmlFor="SL" value="SL">
-                SL
+              <Label htmlFor="TradeName" value="TradeName">
+              TradeName
               </Label>
               <TextInput
-                id="SL"
-                name="SL"
-                placeholder="SL"
-                value={newTrade.SL}
-                onChange={handleChange}
-                required
-              />
-            </div>
-            <div>
-              <Label htmlFor="TP" value="TP">
-                TP
-              </Label>
-              <TextInput
-                id="TP"
-                name="TP"
-                placeholder="TP"
-                value={newTrade.TP}
+                id="TradeName"
+                name="TradeName"
+                placeholder="TradeName"
+                value={newTrade.TradeName}
                 onChange={handleChange}
                 required
               />
@@ -283,46 +286,111 @@ export default function DashTrades() {
                 onChange={handleChange}
                 required
               />
-            </div>
-            <div>
-              <Label htmlFor="TrailingSL" value="TrailingSL">
-                TrailingSL
+              </div>
+              <div>
+              <Label htmlFor="StopLoss" value="StopLoss">
+                StopLoss
               </Label>
               <TextInput
-                id="TrailingSL"
-                name="TrailingSL"
-                placeholder="TrailingSL"
-                value={newTrade.TrailingSL}
+                id="StopLoss"
+                name="StopLoss"
+                placeholder="StopLoss"
+                value={newTrade.StopLoss}
                 onChange={handleChange}
                 required
               />
-            </div>
-            <div>
-              <Label htmlFor="Steps" value="Steps">
-                Steps
+              </div>
+              <div>
+              <Label htmlFor="Profit" value="Profit">
+                Profit
               </Label>
               <TextInput
-                id="Steps"
-                name="Steps"
-                placeholder="Steps"
-                value={newTrade.Steps}
+                id="Profit"
+                name="Profit"
+                placeholder="Profit"
+                value={newTrade.Profit}
                 onChange={handleChange}
                 required
               />
-            </div>
-            <div>
-              <Label htmlFor="BreakEven" value="BreakEven">
-                BreakEven
+              </div>
+              <div>
+              <Label htmlFor="UseBreakeven" value="UseBreakeven">
+                UseBreakeven
               </Label>
               <TextInput
-                id="BreakEven"
-                name="BreakEven"
-                placeholder="BreakEven"
-                value={newTrade.BreakEven}
+                id="UseBreakeven"
+                name="UseBreakeven"
+                placeholder="UseBreakeven"
+                value={newTrade.UseBreakeven}
                 onChange={handleChange}
                 required
               />
-            </div>
+              </div>
+              <div>
+              <Label htmlFor="BreakevenTrigger" value="BreakevenTrigger">
+                BreakevenTrigger
+              </Label>
+              <TextInput
+                id="BreakevenTrigger"
+                name="BreakevenTrigger"
+                placeholder="BreakevenTrigger"
+                value={newTrade.BreakevenTrigger}
+                onChange={handleChange}
+                required
+              />
+              </div>
+              <div>
+              <Label htmlFor="BreakevenOffset" value="BreakevenOffset">
+                BreakevenOffset
+                </Label>
+                <TextInput
+                id="BreakevenOffset"
+                name="BreakevenOffset"
+                placeholder="BreakevenOffset"
+                value={newTrade.BreakevenOffset}
+                onChange={handleChange}
+                required
+              />
+              </div>
+              <div>
+              <Label htmlFor="UseTrail" value="UseTrail">
+                UseTrail
+              </Label>
+              <TextInput
+                id="UseTrail"
+                name="UseTrail"
+                placeholder="UseTrail"
+                value={newTrade.UseTrail}
+                onChange={handleChange}
+                required
+              />
+              </div>
+              <div>
+              <Label htmlFor="TrailTrigger" value="TrailTrigger">
+                TrailTrigger
+              </Label>
+              <TextInput
+                id="TrailTrigger"
+                name="TrailTrigger"
+                placeholder="TrailTrigger"
+                value={newTrade.TrailTrigger}
+                onChange={handleChange}
+                required
+              />
+              </div>
+              <div>
+              <Label htmlFor="Trail" value="Trail">
+                Trail
+              </Label>
+              <TextInput
+                id="Trail"
+                name="Trail"
+                placeholder="Trail"
+                value={newTrade.Trail}
+                onChange={handleChange}
+                required
+              />
+              </div>
           </div>
         </Modal.Body>
         <Modal.Footer>
