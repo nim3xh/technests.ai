@@ -3,10 +3,13 @@ import { useLocation } from "react-router-dom";
 import DashSidebar from "../components/DashSidebar";
 import DashProfile from "../components/DashProfile";
 import DashboardComp from "../components/DashboardComp";
+import DashboardCompUser from "../components/DashboardCompUser";
+import DashboardCompSuperUser from "../components/DashboardCompSuperUser";
 import DashAccountDetails from "../components/DashAccountDetails";
 import DashUsers from "../components/DashUsers";
 import DashAccountOwners from "../components/DashAccountOwners";
 import DashTrades from "../components/DashTrades";
+import DashUserPasswordChange from "../components/DashUserPasswordChange";
 
 export default function Dashboard() {
   const location = useLocation();
@@ -29,8 +32,14 @@ export default function Dashboard() {
       </div>
       {/* profile */}
       {tab === "profile" && <DashProfile />}
+      {/* password-change */}
+      {tab === "password-change" && <DashUserPasswordChange />}
       {/* dashboard comp */}
       {tab === "dash" && <DashboardComp />}
+      {/* dashboard comp user */}
+      {tab === "dashUser" && <DashboardCompUser />}
+      {/* dashboard comp super user */}
+      {tab === "dashSuperUser" && <DashboardCompSuperUser />}
       {/* Account Details */}
       {tab === "accountDetails" && <DashAccountDetails />}
       {/* Users */}

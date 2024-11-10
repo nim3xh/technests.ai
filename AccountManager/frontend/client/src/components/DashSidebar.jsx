@@ -13,6 +13,7 @@ import { Link, useLocation } from "react-router-dom";
 import { signoutSuccess } from "../redux/user/userSlice";
 import { useDispatch } from "react-redux";
 import { useSelector } from "react-redux";
+import { MdPassword } from "react-icons/md";
 
 const BaseURL = import.meta.env.VITE_BASE_URL;
 
@@ -50,7 +51,7 @@ export default function DashSidebar() {
       <Sidebar className="w-full md:w-56">
         <Sidebar.Items>
           <Sidebar.ItemGroup className="flex flex-col gap-1">
-            {currentUser.user.role !== "user" && (
+            {currentUser.user.role == "admin" && (
               <Link to="/dashboard?tab=dash">
                 <Sidebar.Item
                   active={tab === "dash" || !tab}
@@ -61,24 +62,59 @@ export default function DashSidebar() {
                 </Sidebar.Item>
               </Link>
             )}
+            {currentUser.user.role === "user" && (
+              <Link to="/dashboard?tab=dashUser">
+                <Sidebar.Item
+                  active={tab === "dashUser"}
+                  icon={HiChartPie}
+                  as="div"
+                >
+                  Dashboard
+                </Sidebar.Item>
+              </Link>
+            )}
+            {currentUser.user.role === "super-user" && (
+              <Link to="/dashboard?tab=dashSuperUser">
+                <Sidebar.Item
+                  active={tab === "dashSuperUser"}
+                  icon={HiChartPie}
+                  as="div"
+                >
+                  Dashboard
+                </Sidebar.Item>
+              </Link>
+            )}
+            <Sidebar.Collapse icon={HiUser} label="Profile">
+              <Link to="/dashboard?tab=profile">
+                <Sidebar.Item
+                  active={tab === "profile"}
+                  icon={HiUser}
+                  label={
+                    currentUser.user.role === "admin"
+                      ? "Admin"
+                      : currentUser.user.role === "super-user"
+                      ? "Super User"
+                      : "User"
+                  }
+                  labelColor="dark"
+                  as="div"
+                >
+                  Profile
+                </Sidebar.Item>
+              </Link>
+              <Link to="/dashboard?tab=password-change">
+                  <Sidebar.Item
+                    className="mt-2 mb-2"
+                    active={tab === "password-change"}
+                    icon={MdPassword}
+                    as="div"
+                  >
+                    Change Password
+                  </Sidebar.Item>
+                </Link>
 
-            <Link to="/dashboard?tab=profile">
-              <Sidebar.Item
-                active={tab === "profile"}
-                icon={HiUser}
-                label={
-                  currentUser.user.role === "admin"
-                    ? "Admin"
-                    : currentUser.user.role === "super-user"
-                    ? "Super User"
-                    : "User"
-                }
-                labelColor="dark"
-                as="div"
-              >
-                Profile
-              </Sidebar.Item>
-            </Link>
+            </Sidebar.Collapse>
+            
              {currentUser.user.role === "admin" && (
               <>
                 <Link to="/dashboard?tab=users">

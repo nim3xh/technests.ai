@@ -146,7 +146,12 @@ export default function DashboardComp() {
         </Breadcrumb.Item>
         <Breadcrumb.Item></Breadcrumb.Item>
       </Breadcrumb>
-      {currentUser.user.role !== "user" && (
+      <div className="text-2xl text-center mt-4">
+          Welcome, {currentUser.user.FirstName} {currentUser.user.LastName}!
+      </div>
+      
+
+      {currentUser.user.role == "admin" && (
         <>
           {loading ? (
             <div className="flex justify-center items-center h-96">
