@@ -1,14 +1,18 @@
 const models = require("../models");
 
-function save(req, res) { 
+function save(req, res) {
     const trade = {
-        SL: req.body.SL,
-        TP: req.body.TP,
+        TradeName: req.body.TradeName,
         Instrument: req.body.Instrument,
         Quantity: req.body.Quantity,
-        TrailingSL: req.body.TrailingSL,
-        Steps: req.body.Steps,
-        BreakEven: req.body.BreakEven
+        StopLoss: req.body.StopLoss,
+        Profit: req.body.Profit,
+        UseBreakeven: req.body.UseBreakeven,
+        BreakevenTrigger: req.body.BreakevenTrigger,
+        BreakevenOffset: req.body.BreakevenOffset,
+        UseTrail: req.body.UseTrail,
+        TrailTrigger: req.body.TrailTrigger,
+        Trail: req.body.Trail
     };
 
     models.Trade.create(trade)
@@ -62,21 +66,30 @@ function show(req, res) {
 function update(req, res) {
     const id = req.params.id;
     const updatedTrade = {
-        SL: req.body.SL,
-        TP: req.body.TP,
+        TradeName: req.body.TradeName,
         Instrument: req.body.Instrument,
         Quantity: req.body.Quantity,
-        TrailingSL: req.body.TrailingSL,
-        Steps: req.body.Steps,
-        BreakEven: req.body.BreakEven
+        StopLoss: req.body.StopLoss,
+        Profit: req.body.Profit,
+        UseBreakeven: req.body.UseBreakeven,
+        BreakevenTrigger: req.body.BreakevenTrigger,
+        BreakevenOffset: req.body.BreakevenOffset,
+        UseTrail: req.body.UseTrail,
+        TrailTrigger: req.body.TrailTrigger,
+        Trail: req.body.Trail
     };
 
     models.Trade.update(updatedTrade, { where: { id: id } })
         .then((result) => {
-            res.status(200).json({
-                message: "Trade updated successfully",
-                trade: result,
-            });
+            if (result[0] === 1) {
+                res.status(200).json({
+                    message: "Trade updated successfully",
+                });
+            } else {
+                res.status(404).json({
+                    message: "Trade not found",
+                });
+            }
         })
         .catch((error) => {
             res.status(500).json({
@@ -90,10 +103,15 @@ function destroy(req, res) {
     const id = req.params.id;
     models.Trade.destroy({ where: { id: id } })
         .then((result) => {
-            res.status(200).json({
-                message: "Trade deleted successfully",
-                trade: result,
-            });
+            if (result === 1) {
+                res.status(200).json({
+                    message: "Trade deleted successfully",
+                });
+            } else {
+                res.status(404).json({
+                    message: "Trade not found",
+                });
+            }
         })
         .catch((error) => {
             res.status(500).json({
@@ -108,5 +126,5 @@ module.exports = {
     index: index,
     show: show,
     update: update,
-    destroy: destroy
-}
+    destroy: destroy,
+};

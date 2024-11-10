@@ -1,29 +1,29 @@
 'use strict';
-const {
-  Model
-} = require('sequelize');
+const { Model } = require('sequelize');
+
 module.exports = (sequelize, DataTypes) => {
   class Trade extends Model {
-    /**
-     * Helper method for defining associations.
-     * This method is not a part of Sequelize lifecycle.
-     * The `models/index` file will call this method automatically.
-     */
     static associate(models) {
-      // define association here
+      // define associations here
     }
   }
+  
   Trade.init({
-    SL: DataTypes.INTEGER,
-    TP: DataTypes.INTEGER,
+    TradeName: DataTypes.STRING,
     Instrument: DataTypes.STRING,
     Quantity: DataTypes.INTEGER,
-    TrailingSL: DataTypes.INTEGER,
-    Steps: DataTypes.INTEGER,
-    BreakEven: DataTypes.INTEGER
+    StopLoss: DataTypes.INTEGER,
+    Profit: DataTypes.INTEGER,
+    UseBreakeven: DataTypes.BOOLEAN,
+    BreakevenTrigger: DataTypes.INTEGER,
+    BreakevenOffset: DataTypes.INTEGER,
+    UseTrail: DataTypes.BOOLEAN,
+    TrailTrigger: DataTypes.INTEGER,
+    Trail: DataTypes.INTEGER
   }, {
     sequelize,
     modelName: 'Trade',
   });
+
   return Trade;
 };
