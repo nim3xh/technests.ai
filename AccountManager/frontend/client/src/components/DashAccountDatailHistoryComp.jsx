@@ -67,6 +67,7 @@ export default function DashTradeHistoryComp() {
   const [isPAaccountCus, setIsPAaccountCus] = useState(false);
   const [isEvalAccountCus, setIsEvalAccountCus] = useState(false);
   const [selectedAccounts, setSelectedAccounts] = useState([]);
+  const [showModal, setShowModal] = useState(false);
 
 
   const processRanges = [
@@ -88,6 +89,20 @@ export default function DashTradeHistoryComp() {
     { label: "54500", min: 54250, max: 54749 },
     { label: "55000", min: 54750, max: 55249 },
   ];
+
+   /* Customized Csv part */
+  // Column definitions for the table
+  const columns = useMemo(
+    () => [
+      { label: "Account", value: "account" },
+      { label: "Account Balance", value: "accountBalance" },
+      { label: "Account Name", value: "accountName" },
+      { label: "Status", value: "status" },
+      { label: "Trailing Threshold", value: "trailingThreshold" },
+      { label: "PnL", value: "pnl" },
+    ],
+    []
+  );
 
   const mergeData = (users, accountDetails) => {
     return accountDetails.map((account) => {
@@ -668,6 +683,146 @@ export default function DashTradeHistoryComp() {
           )}
         </>
       )}
+
+<Modal show={showModal} onClose={() => setShowModal(false)}>
+        {/* Modal Header */}
+        <Modal.Header>
+          <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100">
+            Select Options
+          </h2>
+        </Modal.Header>
+
+        {/* Modal Body */}
+        <Modal.Body className="flex flex-col md:flex-row gap-6 p-4">
+          {/* Columns Section */}
+          <div className="flex-1">
+            <h3 className="text-lg font-medium text-gray-700 dark:text-gray-200 mb-3">
+              Select Columns:
+            </h3>
+            <div className="space-y-2">
+              {columns.map((col) => (
+                <label key={col.value} className="flex items-center space-x-2">
+                  <Checkbox
+                    checked={selectedColumns.includes(col.value)}
+                    onChange={() => handleCheckboxChange(col.value)}
+                    className="focus:ring-blue-500"
+                  />
+                  <span className="text-gray-700 dark:text-gray-200">
+                    {col.label}
+                  </span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          {/* Filters Section */}
+          <div className="flex-1 p-6 bg-white dark:bg-gray-900 rounded-lg shadow-lg w-full max-w-3xl">
+            <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-200 mb-4">
+              Filters:
+            </h3>
+
+            {/* Dropdowns */}
+            <div className="flex flex-col gap-4 sm:flex-row items-start">
+              {/* Account Dropdown */}
+              <div className="w-full sm:w-1/2">
+                <Dropdown
+                  label={accountFilter || "Select Account"}
+                  className="w-full text-left dark:bg-gray-800 dark:text-gray-200"
+                  inline
+                >
+                  <Dropdown.Item onClick={() => setAccountFilter("")}>
+                    Select Account
+                  </Dropdown.Item>
+                  {uniqueAccountNumbers.map((account) => (
+                    <Dropdown.Item
+                      key={account}
+                      onClick={() => setAccountFilter(account)}
+                    >
+                      {account}
+                    </Dropdown.Item>
+                  ))}
+                </Dropdown>
+              </div>
+
+              {/* Process Range Dropdown */}
+              <div className="w-full sm:w-1/2">
+                <Dropdown
+                  label={selectedProcessRange || "Select Range"}
+                  className="w-full text-left dark:bg-gray-800 dark:text-gray-200"
+                  inline
+                >
+                  <Dropdown.Item onClick={() => setSelectedProcessRange("")}>
+                    Select Range
+                  </Dropdown.Item>
+                  {processRanges.map((range) => (
+                    <Dropdown.Item
+                      key={range.label}
+                      onClick={() => setSelectedProcessRange(range.label)}
+                    >
+                      {range.label}
+                    </Dropdown.Item>
+                  ))}
+                </Dropdown>
+              </div>
+            </div>
+
+            {/* Checkbox Filters */}
+            <div className="mt-6">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <label className="flex items-center gap-2 text-gray-700 dark:text-gray-200">
+                  <Checkbox
+                    checked={isAdminOnlyCus}
+                    onChange={(e) => setIsAdminOnlyCus(e.target.checked)}
+                    className="focus:ring-blue-500"
+                    disabled={isPAaccountCus || isEvalAccountCus} // Disable if other checkboxes are checked
+                  />
+                  Admin Only
+                </label>
+
+                <label className="flex items-center gap-2 text-gray-700 dark:text-gray-200">
+                  <Checkbox
+                    checked={isPAaccountCus}
+                    onChange={(e) => setIsPAaccountCus(e.target.checked)}
+                    className="focus:ring-blue-500"
+                    disabled={isAdminOnlyCus || isEvalAccountCus} // Disable if other checkboxes are checked
+                  />
+                  PA Accounts Only
+                </label>
+
+                <label className="flex items-center gap-2 text-gray-700 dark:text-gray-200">
+                  <Checkbox
+                    checked={isEvalAccountCus}
+                    onChange={(e) => setIsEvalAccountCus(e.target.checked)}
+                    className="focus:ring-blue-500"
+                    disabled={isAdminOnlyCus || isPAaccountCus} // Disable if other checkboxes are checked
+                  />
+                  Eval Accounts Only
+                </label>
+              </div>
+            </div>
+          </div>
+        </Modal.Body>
+
+        {/* Modal Footer */}
+        <Modal.Footer>
+          <div className="flex justify-end w-full">
+            <Button
+              gradientDuoTone="greenToBlue"
+              onClick={() => {
+                const exportData = customExports(selectedColumns); // Generate export data
+                handleExport(exportData); // Call the export function
+
+                // Clear all selections and close the modal
+                resetSelections(); // Reset selections
+                setShowModal(false); // Close the modal
+              }}
+              className="w-full sm:w-auto"
+            >
+              Export
+            </Button>
+          </div>
+        </Modal.Footer>
+      </Modal>
     </div>
   )
 }
