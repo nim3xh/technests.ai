@@ -9,11 +9,8 @@ module.exports = {
         primaryKey: true,
         type: Sequelize.INTEGER
       },
-      SL: {
-        type: Sequelize.INTEGER
-      },
-      TP: {
-        type: Sequelize.INTEGER
+      TradeName: {
+        type: Sequelize.STRING
       },
       Instrument: {
         type: Sequelize.STRING
@@ -21,13 +18,28 @@ module.exports = {
       Quantity: {
         type: Sequelize.INTEGER
       },
-      TrailingSL: {
+      StopLoss: {
         type: Sequelize.INTEGER
       },
-      Steps: {
+      Profit: {
         type: Sequelize.INTEGER
       },
-      BreakEven: {
+      UseBreakeven: {
+        type: Sequelize.BOOLEAN
+      },
+      BreakevenTrigger: {
+        type: Sequelize.INTEGER
+      },
+      BreakevenOffset: {
+        type: Sequelize.INTEGER
+      },
+      UseTrail: {
+        type: Sequelize.BOOLEAN
+      },
+      TrailTrigger: {
+        type: Sequelize.INTEGER
+      },
+      Trail: {
         type: Sequelize.INTEGER
       },
       createdAt: {
@@ -40,6 +52,7 @@ module.exports = {
       }
     });
   },
+  
   async down(queryInterface, Sequelize) {
     await queryInterface.dropTable('Trades');
   }

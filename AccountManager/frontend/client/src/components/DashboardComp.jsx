@@ -18,6 +18,7 @@ import { GiMedievalGate } from "react-icons/gi";
 import axios from "axios";
 import { Link } from "react-router-dom"; 
 import ReactApexChart from "react-apexcharts";
+import { Datepicker } from "flowbite-react";
 
 const BaseURL = import.meta.env.VITE_BASE_URL;
 
@@ -253,7 +254,7 @@ export default function DashboardComp() {
 
               <div className="flex flex-wrap items-start">
                 {/* Pie Chart Section */}
-                <div id="pie-chart" className="w-full md:w-1/2 p-3 mt-20 ">
+                <div id="pie-chart" className="w-full md:w-1/3 p-3 mt-20">
                   <ReactApexChart
                     options={{
                       series: chartData.series,
@@ -294,8 +295,13 @@ export default function DashboardComp() {
                   />
                 </div>
 
+                {/* Datepicker Section (centered between chart and table) */}
+                <div className="w-full md:w-1/3 p-3 flex justify-center mt-20">
+                  <Datepicker inline />
+                </div>
+
                 {/* Table Section */}
-                <div className="w-full md:w-1/2 p-3">
+                <div className="w-full md:w-1/3 p-3">
                   <Table hoverable className="shadow-md w-full">
                     <TableHead>
                       <TableHeadCell>#</TableHeadCell>
