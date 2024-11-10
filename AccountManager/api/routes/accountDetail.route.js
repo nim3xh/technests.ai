@@ -10,6 +10,7 @@ router.post("/add-account", verifyToken, upload.single("csvFile"), accountDetail
 router.post("/add-accounts", verifyToken, upload.array("csvFiles"), accountDetailController.importFromCSVs);
 router.post('/add-acc-auto', upload.array("csvFiles"), accountDetailController.importFromCSVs);
 router.get("/", verifyToken, accountDetailController.index);
+router.get('/viewDeleted', verifyToken,accountDetailController.indexDeleted);
 router.get("/:id", verifyToken, accountDetailController.show);
 router.get("/account/:account", verifyToken, accountDetailController.showByACnu);
 router.patch("/:id", verifyToken, accountDetailController.update);
@@ -17,5 +18,6 @@ router.patch("/account/:account", verifyToken, accountDetailController.updateByA
 router.delete("/:id", verifyToken, accountDetailController.destroy);
 router.delete("/", accountDetailController.destroyAll);
 router.delete('/auto-delete', accountDetailController.destroyAll);
+
 
 module.exports = router;

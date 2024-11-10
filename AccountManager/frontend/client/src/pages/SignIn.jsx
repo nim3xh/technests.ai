@@ -46,7 +46,11 @@ export default function SignIn() {
         // Handle successful sign-in
         dispatch(signInSuccess(data)); // Update the user state with the fetched user data
         localStorage.setItem("access", data.token);
-        navigate("/dashboard?tab=dash"); // Navigate to the dashboard after successful login
+        if (data.user.role === "admin") navigate("/dashboard?tab=dash"); // Navigate to the users tab if the user is an admin
+        else if (data.user.role === "user"){
+          navigate("/dashboard?tab=dashUser"); // Navigate to the user dashboard if the user is a regular user
+        }
+        else if (data.user.role === "super-user") navigate("/dashboard?tab=dashSuperUser"); // Navigate to the superuser dashboard if the user is a superuser
       } else {
         // Handle errors (e.g., invalid credentials)
         // dispatch(signInFailure(data.message || "Login failed"));

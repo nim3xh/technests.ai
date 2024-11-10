@@ -52,6 +52,7 @@ export default function DashSidebar() {
         <Sidebar.Items>
           <Sidebar.ItemGroup className="flex flex-col gap-1">
             {currentUser.user.role == "admin" && (
+              <>
               <Link to="/dashboard?tab=dash">
                 <Sidebar.Item
                   active={tab === "dash" || !tab}
@@ -61,6 +62,7 @@ export default function DashSidebar() {
                   Dashboard
                 </Sidebar.Item>
               </Link>
+              </>
             )}
             {currentUser.user.role === "user" && (
               <Link to="/dashboard?tab=dashUser">
@@ -159,6 +161,17 @@ export default function DashSidebar() {
                   </Sidebar.Item>
                 </Link>
               </>
+            )}
+            {currentUser.user.role == 'admin' &&(
+              <Link to="/dashboard?tab=accountDetailsHistory">
+                <Sidebar.Item
+                  active={tab === "accountDetailsHistory"}
+                  icon={HiBriefcase}
+                  as="div"
+                >
+                  Account D. History
+                </Sidebar.Item>
+              </Link>
             )}
             <Sidebar.Item
               icon={HiArrowSmRight}
