@@ -388,7 +388,12 @@ function destroyAll(req, res) {
 }
 
 function indexDeleted(req, res) {
-  models.AccountDetail.findAll({ paranoid: false })
+  models.AccountDetail.findAll({
+    where: {
+      deletedAt: { [models.Sequelize.Op.ne]: null }
+    },
+    paranoid: false
+  })
     .then((result) => {
       res.status(200).json(result);
     })
@@ -399,7 +404,6 @@ function indexDeleted(req, res) {
       });
     });
 }
-
 
 module.exports = {
   save: save,

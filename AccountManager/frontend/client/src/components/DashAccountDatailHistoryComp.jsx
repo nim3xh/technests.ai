@@ -589,6 +589,7 @@ export default function DashTradeHistoryComp() {
                       <TableHeadCell>Status</TableHeadCell>
                       <TableHeadCell>Trailing Threshold</TableHeadCell>
                       <TableHeadCell>PnL</TableHeadCell>
+                      <TableHeadCell>Deleted At</TableHeadCell>
                     </TableHead>
                     <TableBody>
                       {filteredData.length > 0 ? (
@@ -635,6 +636,20 @@ export default function DashTradeHistoryComp() {
                               </TableCell>
                               <TableCell>
                                 <p className="font-semibold">{account.PnL}</p>
+                              </TableCell>
+                              <TableCell>
+                                <p className="font-semibold">
+                                  {new Date(account.deletedAt).toLocaleDateString("en-US", {
+                                    year: "numeric",
+                                    month: "long",
+                                    day: "numeric"
+                                  })}{" "}
+                                  {new Date(account.deletedAt).toLocaleTimeString("en-US", {
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                    second: "2-digit"
+                                  })}
+                                </p>
                               </TableCell>
                             </TableRow>
                           );

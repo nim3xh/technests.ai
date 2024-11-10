@@ -6,10 +6,7 @@ import { Breadcrumb } from "flowbite-react";
 const BaseURL = import.meta.env.VITE_BASE_URL;
 
 export default function DashboardCompUser() {
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const { currentUser } = useSelector((state) => state.user);
-  const [userStats, setUserStats] = useState([]);
 
   // Generate the calendar days for the current month
   const generateCalendar = () => {
@@ -53,6 +50,9 @@ export default function DashboardCompUser() {
   const calendarDays = generateCalendar();
   const { monthName, year } = getMonthAndYear();
 
+  const todayDate = new Date().getDate();
+  const currentDayOfWeek = new Date().getDay(); // 0 - Sunday, 6 - Saturday
+
   const handleDateClick = (day, index) => {
     if (day && index % 7 !== 0 && index % 7 !== 6) { // Check if the day is not Saturday or Sunday
       alert(`Selected day: ${day}`);
@@ -65,7 +65,6 @@ export default function DashboardCompUser() {
         <Breadcrumb.Item href="#" icon={HiHome}>
           Home
         </Breadcrumb.Item>
-        <Breadcrumb.Item></Breadcrumb.Item>
       </Breadcrumb>
       <div className="text-2xl text-center mt-4">
         Welcome, {currentUser.user.FirstName} {currentUser.user.LastName}!
@@ -87,21 +86,30 @@ export default function DashboardCompUser() {
           <div className="text-center font-bold">Sat</div>
 
           {/* Calendar days */}
-          {calendarDays.map((day, index) => (
-            <div
-              key={index}
-              className={`p-2 text-center cursor-pointer rounded-md ${
-                day === null
-                  ? "opacity-0"
-                  : index % 7 === 0 || index % 7 === 6
-                  ? "bg-gray-300 text-gray-500" // Grayed-out weekends
-                  : "bg-blue-100 hover:bg-blue-200"
-              }`}
-              onClick={() => handleDateClick(day, index)}
-            >
-              {day}
-            </div>
-          ))}
+          {calendarDays.map((day, index) => {
+            // Determine if the current day is a weekend
+            const isWeekend = index % 7 === 0 || index % 7 === 6;
+
+            return (
+              <div
+                key={index}
+                className={`p-2 text-center cursor-pointer rounded-md ${
+                  day === null
+                    ? "opacity-0"
+                    : day === todayDate && isWeekend
+                    ? "bg-gray-400 text-blue-900" // Mixed gray and blue for today if it's a weekend
+                    : day === todayDate
+                    ? "bg-blue-800 text-white" // Dark blue for today if it's a weekday
+                    : isWeekend
+                    ? "bg-gray-300 text-gray-500" // Grayed-out weekends
+                    : "bg-blue-100 hover:bg-blue-200"
+                }`}
+                onClick={() => handleDateClick(day, index)}
+              >
+                {day}
+              </div>
+            );
+          })}
         </div>
       </div>
     </div>
