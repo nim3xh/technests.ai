@@ -10,6 +10,7 @@ import DashUsers from "../components/DashUsers";
 import DashAccountOwners from "../components/DashAccountOwners";
 import DashTrades from "../components/DashTrades";
 import DashUserPasswordChange from "../components/DashUserPasswordChange";
+import DashAccountDatailHistoryComp from "../components/DashAccountDatailHistoryComp";
 
 export default function Dashboard() {
   const location = useLocation();
@@ -42,6 +43,8 @@ export default function Dashboard() {
       {tab === "dashSuperUser" && <DashboardCompSuperUser />}
       {/* Account Details */}
       {tab === "accountDetails" && <DashAccountDetails />}
+      {/* Account Details History */}
+      {tab === "accountDetailsHistory" && <DashAccountDatailHistoryComp />}
       {/* Users */}
       {tab === "users" && <DashUsers />}
       {/* Account Owners */}

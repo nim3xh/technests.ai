@@ -353,16 +353,31 @@ function showByACnu(req, res) {
 }
 
 function destroyAll(req, res) {
-  models.AccountDetail.destroy({
-    where: {}, // No condition means all records will be deleted
-    truncate: true, // This will delete all records and reset auto-increment keys
-  });
-  deleteUploads()
+  // Get current date and time
+  const currentDateTime = new Date();
+
+  // Update all records to set the deletedAt timestamp, simulating a soft delete
+  models.AccountDetail.update(
+    { deletedAt: currentDateTime },
+    {
+      where: {}, // No condition means all records will be updated
+      paranoid: false, // Bypass Sequelize's soft delete
+    }
+  )
     .then((result) => {
-      res.status(200).json({
-        message: "All account details deleted successfully",
-        deletedRecords: result, // Number of records deleted
-      });
+      deleteUploads()
+        .then(() => {
+          res.status(200).json({
+            message: "All account details deleted successfully",
+            deletedRecords: result, // Number of records affected
+          });
+        })
+        .catch((error) => {
+          res.status(500).json({
+            message: "Something went wrong with file deletion",
+            error: error,
+          });
+        });
     })
     .catch((error) => {
       res.status(500).json({
@@ -371,6 +386,20 @@ function destroyAll(req, res) {
       });
     });
 }
+
+function indexDeleted(req, res) {
+  models.AccountDetail.findAll({ paranoid: false })
+    .then((result) => {
+      res.status(200).json(result);
+    })
+    .catch((error) => {
+      res.status(500).json({
+        message: "Something went wrong",
+        error: error,
+      });
+    });
+}
+
 
 module.exports = {
   save: save,
@@ -383,4 +412,5 @@ module.exports = {
   updateByACnu: updateByACnu,
   importFromCSV: importFromCSV,
   importFromCSVs: importFromCSVs,
+  indexDeleted: indexDeleted,
 };
