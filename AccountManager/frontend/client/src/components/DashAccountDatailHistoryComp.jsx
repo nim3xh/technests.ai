@@ -177,6 +177,67 @@ export default function DashTradeHistoryComp() {
   );
   const totalUniqueAccountsDisplayed = uniqueAccountsInFilteredData.size;
 
+  // Helper function to apply filters
+  const applyFilters = (
+    data,
+    selectedAccounts, // Change this to selectedAccounts
+    isAdminOnly,
+    isPAaccount,
+    isEvalAccount,
+    selectedProcessRange,
+    processRanges
+  ) => {
+    let filtered = data;
+
+    // Apply account filter for multiple accounts
+    if (selectedAccounts.length > 0) {
+      filtered = filtered.filter((item) =>
+        selectedAccounts.includes(`${item.accountNumber} (${item.name})`)
+      );
+    }
+
+    // Filter for admin status
+    if (isAdminOnly) {
+      filtered = filtered.filter((item) => item.status === "admin only");
+    } else {
+      filtered = filtered.filter((item) => item.status !== "admin only");
+    }
+
+    // Filter accounts that start with "PA"
+    if (isPAaccount) {
+      filtered = filtered.filter((item) => item.account.startsWith("PA"));
+    }
+
+    // Filter accounts that start with "APEX"
+    if (isEvalAccount) {
+      filtered = filtered.filter((item) => item.account.startsWith("APEX"));
+    }
+
+    // Filter by selected process range
+    if (selectedProcessRange) {
+      const selectedRange = processRanges.find(
+        (range) => range.label === selectedProcessRange
+      );
+      filtered = filtered.filter(
+        (item) =>
+          item.accountBalance >= selectedRange.min &&
+          item.accountBalance <= selectedRange.max
+      );
+    }
+
+    return filtered;
+  };
+
+  // Handle checkbox changes for column selections
+  const handleCheckboxChange = useCallback((value) => {
+    setSelectedColumns((prevSelectedColumns) => {
+      const isSelected = prevSelectedColumns.includes(value);
+      return isSelected
+        ? prevSelectedColumns.filter((col) => col !== value)
+        : [...prevSelectedColumns, value];
+    });
+  }, []);
+  
   const debouncedApplyFilters = useCallback(
     debounce(() => {
       const filteredCombinedData = applyFilters(
@@ -211,6 +272,13 @@ export default function DashTradeHistoryComp() {
       setsData,
     ]
   );
+
+  useEffect(() => {
+    debouncedApplyFilters();
+    return debouncedApplyFilters.cancel; // Cleanup debounce on unmount
+  }, [debouncedApplyFilters]);
+
+  
 
   const handleAccountSelection = (account) => {
     if (selectedAccounts.includes(account)) {
