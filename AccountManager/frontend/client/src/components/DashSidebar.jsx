@@ -51,7 +51,7 @@ export default function DashSidebar() {
       <Sidebar className="w-full md:w-56">
         <Sidebar.Items>
           <Sidebar.ItemGroup className="flex flex-col gap-1">
-            {currentUser.user.role == "admin" && (
+            {currentUser.user.role !== "user" && (
               <>
               <Link to="/dashboard?tab=dash">
                 <Sidebar.Item
@@ -75,17 +75,7 @@ export default function DashSidebar() {
                 </Sidebar.Item>
               </Link>
             )}
-            {currentUser.user.role === "super-user" && (
-              <Link to="/dashboard?tab=dashSuperUser">
-                <Sidebar.Item
-                  active={tab === "dashSuperUser"}
-                  icon={HiChartPie}
-                  as="div"
-                >
-                  Dashboard
-                </Sidebar.Item>
-              </Link>
-            )}
+            
             <Sidebar.Collapse icon={HiUser} label="Profile">
               <Link to="/dashboard?tab=profile">
                 <Sidebar.Item
@@ -117,7 +107,7 @@ export default function DashSidebar() {
 
             </Sidebar.Collapse>
             
-             {currentUser.user.role === "admin" && (
+             {currentUser.user.role !== "user" && (
               <>
               <Link to="/dashboard?tab=accountDetails">
                   <Sidebar.Item
@@ -163,7 +153,7 @@ export default function DashSidebar() {
                 
               </>
             )}
-            {currentUser.user.role == 'admin' &&(
+            {currentUser.user.role !== 'user' &&(
               <Link to="/dashboard?tab=accountDetailsHistory">
                 <Sidebar.Item
                   active={tab === "accountDetailsHistory"}

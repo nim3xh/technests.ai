@@ -50,7 +50,7 @@ export default function SignIn() {
         else if (data.user.role === "user"){
           navigate("/dashboard?tab=dashUser"); // Navigate to the user dashboard if the user is a regular user
         }
-        else if (data.user.role === "super-user") navigate("/dashboard?tab=dashSuperUser"); // Navigate to the superuser dashboard if the user is a superuser
+        else if (data.user.role === "super-user") navigate("/dashboard?tab=dash"); // Navigate to the superuser dashboard if the user is a superuser
       } else {
         // Handle errors (e.g., invalid credentials)
         // dispatch(signInFailure(data.message || "Login failed"));
