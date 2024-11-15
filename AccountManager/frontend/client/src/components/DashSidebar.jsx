@@ -119,6 +119,15 @@ export default function DashSidebar() {
             
              {currentUser.user.role === "admin" && (
               <>
+              <Link to="/dashboard?tab=accountDetails">
+                  <Sidebar.Item
+                    active={tab === "accountDetails"}
+                    icon={IoMdAnalytics}
+                    as="div"
+                  >
+                   Filter Account Details
+                  </Sidebar.Item>
+                </Link>
                 <Link to="/dashboard?tab=users">
                   <Sidebar.Item
                     active={tab === "users"}
@@ -151,15 +160,7 @@ export default function DashSidebar() {
                   </Sidebar.Item>
                 </Link>
 
-                <Link to="/dashboard?tab=accountDetails">
-                  <Sidebar.Item
-                    active={tab === "accountDetails"}
-                    icon={IoMdAnalytics}
-                    as="div"
-                  >
-                    Account Details
-                  </Sidebar.Item>
-                </Link>
+                
               </>
             )}
             {currentUser.user.role == 'admin' &&(
