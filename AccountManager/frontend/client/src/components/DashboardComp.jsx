@@ -12,7 +12,7 @@ import {
   Breadcrumb,
   Button,
 } from "flowbite-react";
-import { MdAccountBalance, MdTableRows } from "react-icons/md";
+import { MdAccountBalance, MdOutlineSurroundSound, MdPerson, MdTableRows } from "react-icons/md";
 import { CiMemoPad } from "react-icons/ci";
 import { GiMedievalGate } from "react-icons/gi";
 import axios from "axios";
@@ -167,11 +167,11 @@ export default function DashboardComp() {
                   <div className="flex justify-between">
                     <div className="">
                       <h3 className="text-gray-500 text-md uppercase">
-                        Total Unique Accounts{" "}
+                        Total Users{" "}
                       </h3>
                       <p className="text-2xl">{totalUniqueAccountsDisplayed}</p>
                     </div>
-                    <MdAccountBalance className="bg-teal-600  text-white rounded-full text-5xl p-3 shadow-lg" />
+                    <MdPerson className="bg-teal-600  text-white rounded-full text-5xl p-3 shadow-lg" />
                   </div>
                 </div>
 
@@ -212,11 +212,11 @@ export default function DashboardComp() {
                   <div className="flex justify-between">
                     <div>
                       <h3 className="text-gray-500 text-md uppercase">
-                        Total Eval Admin Only:
+                        Total Admin Only:
                       </h3>
                       <p className="text-2xl">
                         {userStats.reduce(
-                          (acc, user) => acc + user.evalAdminOnly,
+                          (acc, user) => acc + user.evalAdminOnly+user.paAdminOnly,
                           0
                         )}
                       </p>
@@ -224,22 +224,7 @@ export default function DashboardComp() {
                     <CiMemoPad className="bg-teal-600 text-white rounded-full text-5xl p-3 shadow-lg" />
                   </div>
                 </div>
-                <div className="flex flex-col p-3 dark:bg-slate-800 gap-4 md:w-72 w-full rounded-md shadow-md">
-                  <div className="flex justify-between">
-                    <div>
-                      <h3 className="text-gray-500 text-md uppercase">
-                        Total PA Admin Only:
-                      </h3>
-                      <p className="text-2xl">
-                        {userStats.reduce(
-                          (acc, user) => acc + user.paAdminOnly,
-                          0
-                        )}
-                      </p>
-                    </div>
-                    <GiMedievalGate className="bg-teal-600 text-white rounded-full text-5xl p-3 shadow-lg" />
-                  </div>
-                </div>
+                
                 <div className="flex flex-col p-3">
                   <Link
                     to="/dashboard?tab=accountDetails"
