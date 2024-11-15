@@ -212,10 +212,10 @@ export default function DashTrades() {
                 <TableCell>{trade.Quantity}</TableCell>
                 <TableCell>{trade.StopLoss}</TableCell>
                 <TableCell>{trade.Profit}</TableCell>
-                <TableCell>{trade.UseBreakeven ? "Yes" : "No"}</TableCell>
+                <TableCell>{trade.UseBreakeven ? "TRUE" : "FALSE"}</TableCell>
                 <TableCell>{trade.BreakevenTrigger}</TableCell>
                 <TableCell>{trade.BreakevenOffset}</TableCell>'
-                <TableCell>{trade.UseTrail ? "Yes" : "No"}</TableCell>
+                <TableCell>{trade.UseTrail ? "TRUE" : "FALSE"}</TableCell>
                 <TableCell>{trade.TrailTrigger}</TableCell>
                 <TableCell>{trade.Trail}</TableCell>
                 <TableCell>
