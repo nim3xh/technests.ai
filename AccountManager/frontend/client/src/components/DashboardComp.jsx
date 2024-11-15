@@ -224,17 +224,6 @@ export default function DashboardComp() {
                     <CiMemoPad className="bg-teal-600 text-white rounded-full text-5xl p-3 shadow-lg" />
                   </div>
                 </div>
-                
-                <div className="flex flex-col p-3">
-                  <Link
-                    to="/dashboard?tab=accountDetails"
-                    className="self-center whitespace-nowrap text-sm sm:text-xl font-semibold dark:text-white"
-                  >
-                    <Button gradientDuoTone="greenToBlue">
-                      Filter Account Details
-                    </Button>
-                  </Link>
-                </div>
               </div>
 
               <div className="flex flex-wrap items-start">

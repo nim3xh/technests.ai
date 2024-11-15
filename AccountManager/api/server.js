@@ -91,10 +91,10 @@ app.post("/upload-csv", async (req, res) => {
   }
 });
 
-// Schedule the task to run every 1 hour
-cron.schedule("0 * * * *", () => {
-  console.log("Running scheduled task to upload CSV files...");
-  uploadCsvFiles(); // Run the upload task every 1 hour
+// Schedule the task to run every day at 12:00 AM PST
+cron.schedule("0 8 * * *", () => {
+  console.log("Running scheduled task to upload CSV files at 12:00 AM PST...");
+  uploadCsvFiles();
 });
 
 // HTTP server creation
