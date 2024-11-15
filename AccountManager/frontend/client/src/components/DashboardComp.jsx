@@ -152,7 +152,7 @@ export default function DashboardComp() {
       </div>
       
 
-      {currentUser.user.role == "admin" && (
+      {currentUser.user.role !== "user" && (
         <>
           {loading ? (
             <div className="flex justify-center items-center h-96">
