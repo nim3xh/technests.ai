@@ -160,7 +160,7 @@ export default function DashSidebar() {
                   icon={HiBriefcase}
                   as="div"
                 >
-                  Account D. History
+                  Past Account Details
                 </Sidebar.Item>
               </Link>
             )}
