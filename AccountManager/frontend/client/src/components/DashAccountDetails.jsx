@@ -1,10 +1,8 @@
 import {
   React,
   useState,
-  useRef,
   useEffect,
   useCallback,
-  useMemo,
 } from "react";
 import { HiHome } from "react-icons/hi";
 import {
@@ -17,21 +15,14 @@ import {
   Avatar,
   Button,
   Breadcrumb,
-  Modal,
   Checkbox,
-  Label,
-  Alert,
-  TextInput,
-  Select,
   Spinner,
-  Pagination,
   Dropdown,
 } from "flowbite-react";
 import { useSelector } from "react-redux";
 import { debounce, set } from "lodash";
 import axios from "axios";
 import { CSVLink } from "react-csv";
-import { IoMdSettings } from "react-icons/io";
 
 const BaseURL = import.meta.env.VITE_BASE_URL;
 
@@ -68,7 +59,6 @@ export default function DashAccountDetails() {
   const [filteredData, setFilteredData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [accountFilter, setAccountFilter] = useState("");
   const [csvFiles, setCsvFiles] = useState([]);
   const [accountColors, setAccountColors] = useState({});
   const [isAdminOnly, setIsAdminOnly] = useState(false);
@@ -81,10 +71,6 @@ export default function DashAccountDetails() {
   const [createdDateTime, setCreatedDateTime] = useState("");
   const [showModal, setShowModal] = useState(false);
   const [setsMade, setSetsMade] = useState(false); // State to toggle between buttons
-  const [selectedColumns, setSelectedColumns] = useState([]);
-  const [isAdminOnlyCus, setIsAdminOnlyCus] = useState(false);
-  const [isPAaccountCus, setIsPAaccountCus] = useState(false);
-  const [isEvalAccountCus, setIsEvalAccountCus] = useState(false);
   const [showSetsData, setShowSetsData] = useState(false); // State to control the visibility of setsData table
   const [tradesData, setTradesData] = useState([]);
   const [selectedAccounts, setSelectedAccounts] = useState([]);
@@ -108,8 +94,6 @@ export default function DashAccountDetails() {
     { label: "54500", min: 54250, max: 54749 },
     { label: "55000", min: 54750, max: 55249 },
   ];
-
-  
 
   const mergeData = (users, accountDetails) => {
     return accountDetails.map((account) => {
@@ -436,20 +420,6 @@ export default function DashAccountDetails() {
   const formattedDateTime = createdDateTime
     ? new Date(createdDateTime).toLocaleString()
     : "";
-
-  /* Customized Csv part */
-  // Column definitions for the table
-  const columns = useMemo(
-    () => [
-      { label: "Account", value: "account" },
-      { label: "Account Balance", value: "accountBalance" },
-      { label: "Account Name", value: "accountName" },
-      { label: "Status", value: "status" },
-      { label: "Trailing Threshold", value: "trailingThreshold" },
-      { label: "PnL", value: "pnl" },
-    ],
-    []
-  );
 
   const fetchTradeData = async () => {
     try {
