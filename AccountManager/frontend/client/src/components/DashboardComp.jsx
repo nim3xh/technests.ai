@@ -149,7 +149,6 @@ export default function DashboardComp() {
           Welcome, {currentUser.user.FirstName} {currentUser.user.LastName}!
       </div>
       
-
       {currentUser.user.role !== "user" && (
         <>
           {loading ? (
