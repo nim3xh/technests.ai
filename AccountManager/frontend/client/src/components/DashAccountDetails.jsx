@@ -439,13 +439,6 @@ export default function DashAccountDetails() {
     }
   };
 
-  // Reset selection when modal is closed
-  useEffect(() => {
-    if (!showModal) {
-      // resetSelections();
-    }
-  }, [showModal]);
-
   const [runningTrades, setRunningTrades] = useState({}); // Stores running states for each account
   const [elapsedTimes, setElapsedTimes] = useState({}); // Stores time elapsed for each account
 
@@ -600,9 +593,9 @@ export default function DashAccountDetails() {
             <div className="flex flex-col p-3 dark:bg-slate-800 gap-4 md:w-56 w-full rounded-md shadow-md">
               <h4>Total Rows Displayed: {totalRows}</h4>
             </div>
-            <div className="flex flex-col p-3 dark:bg-slate-800 gap-4 md:w-72 w-full rounded-md shadow-md">
+            <div className="flex flex-col p-3 dark:bg-slate-800 gap-4 md:w-56 w-full rounded-md shadow-md">
               <h4>
-                Total Unique Accounts Displayed: {totalUniqueAccountsDisplayed}
+                Total Users Displayed: {totalUniqueAccountsDisplayed}
               </h4>
             </div>
             <div className="flex flex-col p-3 dark:bg-slate-800 gap-4 md:w-56 w-full rounded-md shadow-md">
