@@ -190,16 +190,16 @@ export default function DashTrades() {
         <Table hoverable className="shadow-md w-full">
           <TableHead>
             <TableHeadCell>#</TableHeadCell>
-            <TableHeadCell>TradeName</TableHeadCell>
+            <TableHeadCell>Trade Name</TableHeadCell>
             <TableHeadCell>Instrument</TableHeadCell>
             <TableHeadCell>Quantity</TableHeadCell>
-            <TableHeadCell>StopLoss</TableHeadCell>
+            <TableHeadCell>Stop Loss</TableHeadCell>
             <TableHeadCell>Profit</TableHeadCell>
-            <TableHeadCell>UseBreakeven</TableHeadCell>
-            <TableHeadCell>BreakevenTrigger</TableHeadCell>
-            <TableHeadCell>BreakevenOffset</TableHeadCell>
-            <TableHeadCell>UseTrail</TableHeadCell>
-            <TableHeadCell>TrailTrigger</TableHeadCell>
+            <TableHeadCell>Use Breakeven</TableHeadCell>
+            <TableHeadCell>Breakeven Trigger</TableHeadCell>
+            <TableHeadCell>Breakeven Offset</TableHeadCell>
+            <TableHeadCell>Use Trail</TableHeadCell>
+            <TableHeadCell>Trail Trigger</TableHeadCell>
             <TableHeadCell>Trail</TableHeadCell>
             <TableHeadCell></TableHeadCell>
           </TableHead>
