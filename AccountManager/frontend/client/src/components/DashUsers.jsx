@@ -14,6 +14,7 @@ import {
   Label,
   TextInput,
   Select,
+  Dropdown
 } from "flowbite-react";
 import { useSelector } from "react-redux";
 import { HiOutlineExclamationCircle, HiPlusCircle } from "react-icons/hi";
@@ -40,6 +41,7 @@ export default function DashUsers() {
     password: "",
     role: "admin", // Default role
   });
+  const [uniqueAccountNumbers, setUniqueAccountNumbers] = useState([]);
 
   const fetchData = async () => {
     try {
@@ -59,8 +61,60 @@ export default function DashUsers() {
     }
   };
 
+  // Helper function to merge users and accountDetails based on accountNumber
+  const mergeData = (users, accountDetails) => {
+    return accountDetails.map((account) => {
+      const user = users.find((u) => u.accountNumber === account.accountNumber);
+      return {
+        ...account,
+        name: user ? user.name : "Unknown",
+      };
+    });
+  };
+
+  const fetchUniqueApexAccountNumber = async () => {
+    try {
+      const token = currentUser.token;
+      const headers = {
+        Authorization: `Bearer ${token}`,
+      };
+  
+      // Fetch only user data
+      const usersResponse = await axios.get(`${BaseURL}users`, { headers });
+      const userData = usersResponse.data;
+  
+      // Create a Set to track encountered APEX account numbers
+      const encounteredAccounts = new Set();
+  
+      // Extract and filter unique APEX account numbers
+      const uniqueApexAccounts = userData
+        .filter((user) => user.accountNumber.startsWith("APEX-"))
+        .map((user) => {
+          const accountNumber = user.accountNumber;
+          if (!encounteredAccounts.has(accountNumber)) {
+            encounteredAccounts.add(accountNumber);
+            return `${accountNumber} (${user.name})`;
+          }
+          return null;
+        })
+        .filter(Boolean); // Filter out null values
+  
+      return uniqueApexAccounts;
+    } catch (error) {
+      console.error("Error fetching unique APEX account numbers:", error);
+      return [];
+    }
+  };
+  
   useEffect(() => {
     fetchData();
+
+    const getUniqueApexAccounts = async () => {
+      const accounts = await fetchUniqueApexAccountNumber();
+      setUniqueAccountNumbers(accounts);
+    };
+
+    getUniqueApexAccounts();
   }, [currentUser]);
 
   const handleAddUser = async () => {
@@ -251,13 +305,27 @@ export default function DashUsers() {
             </div>
             <div>
               <Label htmlFor="apexAccountNumber" value="Apex Account Number" />
-              <TextInput
-                id="apexAccountNumber"
-                name="apexAccountNumber"
-                value={newUser.apexAccountNumber}
-                onChange={handleChange}
-                required
-              />
+              <Dropdown
+                label={newUser.apexAccountNumber || "Select Account"}
+                className="w-full text-left dark:bg-gray-800 dark:text-gray-200"
+                inline
+              >
+                {uniqueAccountNumbers.map((account) => (
+                  <Dropdown.Item
+                    key={account}
+                    onClick={() => {
+                      // Extract the account number before the first space
+                      const extractedAccountNumber = account.split(" ")[0];
+                      setNewUser((prevState) => ({
+                        ...prevState,
+                        apexAccountNumber: extractedAccountNumber,
+                      }));
+                    }}
+                  >
+                    {account}
+                  </Dropdown.Item>
+                ))}
+              </Dropdown>
             </div>
             <div>
               <Label htmlFor="email" value="Email" />
@@ -307,6 +375,7 @@ export default function DashUsers() {
         <Modal.Header>Edit User</Modal.Header>
         <Modal.Body>
           <div className="space-y-6">
+            {/* First Name Input */}
             <div>
               <Label htmlFor="firstName" value="First Name" />
               <TextInput
@@ -317,6 +386,8 @@ export default function DashUsers() {
                 required
               />
             </div>
+
+            {/* Last Name Input */}
             <div>
               <Label htmlFor="lastName" value="Last Name" />
               <TextInput
@@ -327,16 +398,33 @@ export default function DashUsers() {
                 required
               />
             </div>
+
+            {/* Apex Account Number Dropdown */}
             <div>
               <Label htmlFor="apexAccountNumber" value="Apex Account Number" />
-              <TextInput
-                id="apexAccountNumber"
-                name="ApexAccountNumber"
-                value={editUserDetails.ApexAccountNumber || ""}
-                onChange={handleEditChange}
-                required
-              />
+              <Dropdown
+                label={editUserDetails.apexAccountNumber || "Select Account"}
+                className="w-full text-left dark:bg-gray-800 dark:text-gray-200"
+                inline
+              >
+                {uniqueAccountNumbers.map((account) => (
+                  <Dropdown.Item
+                    key={account}
+                    onClick={() => {
+                      const extractedAccountNumber = account.split(" ")[0]; // Extract account number before first space
+                      setEditUserDetails((prevState) => ({
+                        ...prevState,
+                        apexAccountNumber: extractedAccountNumber,
+                      }));
+                    }}
+                  >
+                    {account}
+                  </Dropdown.Item>
+                ))}
+              </Dropdown>
             </div>
+
+            {/* Email Input */}
             <div>
               <Label htmlFor="email" value="Email" />
               <TextInput
@@ -348,6 +436,8 @@ export default function DashUsers() {
                 required
               />
             </div>
+
+            {/* Role Selection */}
             <div>
               <Label htmlFor="role" value="Role" />
               <Select
@@ -355,6 +445,7 @@ export default function DashUsers() {
                 name="role"
                 value={editUserDetails.role || ""}
                 onChange={handleEditChange}
+                required
               >
                 <option value="admin">Admin</option>
                 <option value="user">User</option>
@@ -365,9 +456,12 @@ export default function DashUsers() {
         </Modal.Body>
         <Modal.Footer>
           <Button onClick={handleEditUser}>Save Changes</Button>
-          <Button onClick={() => setShowEditModal(false)}>Close</Button>
+          <Button variant="secondary" onClick={() => setShowEditModal(false)}>
+            Close
+          </Button>
         </Modal.Footer>
       </Modal>
+
     </div>
   );
 }

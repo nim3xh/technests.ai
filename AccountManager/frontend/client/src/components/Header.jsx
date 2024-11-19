@@ -1,11 +1,10 @@
 import { Avatar, Button, Dropdown, Navbar, TextInput } from "flowbite-react";
 import React from "react";
 import { Link } from "react-router-dom";
-import { FaMoon, FaSun } from "react-icons/fa";
 import { useSelector, useDispatch } from "react-redux";
-import { toggleTheme } from "../redux/theme/themeSlice";
 import { signoutSuccess } from "../redux/user/userSlice";
-import { useEffect, useState } from "react";
+import LogoNew from "../assets/logonew.jpg";
+
 
 const BaseURL = import.meta.env.VITE_BASE_URL;
 
@@ -40,9 +39,7 @@ export default function Header() {
         to="/dashboard?tab=dash"
         className="self-center whitespace-nowrap text-sm sm:text-xl font-semibold dark:text-white"
       >
-        <span className="px-2 py-1 bg-gradient-to-r from-teal-400 via-teal-500 to-teal-600 rounded-lg text-white">
-          technests.ai
-        </span>
+       < img src={LogoNew} alt="logo" className="w-10 h-10 rounded-lg" />
       </Link>
       <div className="flex gap-2 md:order-2">
         {/* <Button

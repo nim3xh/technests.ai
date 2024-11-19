@@ -31,6 +31,7 @@ export default function DashAccountOwners() {
       // Fetch only user data
       const usersResponse = await axios.get(`${BaseURL}users`, { headers });
       setUserData(usersResponse.data); // Set user data directly from response
+      console.log(usersResponse.data);
       setLoading(false);
     } catch (err) {
       setError("Something went wrong while fetching data.");

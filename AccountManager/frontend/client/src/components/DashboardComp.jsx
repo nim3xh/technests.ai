@@ -10,14 +10,10 @@ import {
   TableRow,
   Spinner,
   Breadcrumb,
-  Button,
 } from "flowbite-react";
 import { MdAccountBalance, MdOutlineSurroundSound, MdPerson, MdTableRows } from "react-icons/md";
 import { CiMemoPad } from "react-icons/ci";
-import { GiMedievalGate } from "react-icons/gi";
 import axios from "axios";
-import { Link } from "react-router-dom"; 
-import ReactApexChart from "react-apexcharts";
 import { Datepicker } from "flowbite-react";
 
 const BaseURL = import.meta.env.VITE_BASE_URL;
@@ -28,7 +24,7 @@ export default function DashboardComp() {
   const [error, setError] = useState(null);
   const { currentUser } = useSelector((state) => state.user);
   const [userStats, setUserStats] = useState([]);
-  const [chartData, setChartData] = useState({});
+  const [selectedDate, setSelectedDate] = useState(null);
   
   // Function to merge users and account details data
   const mergeData = (users, accountDetails) => {
@@ -112,17 +108,7 @@ export default function DashboardComp() {
           totalAccounts: stats[userName].evalActive + stats[userName].paActive,
         }));
 
-        setUserStats(userStatsArray);
-
-        // Set chart data
-        setChartData({
-          series: [
-            totalEvalActive,
-            totalPAActive,
-            totalEvalAdminOnly + totalPAAdminOnly,
-          ],
-          labels: ["EVAL Active", "PA Active", "Admin Only"],
-        });
+        setUserStats(userStatsArray); 
       } catch (err) {
         console.error("Error fetching data:", err);
         setError("Something went wrong while fetching data.");
@@ -139,6 +125,19 @@ export default function DashboardComp() {
   );
   const totalUniqueAccountsDisplayed = uniqueAccountsInFilteredData.size;
 
+
+  const handleDateChange = (date) => {
+    // Get the day of the week for the selected date
+    const dayOfWeek = new Date(date).getDay();
+    // Day 0 is Sunday and day 6 is Saturday
+    if (dayOfWeek === 0 || dayOfWeek === 6) {
+      // Alert user or simply return to prevent selecting weekends
+      alert("Weekends are not selectable.");
+      return;
+    }
+    setSelectedDate(date);
+  };
+
   return (
     <div className="p-3 w-full">
       <Breadcrumb aria-label="Default breadcrumb example">
@@ -151,7 +150,6 @@ export default function DashboardComp() {
           Welcome, {currentUser.user.FirstName} {currentUser.user.LastName}!
       </div>
       
-
       {currentUser.user.role !== "user" && (
         <>
           {loading ? (
@@ -226,56 +224,9 @@ export default function DashboardComp() {
                 </div>
               </div>
 
-              <div className="flex flex-wrap items-start">
-                {/* Pie Chart Section */}
-                <div id="pie-chart" className="w-full md:w-1/3 p-3 mt-20">
-                  <ReactApexChart
-                    options={{
-                      series: chartData.series,
-                      colors: ["#1C64F2", "#16BDCA", "#9061F9"],
-                      chart: {
-                        height: 420,
-                        type: "pie",
-                      },
-                      stroke: {
-                        colors: ["white"],
-                      },
-                      plotOptions: {
-                        pie: {
-                          labels: {
-                            show: true,
-                          },
-                          dataLabels: {
-                            offset: -25,
-                          },
-                        },
-                      },
-                      labels: chartData.labels,
-                      dataLabels: {
-                        enabled: true,
-                        style: {
-                          fontFamily: "Inter, sans-serif",
-                          color: "inherit",
-                        },
-                      },
-                      legend: {
-                        position: "bottom",
-                        fontFamily: "Inter, sans-serif",
-                      },
-                    }}
-                    series={chartData.series || []}
-                    type="pie"
-                    height={420}
-                  />
-                </div>
-
-                {/* Datepicker Section (centered between chart and table) */}
-                <div className="w-full md:w-1/3 p-3 flex justify-center mt-20">
-                  <Datepicker inline />
-                </div>
-
+              <div className="flex flex-col md:flex-row md:space-x-4 items-start">
                 {/* Table Section */}
-                <div className="w-full md:w-1/3 p-3">
+                <div className="w-full md:w-1/2 p-3 mt-5">
                   <Table hoverable className="shadow-md w-full">
                     <TableHead>
                       <TableHeadCell>#</TableHeadCell>
@@ -300,6 +251,15 @@ export default function DashboardComp() {
                       ))}
                     </TableBody>
                   </Table>
+                </div>
+
+                {/* Datepicker Section */}
+                <div className="w-full md:w-1/2 p-3 flex justify-center">
+                  <Datepicker
+                    value={selectedDate}
+                    onChange={handleDateChange}
+                    inline
+                  />
                 </div>
               </div>
             </>

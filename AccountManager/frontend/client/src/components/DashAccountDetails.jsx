@@ -1,10 +1,8 @@
 import {
   React,
   useState,
-  useRef,
   useEffect,
   useCallback,
-  useMemo,
 } from "react";
 import { HiHome } from "react-icons/hi";
 import {
@@ -17,41 +15,16 @@ import {
   Avatar,
   Button,
   Breadcrumb,
-  Modal,
   Checkbox,
-  Label,
-  Alert,
-  TextInput,
-  Select,
   Spinner,
-  Pagination,
   Dropdown,
 } from "flowbite-react";
-import {
-  HiOutlineExclamationCircle,
-  HiPlusCircle,
-  HiUserAdd,
-} from "react-icons/hi";
 import { useSelector } from "react-redux";
 import { debounce, set } from "lodash";
 import axios from "axios";
 import { CSVLink } from "react-csv";
-import { CiViewList } from "react-icons/ci";
-import { IoMdRefresh } from "react-icons/io";
-import { FaCloudUploadAlt } from "react-icons/fa";
-import { IoMdSettings } from "react-icons/io";
-import { FaFileExport } from "react-icons/fa6";
 
 const BaseURL = import.meta.env.VITE_BASE_URL;
-
-const generateRandomColor = () => {
-  const letters = "0123456789ABCDEF";
-  let color = "#";
-  for (let i = 0; i < 6; i++) {
-    color += letters[Math.floor(Math.random() * 16)];
-  }
-  return color;
-};
 
 const getLuminance = (hex) => {
   const rgb = parseInt(hex.substring(1), 16);
@@ -86,7 +59,6 @@ export default function DashAccountDetails() {
   const [filteredData, setFilteredData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [accountFilter, setAccountFilter] = useState("");
   const [csvFiles, setCsvFiles] = useState([]);
   const [accountColors, setAccountColors] = useState({});
   const [isAdminOnly, setIsAdminOnly] = useState(false);
@@ -99,10 +71,6 @@ export default function DashAccountDetails() {
   const [createdDateTime, setCreatedDateTime] = useState("");
   const [showModal, setShowModal] = useState(false);
   const [setsMade, setSetsMade] = useState(false); // State to toggle between buttons
-  const [selectedColumns, setSelectedColumns] = useState([]);
-  const [isAdminOnlyCus, setIsAdminOnlyCus] = useState(false);
-  const [isPAaccountCus, setIsPAaccountCus] = useState(false);
-  const [isEvalAccountCus, setIsEvalAccountCus] = useState(false);
   const [showSetsData, setShowSetsData] = useState(false); // State to control the visibility of setsData table
   const [tradesData, setTradesData] = useState([]);
   const [selectedAccounts, setSelectedAccounts] = useState([]);
@@ -126,96 +94,6 @@ export default function DashAccountDetails() {
     { label: "54500", min: 54250, max: 54749 },
     { label: "55000", min: 54750, max: 55249 },
   ];
-
-  const deleteAllAccounts = async () => {
-    if (
-      window.confirm(
-        "Are you sure you want to delete all account details from database?"
-      )
-    ) {
-      try {
-        const token = currentUser.token; // Get the token from the currentUser object
-
-        const headers = {
-          Authorization: `Bearer ${token}`, // Pass token in the Authorization header
-        };
-
-        await axios.delete(`${BaseURL}accountDetails/`, { headers }); // Send headers with the delete request
-        alert("All account details deleted successfully.");
-
-        setCombinedData([]); // Clear the data in the frontend after deletion
-        setFilteredData([]); // Clear the filtered data as well
-        setPaAccountsCount(0);
-        setNonPaAccountsCount(0);
-      } catch (error) {
-        console.error("Error deleting all accounts:", error);
-        alert("Failed to delete all accounts.");
-      }
-    }
-  };
-
-  const clearSets = () => {
-    setSetsMade(false); // Switch back to show the Make Sets button
-    setSetsData([]); // Reset the sets data to an empty array
-    setShowSetsData(false); // Hide the setsData table
-  };
-
-  const makeSets = () => {
-    setSetsMade(true); // Switch to show the Clear Sets button
-    const groupedAccounts = {};
-
-    // Group accounts by user name
-    filteredData.forEach((account) => {
-      if (!groupedAccounts[account.name]) {
-        groupedAccounts[account.name] = [];
-      }
-      groupedAccounts[account.name].push(account);
-    });
-
-    const sets = [];
-    const numRowsPerAccount = 4; // Number of rows per account
-    const colors = ["#808080", "#D3D3D3", "#A9A9A9", "#C0C0C0"]; // List of colors to choose from
-
-    // Get the maximum number of accounts for a user
-    const maxGroupSize = Math.max(
-      ...Object.values(groupedAccounts).map((group) => group.length)
-    );
-
-    // Color index to keep track of which color to use next
-    let colorIndex = 0;
-
-    // Create sets by appending each user's accounts in the desired order
-    for (let i = 0; i < maxGroupSize; i++) {
-      Object.keys(groupedAccounts).forEach((user) => {
-        const userAccounts = groupedAccounts[user];
-
-        // Get only available accounts for the current iteration
-        const availableAccounts = userAccounts.slice(
-          i * numRowsPerAccount,
-          (i + 1) * numRowsPerAccount
-        );
-
-        // If there are available accounts, assign color and add them to sets
-        if (availableAccounts.length > 0) {
-          // Assign the current color to all available accounts
-          const color = colors[colorIndex % colors.length]; // Get the color for the current set
-
-          availableAccounts.forEach((account) => {
-            const accountWithColor = { ...account, color }; // Assign color to account
-            sets.push(accountWithColor);
-          });
-
-          colorIndex++; // Move to the next color for the next set
-        }
-      });
-    }
-
-    setSetsData(sets);
-    setShowSetsData(true); // Show setsData table
-
-    //for decrease cpu usage
-    setFilteredData([]); // Clear the filtered data
-  };
 
   const mergeData = (users, accountDetails) => {
     return accountDetails.map((account) => {
@@ -371,10 +249,6 @@ export default function DashAccountDetails() {
     debouncedApplyFilters();
     return debouncedApplyFilters.cancel; // Cleanup debounce on unmount
   }, [debouncedApplyFilters]);
-
-  const handleFileChange = (e) => {
-    setCsvFiles(e.target.files);
-  };
 
   const uploadCsvs = async () => {
     const input = document.createElement("input");
@@ -547,114 +421,6 @@ export default function DashAccountDetails() {
     ? new Date(createdDateTime).toLocaleString()
     : "";
 
-  /* Customized Csv part */
-  // Column definitions for the table
-  const columns = useMemo(
-    () => [
-      { label: "Account", value: "account" },
-      { label: "Account Balance", value: "accountBalance" },
-      { label: "Account Name", value: "accountName" },
-      { label: "Status", value: "status" },
-      { label: "Trailing Threshold", value: "trailingThreshold" },
-      { label: "PnL", value: "pnl" },
-    ],
-    []
-  );
-
-  // Function to reset all selections
-  const resetSelections = useCallback(() => {
-    setSelectedColumns([]); // Reset column selections
-    setAccountFilter(""); // Reset account filter
-    setSelectedProcessRange(""); // Reset process range selection
-    setIsAdminOnlyCus(false); // Reset Admin Only checkbox
-    setIsPAaccountCus(false); // Reset PA Accounts Only checkbox
-    setIsEvalAccountCus(false); // Reset Eval Accounts Only checkbox
-  }, []);
-
-  // Handle checkbox changes for column selections
-  const handleCheckboxChange = useCallback((value) => {
-    setSelectedColumns((prevSelectedColumns) => {
-      const isSelected = prevSelectedColumns.includes(value);
-      return isSelected
-        ? prevSelectedColumns.filter((col) => col !== value)
-        : [...prevSelectedColumns, value];
-    });
-  }, []);
-
-  // Function to prepare data for export based on selected columns
-  const customExports = useCallback(
-    (selectedColumns) => {
-      // Choose between filteredData or setsData
-      const dataToExport = setsData.length > 0 ? setsData : filteredData;
-
-      // Define mappings for the columns
-      const columnMappings = {
-        account: { label: "Account", key: "Account" },
-        accountBalance: { label: "Account Balance", key: "AccountBalance" },
-        accountName: { label: "Account Name", key: "AccountName" },
-        status: { label: "Status", key: "Status" },
-        trailingThreshold: {
-          label: "Trailing Threshold",
-          key: "TrailingThreshold",
-        },
-        pnl: { label: "PnL", key: "PnL" },
-      };
-
-      // Filter headers based on selected columns
-      const headers = selectedColumns.map((col) => columnMappings[col]);
-
-      // Filter data based on selected columns
-      const csvData = dataToExport.map((account) => {
-        const row = {};
-        selectedColumns.forEach((col) => {
-          if (col === "accountName") {
-            row[
-              columnMappings[col].key
-            ] = `${account.accountNumber} (${account.name})`; // Handle special case for accountName
-          } else {
-            row[columnMappings[col].key] = account[col];
-          }
-        });
-        return row;
-      });
-
-      return { data: csvData, headers, filename: generateCsvFilename() };
-    },
-    [setsData, filteredData]
-  );
-
-  // Handle exporting of the data
-  const handleExport = useCallback(
-    (exportData) => {
-      const { data, headers, filename } = exportData;
-
-      // Convert data to CSV format
-      const csvContent = [
-        headers.map((header) => header.label).join(","), // CSV headers
-        ...data.map(
-          (row) =>
-            headers
-              .map((header) => JSON.stringify(row[header.key] || ""))
-              .join(",") // CSV rows
-        ),
-      ].join("\n");
-
-      // Create a blob and a link to download the CSV
-      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-      const link = document.createElement("a");
-      const url = URL.createObjectURL(blob);
-
-      link.setAttribute("href", url);
-      link.setAttribute("download", filename);
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link); // Clean up
-      resetSelections();
-      setShowModal(false);
-    },
-    [resetSelections]
-  );
-
   const fetchTradeData = async () => {
     try {
       const token = currentUser.token;
@@ -673,16 +439,8 @@ export default function DashAccountDetails() {
     }
   };
 
-  // Reset selection when modal is closed
-  useEffect(() => {
-    if (!showModal) {
-      // resetSelections();
-    }
-  }, [showModal]);
-
   const [runningTrades, setRunningTrades] = useState({}); // Stores running states for each account
   const [elapsedTimes, setElapsedTimes] = useState({}); // Stores time elapsed for each account
-  const [selectedTrades, setSelectedTrades] = useState({}); // Store selected values for each account
 
   useEffect(() => {
     const intervals = {};
@@ -702,90 +460,6 @@ export default function DashAccountDetails() {
       Object.values(intervals).forEach(clearInterval);
     };
   }, [runningTrades]);
-
-  const handleTradeChange = (accountId, tradeName, field) => {
-    setSelectedTrades((prev) => ({
-      ...prev,
-      [accountId]: {
-        ...prev[accountId],
-        [field]: tradeName,
-      },
-    }));
-  };
-
-  const handleStart = (id) => {
-    const accountSelections = selectedTrades[id];
-
-    if (
-      !accountSelections ||
-      !accountSelections.tradeName ||
-      !accountSelections.direction ||
-      !accountSelections.time
-    ) {
-      alert(
-        "Please select a trade name, direction, and trade time before starting."
-      );
-      return;
-    }
-
-    setRunningTrades((prev) => ({
-      ...prev,
-      [id]: true,
-    }));
-    setElapsedTimes((prev) => ({
-      ...prev,
-      [id]: 0, // Reset timer for the new account
-    }));
-  };
-
-  const handleStop = (id) => {
-    setRunningTrades((prev) => ({
-      ...prev,
-      [id]: false,
-    }));
-  };
-
-  const formatTime = (timeInSeconds) => {
-    const minutes = String(Math.floor(timeInSeconds / 60)).padStart(2, "0");
-    const seconds = String(timeInSeconds % 60).padStart(2, "0");
-    return `${minutes}:${seconds}`;
-  };
-
-  const refreshAccounts = async () => {
-    if (
-      window.confirm("Are you sure you want to refresh and upload CSV data?")
-    ) {
-      try {
-        const token = currentUser.token; // Get the token from the currentUser object
-
-        const headers = {
-          Authorization: `Bearer ${token}`, // Pass token in the Authorization header
-          "Content-Type": "application/json", // Set content type if sending JSON
-        };
-        setLoading(true);
-
-        // Use BaseURL for the API call
-        const response = await axios.post(
-          `${BaseURL}upload-csv`, // Updated to use BaseURL
-          {}, // Sending an empty object as the request body
-          { headers }
-        );
-
-        // Log the entire response to debug
-        // console.log("Server Response:", response.data);
-
-        // Show alert based on the server response
-        alert(response.data); // Display the message from the server
-        fetchData(); // Fetch the updated data after the refresh
-        setLoading(false);
-      } catch (error) {
-        console.error("Error refreshing and uploading CSV:", error);
-        alert(
-          "Failed to refresh and upload CSV data. Please check the console for more details."
-        );
-      }
-    }
-  };
 
   const handleAccountSelection = (account) => {
     if (selectedAccounts.includes(account)) {
@@ -919,9 +593,9 @@ export default function DashAccountDetails() {
             <div className="flex flex-col p-3 dark:bg-slate-800 gap-4 md:w-56 w-full rounded-md shadow-md">
               <h4>Total Rows Displayed: {totalRows}</h4>
             </div>
-            <div className="flex flex-col p-3 dark:bg-slate-800 gap-4 md:w-72 w-full rounded-md shadow-md">
+            <div className="flex flex-col p-3 dark:bg-slate-800 gap-4 md:w-56 w-full rounded-md shadow-md">
               <h4>
-                Total Unique Accounts Displayed: {totalUniqueAccountsDisplayed}
+                Total Users Displayed: {totalUniqueAccountsDisplayed}
               </h4>
             </div>
             <div className="flex flex-col p-3 dark:bg-slate-800 gap-4 md:w-56 w-full rounded-md shadow-md">
@@ -954,7 +628,6 @@ export default function DashAccountDetails() {
                 </Dropdown.Item>
               ))}
             </Dropdown>
-
             <Dropdown
               label={selectedProcessRange || "Select Range"}
               disabled={setsMade}
@@ -1030,16 +703,6 @@ export default function DashAccountDetails() {
             >
               Export CSV
             </CSVLink>
-
-            <Button
-              gradientDuoTone="greenToBlue"
-              onClick={() => setShowModal(true)}
-              disabled={setsMade}
-            >
-              <IoMdSettings />
-              Customize CSV Export
-            </Button>
-
             <Button
               gradientDuoTone="greenToBlue"
               disabled={selectedAccounts.length !== 2}
@@ -1047,38 +710,7 @@ export default function DashAccountDetails() {
             >
               Compare both accounts
             </Button>
-
-            <Button
-              gradientDuoTone={setsMade ? "purpleToPink" : "purpleToBlue"}
-              onClick={setsMade ? clearSets : makeSets}
-              disabled={!!accountFilter}
-            >
-              {setsMade ? "Clear Sets" : "Make Sets"}
-            </Button>
-
-            {currentUser.user.role === "admin" && (
-              <>
-                <Button
-                  // disabled={setsMade}
-                  disabled={true}
-                  gradientMonochrome="teal"
-                  onClick={refreshAccounts}
-                >
-                  {/* <IoMdRefresh /> */}
-                  Refresh
-                </Button>
-                <Button
-                  // disabled={setsMade}
-                  disabled={false}
-                  gradientMonochrome="failure"
-                  onClick={deleteAllAccounts}
-                >
-                  Delete All
-                </Button>
-              </>
-            )}
           </div>
-
           {createLoding ? (
             <div className="flex justify-center items-center h-96">
               <Spinner size="xl" />
@@ -1086,174 +718,6 @@ export default function DashAccountDetails() {
           ) : (
             <>
               <div className="tables-container">
-                {/* Show setsData table if showSetsData is true */}
-                {showSetsData && (
-                  <Table hoverable className="shadow-md w-full mt-4">
-                    <TableHead>
-                      <TableHeadCell>Account</TableHeadCell>
-                      <TableHeadCell>Account Balance</TableHeadCell>
-                      <TableHeadCell>Status</TableHeadCell>
-                      <TableHeadCell>Trade Name</TableHeadCell>
-                      <TableHeadCell>Direction</TableHeadCell>
-                      <TableHeadCell>Trade Time</TableHeadCell>
-                      <TableHeadCell>Action</TableHeadCell>
-                    </TableHead>
-                    <TableBody>
-                      {setsData.length > 0 ? (
-                        setsData.map((account) => {
-                          const backgroundColor = account.color;
-                          const luminance = getLuminance(backgroundColor);
-                          const textColor =
-                            luminance > 160 ? "#000000" : "#FFFFFF";
-
-                          return (
-                            <TableRow
-                              key={account.id}
-                              style={{ backgroundColor, color: textColor }}
-                            >
-                              <TableCell>
-                                <div className="flex items-center gap-3">
-                                  <Avatar
-                                    size="sm"
-                                    src={account.profilePicture}
-                                    alt={account.name}
-                                  />
-                                  <div>
-                                    <p className="font-semibold">
-                                      {account.account}
-                                    </p>
-                                    <p className="text-xs text-gray-500">
-                                      {account.email}
-                                    </p>
-                                  </div>
-                                </div>
-                              </TableCell>
-                              <TableCell>
-                                <p className="font-semibold">
-                                  ${account.accountBalance}
-                                </p>
-                              </TableCell>
-                              <TableCell>
-                                {runningTrades[account.id] ? (
-                                  <span style={{ marginRight: "8px" }}>
-                                    In Progress
-                                  </span>
-                                ) : (
-                                  <p className="font-semibold">
-                                    {account.status}
-                                  </p>
-                                )}
-                              </TableCell>
-
-                              {/* Trade Name Dropdown */}
-                              <TableCell style={{ color: "#000000" }}>
-                                <select
-                                  className="border border-gray-300 rounded-md p-2"
-                                  value={
-                                    selectedTrades[account.id]?.tradeName || ""
-                                  }
-                                  onChange={(e) =>
-                                    handleTradeChange(
-                                      account.id,
-                                      e.target.value,
-                                      "tradeName"
-                                    )
-                                  }
-                                >
-                                  <option value="" disabled>
-                                    Select Trade
-                                  </option>
-                                  {tradesData.map((trade) => (
-                                    <option key={trade.id} value={trade.id}>
-                                      {`Trade 0${trade.id}`}
-                                    </option>
-                                  ))}
-                                </select>
-                              </TableCell>
-
-                              {/* Direction Drop-Down */}
-                              <TableCell style={{ color: "#000000" }}>
-                                <select
-                                  className="border border-gray-300 rounded-md p-2"
-                                  value={
-                                    selectedTrades[account.id]?.direction || ""
-                                  }
-                                  onChange={(e) =>
-                                    handleTradeChange(
-                                      account.id,
-                                      e.target.value,
-                                      "direction"
-                                    )
-                                  }
-                                >
-                                  <option value="" disabled>
-                                    Select Direction
-                                  </option>
-                                  <option value="LONG">LONG</option>
-                                  <option value="SHORT">SHORT</option>
-                                </select>
-                              </TableCell>
-
-                              {/* Trade Time Input */}
-                              <TableCell style={{ color: "#000000" }}>
-                                <input
-                                  type="time"
-                                  className="border border-gray-300 rounded-md p-2"
-                                  value={selectedTrades[account.id]?.time || ""}
-                                  onChange={(e) =>
-                                    handleTradeChange(
-                                      account.id,
-                                      e.target.value,
-                                      "time"
-                                    )
-                                  }
-                                />
-                              </TableCell>
-
-                              {/* Action Button */}
-                              <TableCell>
-                                {runningTrades[account.id] ? (
-                                  <div
-                                    style={{
-                                      display: "flex",
-                                      alignItems: "center",
-                                    }}
-                                  >
-                                    <span style={{ marginRight: "8px" }}>
-                                      {formatTime(
-                                        elapsedTimes[account.id] || 0
-                                      )}
-                                    </span>
-                                    <Button
-                                      gradientMonochrome="failure"
-                                      onClick={() => handleStop(account.id)}
-                                    >
-                                      Stop
-                                    </Button>
-                                  </div>
-                                ) : (
-                                  <Button
-                                    gradientMonochrome="purple"
-                                    onClick={() => handleStart(account.id)}
-                                  >
-                                    Start
-                                  </Button>
-                                )}
-                              </TableCell>
-                            </TableRow>
-                          );
-                        })
-                      ) : (
-                        <TableRow>
-                          <TableCell colSpan={7} className="text-center">
-                            No data available for setsData.
-                          </TableCell>
-                        </TableRow>
-                      )}
-                    </TableBody>
-                  </Table>
-                )}
-
                 {/* Show filteredData table if setsData is not displayed */}
                 {!showSetsData && (
                   <Table hoverable className="shadow-md w-full mt-4">
@@ -1337,145 +801,6 @@ export default function DashAccountDetails() {
           )}
         </>
       )}
-      <Modal show={showModal} onClose={() => setShowModal(false)}>
-        {/* Modal Header */}
-        <Modal.Header>
-          <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100">
-            Select Options
-          </h2>
-        </Modal.Header>
-
-        {/* Modal Body */}
-        <Modal.Body className="flex flex-col md:flex-row gap-6 p-4">
-          {/* Columns Section */}
-          <div className="flex-1">
-            <h3 className="text-lg font-medium text-gray-700 dark:text-gray-200 mb-3">
-              Select Columns:
-            </h3>
-            <div className="space-y-2">
-              {columns.map((col) => (
-                <label key={col.value} className="flex items-center space-x-2">
-                  <Checkbox
-                    checked={selectedColumns.includes(col.value)}
-                    onChange={() => handleCheckboxChange(col.value)}
-                    className="focus:ring-blue-500"
-                  />
-                  <span className="text-gray-700 dark:text-gray-200">
-                    {col.label}
-                  </span>
-                </label>
-              ))}
-            </div>
-          </div>
-
-          {/* Filters Section */}
-          <div className="flex-1 p-6 bg-white dark:bg-gray-900 rounded-lg shadow-lg w-full max-w-3xl">
-            <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-200 mb-4">
-              Filters:
-            </h3>
-
-            {/* Dropdowns */}
-            <div className="flex flex-col gap-4 sm:flex-row items-start">
-              {/* Account Dropdown */}
-              <div className="w-full sm:w-1/2">
-                <Dropdown
-                  label={accountFilter || "Select Account"}
-                  className="w-full text-left dark:bg-gray-800 dark:text-gray-200"
-                  inline
-                >
-                  <Dropdown.Item onClick={() => setAccountFilter("")}>
-                    Select Account
-                  </Dropdown.Item>
-                  {uniqueAccountNumbers.map((account) => (
-                    <Dropdown.Item
-                      key={account}
-                      onClick={() => setAccountFilter(account)}
-                    >
-                      {account}
-                    </Dropdown.Item>
-                  ))}
-                </Dropdown>
-              </div>
-
-              {/* Process Range Dropdown */}
-              <div className="w-full sm:w-1/2">
-                <Dropdown
-                  label={selectedProcessRange || "Select Range"}
-                  className="w-full text-left dark:bg-gray-800 dark:text-gray-200"
-                  inline
-                >
-                  <Dropdown.Item onClick={() => setSelectedProcessRange("")}>
-                    Select Range
-                  </Dropdown.Item>
-                  {processRanges.map((range) => (
-                    <Dropdown.Item
-                      key={range.label}
-                      onClick={() => setSelectedProcessRange(range.label)}
-                    >
-                      {range.label}
-                    </Dropdown.Item>
-                  ))}
-                </Dropdown>
-              </div>
-            </div>
-
-            {/* Checkbox Filters */}
-            <div className="mt-6">
-              <div className="grid gap-4 sm:grid-cols-2">
-                <label className="flex items-center gap-2 text-gray-700 dark:text-gray-200">
-                  <Checkbox
-                    checked={isAdminOnlyCus}
-                    onChange={(e) => setIsAdminOnlyCus(e.target.checked)}
-                    className="focus:ring-blue-500"
-                    disabled={isPAaccountCus || isEvalAccountCus} // Disable if other checkboxes are checked
-                  />
-                  Admin Only
-                </label>
-
-                <label className="flex items-center gap-2 text-gray-700 dark:text-gray-200">
-                  <Checkbox
-                    checked={isPAaccountCus}
-                    onChange={(e) => setIsPAaccountCus(e.target.checked)}
-                    className="focus:ring-blue-500"
-                    disabled={isAdminOnlyCus || isEvalAccountCus} // Disable if other checkboxes are checked
-                  />
-                  PA Accounts Only
-                </label>
-
-                <label className="flex items-center gap-2 text-gray-700 dark:text-gray-200">
-                  <Checkbox
-                    checked={isEvalAccountCus}
-                    onChange={(e) => setIsEvalAccountCus(e.target.checked)}
-                    className="focus:ring-blue-500"
-                    disabled={isAdminOnlyCus || isPAaccountCus} // Disable if other checkboxes are checked
-                  />
-                  Eval Accounts Only
-                </label>
-              </div>
-            </div>
-          </div>
-        </Modal.Body>
-
-        {/* Modal Footer */}
-        <Modal.Footer>
-          <div className="flex justify-end w-full">
-            <Button
-              gradientDuoTone="greenToBlue"
-              onClick={() => {
-                const exportData = customExports(selectedColumns); // Generate export data
-                handleExport(exportData); // Call the export function
-
-                // Clear all selections and close the modal
-                resetSelections(); // Reset selections
-                setShowModal(false); // Close the modal
-              }}
-              className="w-full sm:w-auto"
-            >
-              Export
-            </Button>
-          </div>
-        </Modal.Footer>
-      </Modal>
     </div>
   );
 }
