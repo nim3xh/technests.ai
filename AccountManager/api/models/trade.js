@@ -7,23 +7,68 @@ module.exports = (sequelize, DataTypes) => {
       // define associations here
     }
   }
-  
-  Trade.init({
-    TradeName: DataTypes.STRING,
-    Instrument: DataTypes.STRING,
-    Quantity: DataTypes.INTEGER,
-    StopLoss: DataTypes.INTEGER,
-    Profit: DataTypes.INTEGER,
-    UseBreakeven: DataTypes.BOOLEAN,
-    BreakevenTrigger: DataTypes.INTEGER,
-    BreakevenOffset: DataTypes.INTEGER,
-    UseTrail: DataTypes.BOOLEAN,
-    TrailTrigger: DataTypes.INTEGER,
-    Trail: DataTypes.INTEGER
-  }, {
-    sequelize,
-    modelName: 'Trade',
-  });
+
+  Trade.init(
+    {
+      TradeName: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
+      Instrument: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
+      Quantity: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+      },
+      StopLoss: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
+      Profit: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
+      UseBreakeven: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: false,
+      },
+      BreakevenTrigger: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
+      BreakevenOffset: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
+      UseTrail: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: false,
+      },
+      TrailTrigger: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
+      Trail: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
+      TradeType: {
+        type: DataTypes.STRING,
+        allowNull: true, // You can set this to true if it's optional
+      },
+    },
+    {
+      sequelize,
+      modelName: 'Trade',
+      paranoid: true, // Enables soft delete
+      timestamps: true, // Adds `createdAt` and `updatedAt` fields
+      deletedAt: 'deletedAt', // Adds `deletedAt` field for soft delete
+    }
+  );
 
   return Trade;
 };
