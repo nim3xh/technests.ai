@@ -11,6 +11,7 @@ import DashAccountOwners from "../components/DashAccountOwners";
 import DashTrades from "../components/DashTrades";
 import DashUserPasswordChange from "../components/DashUserPasswordChange";
 import DashAccountDatailHistoryComp from "../components/DashAccountDatailHistoryComp";
+import DashTradingComp from "../components/DashTradingComp";
 
 export default function Dashboard() {
   const location = useLocation();
@@ -51,6 +52,8 @@ export default function Dashboard() {
       {tab === "accOwners" && <DashAccountOwners />}
       {/* Trades */}
       {tab === "trades" && <DashTrades />}
+      {/* Trading */}
+      {tab === "trading" && <DashTradingComp />}
     </div>
   );
 }
