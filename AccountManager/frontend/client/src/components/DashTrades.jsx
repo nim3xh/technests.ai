@@ -92,17 +92,29 @@ export default function DashTrades() {
       const headers = {
         Authorization: `Bearer ${token}`,
       };
-      
+  
+      // Convert numeric fields to strings
+      const formattedTrade = {
+        ...newTrade,
+        Quantity: newTrade.Quantity.toString(),
+        StopLoss: newTrade.StopLoss.toString(),
+        Profit: newTrade.Profit.toString(),
+        BreakevenTrigger: newTrade.BreakevenTrigger.toString(),
+        BreakevenOffset: newTrade.BreakevenOffset.toString(),
+        TrailTrigger: newTrade.TrailTrigger.toString(),
+        Trail: newTrade.Trail.toString(),
+      };
+  
       if (isEditMode) {
         // Update trade via PATCH
-        await axios.patch(`${BaseURL}trades/${selectedTradeId}`, newTrade, {
+        await axios.patch(`${BaseURL}trades/${selectedTradeId}`, formattedTrade, {
           headers,
         });
       } else {
         // Add new trade via POST
-        await axios.post(`${BaseURL}trades`, newTrade, { headers });
+        await axios.post(`${BaseURL}trades`, formattedTrade, { headers });
       }
-
+  
       fetchData();
       setShowModal(false);
       resetForm();
@@ -110,6 +122,7 @@ export default function DashTrades() {
       setError("Something went wrong while saving trade.");
     }
   };
+  
 
   const handleAddClick = () => { 
     resetForm(); // Clear the form
@@ -249,9 +262,7 @@ export default function DashTrades() {
         <Modal.Body>
           <div className="space-y-6">
             <div>
-              <Label htmlFor="TradeName" value="TradeName">
-              TradeName
-              </Label>
+              <Label htmlFor="TradeName" value="TradeName">TradeName</Label>
               <TextInput
                 id="TradeName"
                 name="TradeName"
@@ -262,9 +273,7 @@ export default function DashTrades() {
               />
             </div>
             <div>
-              <Label htmlFor="Instrument" value="Instrument">
-                Instrument
-              </Label>
+              <Label htmlFor="Instrument" value="Instrument">Instrument</Label>
               <TextInput
                 id="Instrument"
                 name="Instrument"
@@ -275,10 +284,9 @@ export default function DashTrades() {
               />
             </div>
             <div>
-              <Label htmlFor="Quantity" value="Quantity">
-                Quantity
-              </Label>
+              <Label htmlFor="Quantity" value="Quantity">Quantity</Label>
               <TextInput
+                type="number"
                 id="Quantity"
                 name="Quantity"
                 placeholder="Quantity"
@@ -286,12 +294,11 @@ export default function DashTrades() {
                 onChange={handleChange}
                 required
               />
-              </div>
-              <div>
-              <Label htmlFor="StopLoss" value="StopLoss">
-                StopLoss
-              </Label>
+            </div>
+            <div>
+              <Label htmlFor="StopLoss" value="StopLoss">StopLoss</Label>
               <TextInput
+                type="number"
                 id="StopLoss"
                 name="StopLoss"
                 placeholder="StopLoss"
@@ -299,12 +306,11 @@ export default function DashTrades() {
                 onChange={handleChange}
                 required
               />
-              </div>
-              <div>
-              <Label htmlFor="Profit" value="Profit">
-                Profit
-              </Label>
+            </div>
+            <div>
+              <Label htmlFor="Profit" value="Profit">Profit</Label>
               <TextInput
+                type="number"
                 id="Profit"
                 name="Profit"
                 placeholder="Profit"
@@ -312,11 +318,9 @@ export default function DashTrades() {
                 onChange={handleChange}
                 required
               />
-              </div>
-              <div>
-              <Label htmlFor="UseBreakeven" value="UseBreakeven">
-                UseBreakeven
-              </Label>
+            </div>
+            <div>
+              <Label htmlFor="UseBreakeven" value="UseBreakeven">UseBreakeven</Label>
               <TextInput
                 id="UseBreakeven"
                 name="UseBreakeven"
@@ -325,12 +329,11 @@ export default function DashTrades() {
                 onChange={handleChange}
                 required
               />
-              </div>
-              <div>
-              <Label htmlFor="BreakevenTrigger" value="BreakevenTrigger">
-                BreakevenTrigger
-              </Label>
+            </div>
+            <div>
+              <Label htmlFor="BreakevenTrigger" value="BreakevenTrigger">BreakevenTrigger</Label>
               <TextInput
+                type="number"
                 id="BreakevenTrigger"
                 name="BreakevenTrigger"
                 placeholder="BreakevenTrigger"
@@ -338,12 +341,11 @@ export default function DashTrades() {
                 onChange={handleChange}
                 required
               />
-              </div>
-              <div>
-              <Label htmlFor="BreakevenOffset" value="BreakevenOffset">
-                BreakevenOffset
-                </Label>
-                <TextInput
+            </div>
+            <div>
+              <Label htmlFor="BreakevenOffset" value="BreakevenOffset">BreakevenOffset</Label>
+              <TextInput
+                type="number"
                 id="BreakevenOffset"
                 name="BreakevenOffset"
                 placeholder="BreakevenOffset"
@@ -351,11 +353,9 @@ export default function DashTrades() {
                 onChange={handleChange}
                 required
               />
-              </div>
-              <div>
-              <Label htmlFor="UseTrail" value="UseTrail">
-                UseTrail
-              </Label>
+            </div>
+            <div>
+              <Label htmlFor="UseTrail" value="UseTrail">UseTrail</Label>
               <TextInput
                 id="UseTrail"
                 name="UseTrail"
@@ -364,12 +364,11 @@ export default function DashTrades() {
                 onChange={handleChange}
                 required
               />
-              </div>
-              <div>
-              <Label htmlFor="TrailTrigger" value="TrailTrigger">
-                TrailTrigger
-              </Label>
+            </div>
+            <div>
+              <Label htmlFor="TrailTrigger" value="TrailTrigger">TrailTrigger</Label>
               <TextInput
+                type="number"
                 id="TrailTrigger"
                 name="TrailTrigger"
                 placeholder="TrailTrigger"
@@ -377,12 +376,11 @@ export default function DashTrades() {
                 onChange={handleChange}
                 required
               />
-              </div>
-              <div>
-              <Label htmlFor="Trail" value="Trail">
-                Trail
-              </Label>
+            </div>
+            <div>
+              <Label htmlFor="Trail" value="Trail">Trail</Label>
               <TextInput
+                type="number"
                 id="Trail"
                 name="Trail"
                 placeholder="Trail"
@@ -390,7 +388,7 @@ export default function DashTrades() {
                 onChange={handleChange}
                 required
               />
-              </div>
+            </div>
           </div>
         </Modal.Body>
         <Modal.Footer>
@@ -399,6 +397,7 @@ export default function DashTrades() {
           </Button>
         </Modal.Footer>
       </Modal>
+
     </div>
   );
 }

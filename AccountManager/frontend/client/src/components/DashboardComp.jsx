@@ -154,10 +154,10 @@ export default function DashboardComp() {
         <Breadcrumb.Item></Breadcrumb.Item>
       </Breadcrumb>
       <div className="text-center mt-4">
-        <p className="text-lg">{formattedTodayDate}</p>
-        <div className="text-2xl">
+      <div className="text-2xl">
           Welcome, {currentUser.user.FirstName} {currentUser.user.LastName}!
         </div>
+      <p className="text-lg font-semibold text-gray-600">Today's Date: {formattedTodayDate}</p> 
       </div>
       
       {currentUser.user.role !== "user" && (
