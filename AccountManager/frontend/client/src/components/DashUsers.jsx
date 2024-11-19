@@ -17,7 +17,7 @@ import {
   Dropdown
 } from "flowbite-react";
 import { useSelector } from "react-redux";
-import { HiOutlineExclamationCircle, HiPlusCircle } from "react-icons/hi";
+import { HiPlusCircle } from "react-icons/hi";
 import axios from "axios";
 import { FaUserEdit } from "react-icons/fa";
 import { MdDeleteForever } from "react-icons/md";
@@ -26,7 +26,6 @@ const BaseURL = import.meta.env.VITE_BASE_URL;
 
 export default function DashUsers() {
   const { currentUser } = useSelector((state) => state.user);
-  const [editUser, setEditUser] = useState(false);
   const [editUserDetails, setEditUserDetails] = useState({});
   const [userData, setUserData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -42,6 +41,8 @@ export default function DashUsers() {
     role: "admin", // Default role
   });
   const [uniqueAccountNumbers, setUniqueAccountNumbers] = useState([]);
+  const [selectedUser, setSelectedUser] = useState(null); // Track the selected user
+  const [showUserDetailsModal, setShowUserDetailsModal] = useState(false); // Modal visibility for user details
 
   const fetchData = async () => {
     try {
@@ -59,17 +60,6 @@ export default function DashUsers() {
       setError("Something went wrong while fetching data.");
       setLoading(false);
     }
-  };
-
-  // Helper function to merge users and accountDetails based on accountNumber
-  const mergeData = (users, accountDetails) => {
-    return accountDetails.map((account) => {
-      const user = users.find((u) => u.accountNumber === account.accountNumber);
-      return {
-        ...account,
-        name: user ? user.name : "Unknown",
-      };
-    });
   };
 
   const fetchUniqueApexAccountNumber = async () => {
@@ -200,6 +190,11 @@ export default function DashUsers() {
     }
   }
 
+  const handleRowClick = (user) => {
+    setSelectedUser(user); // Set the clicked user as selected
+    setShowUserDetailsModal(true); // Show the modal
+  };
+
   return (
     <div className="p-3 w-full">
       <Breadcrumb aria-label="Default breadcrumb example">
@@ -240,7 +235,11 @@ export default function DashUsers() {
           </TableHead>
           <TableBody>
             {userData.map((user, index) => (
-              <TableRow key={index}>
+              <TableRow
+                key={index}
+                onClick={() => handleRowClick(user)} // Row click opens the details modal
+                className="cursor-pointer"
+              >
                 <TableCell>{user.FirstName}</TableCell>
                 <TableCell>{user.LastName}</TableCell>
                 <TableCell>{user.ApexAccountNumber}</TableCell>
@@ -252,7 +251,8 @@ export default function DashUsers() {
                       <Button
                         outline
                         gradientDuoTone="greenToBlue"
-                        onClick={() => {
+                        onClick={(e) => {
+                          e.stopPropagation(); // Prevent row click
                           setEditUserDetails(user);
                           setShowEditModal(true);
                         }}
@@ -263,7 +263,10 @@ export default function DashUsers() {
                       <Button
                         outline
                         gradientDuoTone="pinkToOrange"
-                        onClick={() => handleDeleteUser(user.id)}
+                        onClick={(e) => {
+                          e.stopPropagation(); // Prevent row click
+                          handleDeleteUser(user.id);
+                        }}
                         disabled={!!(currentUser.user.email === user.email)}
                       >
                         <MdDeleteForever className="mr-3 h-4 w-4" />
@@ -275,6 +278,7 @@ export default function DashUsers() {
               </TableRow>
             ))}
           </TableBody>
+
         </Table>
       )}
 
@@ -403,7 +407,7 @@ export default function DashUsers() {
             <div>
               <Label htmlFor="apexAccountNumber" value="Apex Account Number" />
               <Dropdown
-                label={editUserDetails.apexAccountNumber || "Select Account"}
+                label={editUserDetails.ApexAccountNumber || "Select Account"}
                 className="w-full text-left dark:bg-gray-800 dark:text-gray-200"
                 inline
               >
@@ -462,6 +466,60 @@ export default function DashUsers() {
         </Modal.Footer>
       </Modal>
 
+       {/* User Details Modal */}
+        {selectedUser && (
+          <Modal
+            show={showUserDetailsModal}
+            onClose={() => setShowUserDetailsModal(false)}
+            size="3xl" // Adjust the modal size to make it wider
+          >
+            <Modal.Header>User Details</Modal.Header>
+            <Modal.Body>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <strong>First Name:</strong> {selectedUser.FirstName}
+                </div>
+                <div>
+                  <strong>Last Name:</strong> {selectedUser.LastName}
+                </div>
+                <div>
+                  <strong>Email:</strong> {selectedUser.email}
+                </div>
+                <div>
+                  <strong>Apex Account Number:</strong> {selectedUser.ApexAccountNumber}
+                </div>
+                <div>
+                  <strong>Role:</strong> {getUserRoleDisplay(selectedUser.role)}
+                </div>
+                <div>
+                  <strong>Address:</strong> 
+                  {selectedUser.AddressLine1}, {selectedUser.AddressLine2}
+                </div>
+                <div>
+                  <strong>City:</strong> {selectedUser.City}
+                </div>
+                <div>
+                  <strong>State:</strong> {selectedUser.State}
+                </div>
+                <div>
+                  <strong>Country:</strong> {selectedUser.Country}
+                </div>
+                <div>
+                  <strong>Zip:</strong> {selectedUser.ZipCode}
+                </div>
+                <div>
+                  <strong>Phone:</strong> {selectedUser.PhoneNumber}
+                </div>
+                <div>
+                  <strong>Ninja Username:</strong> {selectedUser.NinjaUsername}
+                </div>
+              </div>
+            </Modal.Body>
+            <Modal.Footer>
+              <Button onClick={() => setShowUserDetailsModal(false)}>Close</Button>
+            </Modal.Footer>
+          </Modal>
+        )}
     </div>
   );
 }
