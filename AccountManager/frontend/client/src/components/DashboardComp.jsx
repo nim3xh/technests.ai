@@ -11,7 +11,7 @@ import {
   Spinner,
   Breadcrumb,
 } from "flowbite-react";
-import { MdAccountBalance, MdOutlineSurroundSound, MdPerson, MdTableRows } from "react-icons/md";
+import { MdAccountBalance, MdPerson, MdTableRows } from "react-icons/md";
 import { CiMemoPad } from "react-icons/ci";
 import axios from "axios";
 import { Datepicker } from "flowbite-react";
@@ -25,6 +25,13 @@ export default function DashboardComp() {
   const { currentUser } = useSelector((state) => state.user);
   const [userStats, setUserStats] = useState([]);
   const [selectedDate, setSelectedDate] = useState(null);
+  const [todayDate, setTodayDate] = useState(new Date());
+
+  const formattedTodayDate = new Intl.DateTimeFormat("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  }).format(todayDate);
   
   // Function to merge users and account details data
   const mergeData = (users, accountDetails) => {
@@ -146,8 +153,11 @@ export default function DashboardComp() {
         </Breadcrumb.Item>
         <Breadcrumb.Item></Breadcrumb.Item>
       </Breadcrumb>
-      <div className="text-2xl text-center mt-4">
+      <div className="text-center mt-4">
+        <p className="text-lg">{formattedTodayDate}</p>
+        <div className="text-2xl">
           Welcome, {currentUser.user.FirstName} {currentUser.user.LastName}!
+        </div>
       </div>
       
       {currentUser.user.role !== "user" && (
