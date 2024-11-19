@@ -375,6 +375,7 @@ export default function DashUsers() {
         <Modal.Header>Edit User</Modal.Header>
         <Modal.Body>
           <div className="space-y-6">
+            {/* First Name Input */}
             <div>
               <Label htmlFor="firstName" value="First Name" />
               <TextInput
@@ -385,6 +386,8 @@ export default function DashUsers() {
                 required
               />
             </div>
+
+            {/* Last Name Input */}
             <div>
               <Label htmlFor="lastName" value="Last Name" />
               <TextInput
@@ -395,10 +398,12 @@ export default function DashUsers() {
                 required
               />
             </div>
+
+            {/* Apex Account Number Dropdown */}
             <div>
               <Label htmlFor="apexAccountNumber" value="Apex Account Number" />
               <Dropdown
-                label={newUser.apexAccountNumber || "Select Account"}
+                label={editUserDetails.apexAccountNumber || "Select Account"}
                 className="w-full text-left dark:bg-gray-800 dark:text-gray-200"
                 inline
               >
@@ -406,9 +411,8 @@ export default function DashUsers() {
                   <Dropdown.Item
                     key={account}
                     onClick={() => {
-                      // Extract the account number before the first space
-                      const extractedAccountNumber = account.split(" ")[0];
-                      setNewUser((prevState) => ({
+                      const extractedAccountNumber = account.split(" ")[0]; // Extract account number before first space
+                      setEditUserDetails((prevState) => ({
                         ...prevState,
                         apexAccountNumber: extractedAccountNumber,
                       }));
@@ -419,6 +423,8 @@ export default function DashUsers() {
                 ))}
               </Dropdown>
             </div>
+
+            {/* Email Input */}
             <div>
               <Label htmlFor="email" value="Email" />
               <TextInput
@@ -430,6 +436,8 @@ export default function DashUsers() {
                 required
               />
             </div>
+
+            {/* Role Selection */}
             <div>
               <Label htmlFor="role" value="Role" />
               <Select
@@ -437,6 +445,7 @@ export default function DashUsers() {
                 name="role"
                 value={editUserDetails.role || ""}
                 onChange={handleEditChange}
+                required
               >
                 <option value="admin">Admin</option>
                 <option value="user">User</option>
@@ -447,9 +456,12 @@ export default function DashUsers() {
         </Modal.Body>
         <Modal.Footer>
           <Button onClick={handleEditUser}>Save Changes</Button>
-          <Button onClick={() => setShowEditModal(false)}>Close</Button>
+          <Button variant="secondary" onClick={() => setShowEditModal(false)}>
+            Close
+          </Button>
         </Modal.Footer>
       </Modal>
+
     </div>
   );
 }

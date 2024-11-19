@@ -124,7 +124,7 @@ export default function DashSidebar() {
                     icon={HiOutlineUserGroup}
                     as="div"
                   >
-                    Users
+                    Add/ Edit User
                   </Sidebar.Item>
                 </Link>
                 <Link to="/dashboard?tab=trades">
@@ -133,12 +133,12 @@ export default function DashSidebar() {
                     icon={HiBriefcase}
                     as="div"
                   >
-                    Trades
+                    Add/ Edit Trade
                   </Sidebar.Item>
                 </Link>
               </>
             )}
-            {currentUser.user.role !== "user" && (
+            {/* {currentUser.user.role !== "user" && (
               <>
                 <Link to="/dashboard?tab=accOwners">
                   <Sidebar.Item
@@ -152,7 +152,7 @@ export default function DashSidebar() {
 
                 
               </>
-            )}
+            )} */}
             {currentUser.user.role !== 'user' &&(
               <Link to="/dashboard?tab=accountDetailsHistory">
                 <Sidebar.Item
