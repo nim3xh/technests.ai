@@ -25,7 +25,6 @@ import { CiMemoPad } from "react-icons/ci";
 const BaseURL = import.meta.env.VITE_BASE_URL;
 
 export default function DashTradingComp() {
-
   const [combinedData, setCombinedData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -364,12 +363,14 @@ export default function DashTradingComp() {
                    >
                     Find Match
                   </Button>
+
+                  {showTable && (
+                    <p>Table here</p>
+                  )}
             </>
           )}
         </>
-      )}
-      
-      
+      )}    
     </div>
   )
 }
