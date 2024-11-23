@@ -7,13 +7,14 @@ import {
   HiBriefcase,
 } from "react-icons/hi";
 import { IoMdAnalytics } from "react-icons/io";
-import { FaUserCheck } from "react-icons/fa";
+import { FaHistory } from "react-icons/fa";
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { signoutSuccess } from "../redux/user/userSlice";
 import { useDispatch } from "react-redux";
 import { useSelector } from "react-redux";
 import { MdPassword } from "react-icons/md";
+import { FaMoneyBillTrendUp } from "react-icons/fa6";
 
 const BaseURL = import.meta.env.VITE_BASE_URL;
 
@@ -109,13 +110,22 @@ export default function DashSidebar() {
             
              {currentUser.user.role !== "user" && (
               <>
+              <Link to="/dashboard?tab=trading">
+                <Sidebar.Item
+                  active={tab === "trading"}
+                  icon={FaMoneyBillTrendUp }
+                  as="div"
+                >
+                  Trade
+                </Sidebar.Item>
+              </Link>
               <Link to="/dashboard?tab=accountDetails">
                   <Sidebar.Item
                     active={tab === "accountDetails"}
                     icon={IoMdAnalytics}
                     as="div"
                   >
-                   Filter Account Details
+                   Account Details
                   </Sidebar.Item>
                 </Link>
                 <Link to="/dashboard?tab=users">
@@ -157,7 +167,7 @@ export default function DashSidebar() {
               <Link to="/dashboard?tab=accountDetailsHistory">
                 <Sidebar.Item
                   active={tab === "accountDetailsHistory"}
-                  icon={HiBriefcase}
+                  icon={FaHistory }
                   as="div"
                 >
                   Past Account Details
