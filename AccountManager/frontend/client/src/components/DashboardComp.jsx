@@ -308,11 +308,11 @@ export default function DashboardComp() {
                         <TableHead>
                           <TableHeadCell>#</TableHeadCell>
                           <TableHeadCell>User Name</TableHeadCell>
-                          <TableHeadCell>EVAL Active</TableHeadCell>
-                          <TableHeadCell>PA Active</TableHeadCell>
+                          <TableHeadCell>EVAL</TableHeadCell>
+                          <TableHeadCell>PA</TableHeadCell>
                           <TableHeadCell>Eval Admin Only</TableHeadCell>
                           <TableHeadCell>PA Admin Only</TableHeadCell>
-                          <TableHeadCell>Total Accounts</TableHeadCell>
+                          <TableHeadCell>Total</TableHeadCell>
                         </TableHead>
                         <TableBody>
                           {userStats.map((user, index) => (
