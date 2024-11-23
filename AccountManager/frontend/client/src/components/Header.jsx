@@ -4,6 +4,8 @@ import { Link } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { signoutSuccess } from "../redux/user/userSlice";
 import LogoNew from "../assets/logonew.jpg";
+import { FaMoon, FaSun } from "react-icons/fa";
+import { toggleTheme } from "../redux/theme/themeSlice";
 
 
 const BaseURL = import.meta.env.VITE_BASE_URL;
@@ -42,14 +44,14 @@ export default function Header() {
        < img src={LogoNew} alt="logo" className="w-10 h-10 rounded-lg" />
       </Link>
       <div className="flex gap-2 md:order-2">
-        {/* <Button
+        <Button
           className="w-12 h-10 hidden sm:inline"
           color="gray"
           pill
           onClick={() => dispatch(toggleTheme())}
         >
           {theme === "light" ? <FaSun /> : <FaMoon />}
-        </Button> */}
+        </Button>
         {currentUser ? (
           <Dropdown
             arrowIcon={false}
