@@ -214,30 +214,45 @@ export default function DashTradingComp() {
   );
   const totalUniqueAccountsDisplayed = uniqueAccountsInFilteredData.size;
 
-  // Function to create table data for the selected accounts
   const createTableData = () => {
-    const account1 = combinedData.filter(
+    // Filter and find data for the selected accounts
+    const account1Data = combinedData.filter(
       (account) => `${account.accountNumber} (${account.name})` === selectedAccounts[0]
     );
-    const account2 = combinedData.filter(
+    const account2Data = combinedData.filter(
       (account) => `${account.accountNumber} (${account.name})` === selectedAccounts[1]
     );
-
+  
     // Determine the maximum number of rows to display
-    const maxRows = Math.max(account1.length, account2.length);
-
+    const maxRows = Math.max(account1Data.length, account2Data.length);
+  
+    // Helper function to check if two balances are within the $125 range
+    const withinRange = (balance1, balance2) => {
+      if (!balance1 || !balance2) return false; // Skip invalid or missing balances
+      const diff = Math.abs(parseFloat(balance1) - parseFloat(balance2));
+      return diff <= 125;
+    };
+  
+    // Generate rows for the table
     const rows = [];
     for (let i = 0; i < maxRows; i++) {
+      const account1 = account1Data[i] || {}; // Default to empty object if no more rows
+      const account2 = account2Data[i] || {};
+  
+      const isMatch = withinRange(account1.accountBalance, account2.accountBalance);
+  
       rows.push({
-        account1: account1[i]?.account || "-",
-        balance1: account1[i]?.accountBalance || "-",
-        balance2: account2[i]?.accountBalance || "-",
-        account2: account2[i]?.account || "-",
+        account1: account1.account || "-", // Display "-" for missing data
+        balance1: account1.accountBalance || "-",
+        balance2: account2.accountBalance || "-",
+        account2: account2.account || "-",
+        isMatch, // Add match status for highlighting
       });
     }
-
+  
     return rows;
   };
+  
 
   return (
     <div className="p-3 w-full">
@@ -395,36 +410,67 @@ export default function DashTradingComp() {
                   </Button>
 
                   {showTable && selectedAccounts.length === 2 && (
-                  <div className="overflow-x-auto mt-6">
-                    <h3 className="text-center font-bold text-lg mb-4">Summary of Accounts</h3>
-                    <Table className="min-w-full border-collapse border border-gray-200">
-                      {/* Table Header */}
-                      <TableHead>
-                          <TableHeadCell className="border border-gray-200">Account</TableHeadCell>
-                          <TableHeadCell className="border border-gray-200">{selectedAccounts[0]}</TableHeadCell>
-                          <TableHeadCell className="border border-gray-200">{selectedAccounts[1]}</TableHeadCell>
-                          <TableHeadCell className="border border-gray-200">Account</TableHeadCell>
-                      </TableHead>
+                    <div className="flex flex-col justify-center items-center mt-5">
+                      <h3 className="text-center font-bold text-lg mb-4">Summary of Accounts</h3>
+                      <div className="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4">
+                        {/* First Account Section */}
+                        <div className="w-full md:w-1/2">
+                          <h4 className="text-center font-semibold text-md mb-2">{selectedAccounts[0]}</h4>
+                          <Table>
+                            {/* Table Header */}
+                            <TableHead>
+                              <TableHeadCell className="border border-gray-200 w-64">Account</TableHeadCell>
+                              <TableHeadCell className="border border-gray-200">Account Balance</TableHeadCell>
+                            </TableHead>
+                            {/* Table Body */}
+                            <TableBody>
+                              {createTableData()
+                                .filter((row) => row.account1) // Filter out empty rows
+                                .map((row, index) => (
+                                  <TableRow
+                                    key={index}
+                                    className={row.isMatch ? "bg-green-100" : "bg-white"} // Highlight matching rows
+                                  >
+                                    <TableCell className="border border-gray-200">{row.account1}</TableCell>
+                                    <TableCell className="border border-gray-200">
+                                      {row.balance1 !== "-" ? `$${row.balance1}` : "-"}
+                                    </TableCell>
+                                  </TableRow>
+                                ))}
+                            </TableBody>
+                          </Table>
+                        </div>
 
-                      {/* Table Body */}
-                      <TableBody>
-                        {createTableData().map((row, index) => (
-                          <TableRow key={index}>
-                            <TableCell className="border border-gray-200">{row.account1}</TableCell>
-                            <TableCell className="border border-gray-200">
-                              {row.balance1 !== "-" ? `$${row.balance1}` : "-"}
-                            </TableCell>
-                            <TableCell className="border border-gray-200">
-                              {row.balance2 !== "-" ? `$${row.balance2}` : "-"}
-                            </TableCell>
-                            <TableCell className="border border-gray-200">{row.account2}</TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
-                )}
-
+                        {/* Second Account Section */}
+                        <div className="w-full md:w-1/2">
+                          <h4 className="text-center font-semibold text-md mb-2">{selectedAccounts[1]}</h4>
+                          <Table>
+                            {/* Table Header */}
+                            <TableHead>
+                              <TableHeadCell className="border border-gray-200 w-64">Account</TableHeadCell>
+                              <TableHeadCell className="border border-gray-200">Account Balance</TableHeadCell>
+                            </TableHead>
+                            {/* Table Body */}
+                            <TableBody>
+                              {createTableData()
+                                .filter((row) => row.account2) // Filter out empty rows
+                                .map((row, index) => (
+                                  <TableRow
+                                    key={index}
+                                    className={row.isMatch ? "bg-green-100" : "bg-white"} // Highlight matching rows
+                                  >
+                                    <TableCell className="border border-gray-200">{row.account2}</TableCell>
+                                    <TableCell className="border border-gray-200">
+                                      {row.balance2 !== "-" ? `$${row.balance2}` : "-"}
+                                    </TableCell>
+                                  </TableRow>
+                                ))}
+                            </TableBody>
+                          </Table>
+                        </div>
+                      </div>
+                    </div>
+                  )}
               </>
           )}
         </>
