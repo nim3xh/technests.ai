@@ -96,6 +96,11 @@ export default function DashTradingComp() {
         alert("Please select exactly two accounts.");
       }
     };
+
+    const handleClearSelection = () => {
+      setSelectedAccounts([]);
+      setShowTable(false);
+    }
     
     useEffect(() => {
       const fetchData = async () => {
@@ -114,7 +119,7 @@ export default function DashTradingComp() {
             usersResponse.data,
             accountDetailsResponse.data
           );
-    
+          
           setCombinedData(mergedData);
           setLoading(false);
     
@@ -208,6 +213,31 @@ export default function DashTradingComp() {
     combinedData.map((item) => `${item.accountNumber} (${item.name})`)
   );
   const totalUniqueAccountsDisplayed = uniqueAccountsInFilteredData.size;
+
+  // Function to create table data for the selected accounts
+  const createTableData = () => {
+    const account1 = combinedData.filter(
+      (account) => `${account.accountNumber} (${account.name})` === selectedAccounts[0]
+    );
+    const account2 = combinedData.filter(
+      (account) => `${account.accountNumber} (${account.name})` === selectedAccounts[1]
+    );
+
+    // Determine the maximum number of rows to display
+    const maxRows = Math.max(account1.length, account2.length);
+
+    const rows = [];
+    for (let i = 0; i < maxRows; i++) {
+      rows.push({
+        account1: account1[i]?.account || "-",
+        balance1: account1[i]?.accountBalance || "-",
+        balance2: account2[i]?.accountBalance || "-",
+        account2: account2[i]?.account || "-",
+      });
+    }
+
+    return rows;
+  };
 
   return (
     <div className="p-3 w-full">
@@ -345,7 +375,7 @@ export default function DashTradingComp() {
                         className="w-full text-left dark:bg-gray-800 dark:text-gray-200"
                         inline
                       >
-                      <Dropdown.Item onClick={() => setSelectedAccounts([])}>
+                      <Dropdown.Item onClick={() => handleClearSelection()}>
                               Clear Selection
                             </Dropdown.Item>
                             {uniqueAccountNumbers.map((account) => (
@@ -364,10 +394,38 @@ export default function DashTradingComp() {
                     Find Match
                   </Button>
 
-                  {showTable && (
-                    <p>Table here</p>
-                  )}
-            </>
+                  {showTable && selectedAccounts.length === 2 && (
+                  <div className="overflow-x-auto mt-6">
+                    <h3 className="text-center font-bold text-lg mb-4">Summary of Accounts</h3>
+                    <Table className="min-w-full border-collapse border border-gray-200">
+                      {/* Table Header */}
+                      <TableHead>
+                          <TableHeadCell className="border border-gray-200">Account</TableHeadCell>
+                          <TableHeadCell className="border border-gray-200">{selectedAccounts[0]}</TableHeadCell>
+                          <TableHeadCell className="border border-gray-200">{selectedAccounts[1]}</TableHeadCell>
+                          <TableHeadCell className="border border-gray-200">Account</TableHeadCell>
+                      </TableHead>
+
+                      {/* Table Body */}
+                      <TableBody>
+                        {createTableData().map((row, index) => (
+                          <TableRow key={index}>
+                            <TableCell className="border border-gray-200">{row.account1}</TableCell>
+                            <TableCell className="border border-gray-200">
+                              {row.balance1 !== "-" ? `$${row.balance1}` : "-"}
+                            </TableCell>
+                            <TableCell className="border border-gray-200">
+                              {row.balance2 !== "-" ? `$${row.balance2}` : "-"}
+                            </TableCell>
+                            <TableCell className="border border-gray-200">{row.account2}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+
+              </>
           )}
         </>
       )}    
