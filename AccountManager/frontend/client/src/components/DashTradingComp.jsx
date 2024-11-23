@@ -34,6 +34,7 @@ export default function DashTradingComp() {
   const [selectedDate, setSelectedDate] = useState(null);
   const [todayDate, setTodayDate] = useState(new Date());
   const [selectedAccounts, setSelectedAccounts] = useState([]);
+  const [showTable, setShowTable] = useState(false);
   const [paStats, setPaStats] = useState({
     PA1: 0,
     PA2: 0,
@@ -86,6 +87,14 @@ export default function DashTradingComp() {
         } else {
           alert("You can only select up to two accounts.");
         }
+      }
+    };
+
+    const handleFindMatch = () => {
+      if (selectedAccounts.length === 2) {
+        setShowTable(true);
+      } else {
+        alert("Please select exactly two accounts.");
       }
     };
     
@@ -351,6 +360,7 @@ export default function DashTradingComp() {
                   </Dropdown>
                   <Button
                    gradientDuoTone="greenToBlue"
+                   onClick={handleFindMatch}
                    >
                     Find Match
                   </Button>
