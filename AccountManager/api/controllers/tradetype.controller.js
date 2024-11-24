@@ -1,26 +1,15 @@
 const models = require("../models");
 
 function save(req, res) {
-    const trade = {
-        TradeName: req.body.TradeName,
-        Instrument: req.body.Instrument,
-        Quantity: req.body.Quantity,
-        StopLoss: req.body.StopLoss,
-        Profit: req.body.Profit,
-        UseBreakeven: req.body.UseBreakeven,
-        BreakevenTrigger: req.body.BreakevenTrigger,
-        BreakevenOffset: req.body.BreakevenOffset,
-        UseTrail: req.body.UseTrail,
-        TrailTrigger: req.body.TrailTrigger,
-        Trail: req.body.Trail,
-        TradeType: req.body.TradeType,
+    const tradeType = {
+        TypeName: req.body.TypeName,
     };
 
-    models.Trade.create(trade)
+    models.TradeType.create(tradeType)
         .then((result) => {
             res.status(201).json({
-                message: "Trade created successfully",
-                trade: result,
+                message: "TradeType created successfully",
+                tradeType: result,
             });
         })
         .catch((error) => {
@@ -32,7 +21,7 @@ function save(req, res) {
 }
 
 function index(req, res) {
-    models.Trade.findAll()
+    models.TradeType.findAll()
         .then((result) => {
             res.status(200).json(result);
         })
@@ -46,13 +35,13 @@ function index(req, res) {
 
 function show(req, res) {
     const id = req.params.id;
-    models.Trade.findByPk(id)
+    models.TradeType.findByPk(id)
         .then((result) => {
             if (result) {
                 res.status(200).json(result);
             } else {
                 res.status(404).json({
-                    message: "Trade not found",
+                    message: "TradeType not found",
                 });
             }
         })
@@ -66,30 +55,19 @@ function show(req, res) {
 
 function update(req, res) {
     const id = req.params.id;
-    const updatedTrade = {
-        TradeName: req.body.TradeName,
-        Instrument: req.body.Instrument,
-        Quantity: req.body.Quantity,
-        StopLoss: req.body.StopLoss,
-        Profit: req.body.Profit,
-        UseBreakeven: req.body.UseBreakeven,
-        BreakevenTrigger: req.body.BreakevenTrigger,
-        BreakevenOffset: req.body.BreakevenOffset,
-        UseTrail: req.body.UseTrail,
-        TrailTrigger: req.body.TrailTrigger,
-        Trail: req.body.Trail,
-        TradeType: req.body.TradeType,
+    const updatedTradeType = {
+        TypeName: req.body.TypeName,
     };
 
-    models.Trade.update(updatedTrade, { where: { id: id } })
+    models.TradeType.update(updatedTradeType, { where: { id: id } })
         .then((result) => {
             if (result[0] === 1) {
                 res.status(200).json({
-                    message: "Trade updated successfully",
+                    message: "TradeType updated successfully",
                 });
             } else {
                 res.status(404).json({
-                    message: "Trade not found",
+                    message: "TradeType not found",
                 });
             }
         })
@@ -103,15 +81,15 @@ function update(req, res) {
 
 function destroy(req, res) {
     const id = req.params.id;
-    models.Trade.destroy({ where: { id: id } })
+    models.TradeType.destroy({ where: { id: id } })
         .then((result) => {
             if (result === 1) {
                 res.status(200).json({
-                    message: "Trade deleted successfully",
+                    message: "TradeType deleted successfully",
                 });
             } else {
                 res.status(404).json({
-                    message: "Trade not found",
+                    message: "TradeType not found",
                 });
             }
         })
