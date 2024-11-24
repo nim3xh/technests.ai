@@ -459,6 +459,10 @@ export default function DashTradingComp() {
                   {showTable && selectedAccounts.length === 2 && (
                     <div className="flex flex-col justify-center items-center mt-5">
                       <h3 className="text-center font-bold text-lg mb-4">Summary of Accounts</h3>
+                      <div className="flex justify-center space-x-4">
+                        <h4 className="text-center font-bold text-sm text-gray-500">{selectedAccounts[0]}</h4>
+                        <h4 className="text-center font-bold text-sm text-gray-500">{selectedAccounts[1]}</h4>
+                      </div>
                       <Table>
                         {/* Table Header */}
                         <TableHead>
@@ -467,8 +471,8 @@ export default function DashTradingComp() {
                           {showTime && (
                             <TableHeadCell className="w-64">Time</TableHeadCell>
                           )}
-                          <TableHeadCell className="w-64">Account (Second)</TableHeadCell>
                           <TableHeadCell>Account Balance (Second)</TableHeadCell>
+                          <TableHeadCell className="w-64">Account (Second)</TableHeadCell>
                         </TableHead>
                         {/* Table Body */}
                         <TableBody>
@@ -491,10 +495,10 @@ export default function DashTradingComp() {
                                   />
                                 </TableCell>
                               )}
-                              <TableCell>{row.account2 || "-"}</TableCell>
                               <TableCell>
                                 {row.balance2 !== "-" ? `$${row.balance2}` : "-"}
                               </TableCell>
+                              <TableCell>{row.account2 || "-"}</TableCell>
                             </TableRow>
                           ))}
                         </TableBody>
