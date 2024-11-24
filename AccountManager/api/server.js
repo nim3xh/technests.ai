@@ -10,15 +10,34 @@ const multer = require("multer");
 const upload = multer({ dest: "uploads/" });
 const deleteDashboards = require("./delete-dashboards");
 
+// Function to recursively get all CSV files in the directory and its subdirectories
+const getCsvFiles = (directory) => {
+  let csvFiles = [];
+  const items = fs.readdirSync(directory);
+
+  items.forEach((item) => {
+    const itemPath = path.join(directory, item);
+    const stats = fs.statSync(itemPath);
+
+    if (stats.isDirectory()) {
+      // If item is a directory, recursively search it
+      csvFiles = csvFiles.concat(getCsvFiles(itemPath));
+    } else if (item.endsWith(".csv")) {
+      // If item is a CSV file, add it to the list
+      csvFiles.push(itemPath);
+    }
+  });
+
+  return csvFiles;
+};
+
 // Function to upload and process CSV files
 const uploadCsvFiles = async () => {
-  const directoryPath = path.join(__dirname, "dashboards"); // CSV folder path
+  const directoryPath = path.join(__dirname, "dashboards"); // Root CSV folder path
 
   try {
-    // Check if there are any CSV files in the folder
-    const files = fs
-      .readdirSync(directoryPath)
-      .filter((file) => file.endsWith(".csv")); // Filter CSV files
+    // Get all CSV files in the directory and its subdirectories
+    const files = getCsvFiles(directoryPath);
 
     if (files.length === 0) {
       console.log("No CSV files found, skipping the upload process.");
@@ -28,8 +47,7 @@ const uploadCsvFiles = async () => {
     // Clear the existing database before uploading
     await axios.delete("http://localhost:3000/accountDetails/");
 
-    const uploadPromises = files.map(async (file) => {
-      const filePath = path.join(directoryPath, file);
+    const uploadPromises = files.map(async (filePath) => {
       const formData = new FormData();
       formData.append("csvFiles", fs.createReadStream(filePath));
 
@@ -54,7 +72,7 @@ const uploadCsvFiles = async () => {
       } catch (error) {
         // Handle any errors during the upload
         console.error(
-          `Failed to upload ${file}:`,
+          `Failed to upload ${filePath}:`,
           error.code || error.message || error.response?.status
         );
       }
@@ -64,17 +82,15 @@ const uploadCsvFiles = async () => {
     await Promise.all(uploadPromises);
     deleteDashboards(); // Delete the CSV files after uploading
   } catch (error) {
-    // Handle errors during the database clearing
-    console.error(`Failed to clear the database: ${error.message}`);
+    // Handle errors during the database clearing or upload process
+    console.error(`Error during CSV upload process: ${error.message}`);
   }
 };
 
 app.post("/upload-csv", async (req, res) => {
   try {
     const directoryPath = path.join(__dirname, "dashboards"); // Define the CSV folder path
-    const files = fs
-      .readdirSync(directoryPath)
-      .filter((file) => file.endsWith(".csv")); // Check for CSV files
+    const files = getCsvFiles(directoryPath); // Get all CSV files
 
     // Check if there are any CSV files in the folder
     if (files.length === 0) {
