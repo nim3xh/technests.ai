@@ -37,10 +37,10 @@ export default function DashTrades() {
     Quantity: "",
     StopLoss: "",
     Profit: "",
-    UseBreakeven: "",
+    UseBreakeven: "false",
     BreakevenTrigger: "",
     BreakevenOffset: "",
-    UseTrail: "",
+    UseTrail: "false",
     TrailTrigger: "",
     Trail : "",
     TradeTypeId: "",
@@ -58,6 +58,7 @@ export default function DashTrades() {
         headers,
       });
       setTradesData(tradesResponse.data);
+      console.log(tradesResponse.data);
       setLoading(false);
     } catch (err) {
       setError("Something went wrong while fetching data.");
@@ -94,10 +95,10 @@ export default function DashTrades() {
       Quantity: "",
       StopLoss: "",
       Profit: "",
-      UseBreakeven: "",
+      UseBreakeven: "false",
       BreakevenTrigger: "",
       BreakevenOffset: "",
-      UseTrail: "",
+      UseTrail: "false",
       TrailTrigger: "",
       Trail : "",
       TradeTypeId: "",
@@ -153,12 +154,16 @@ export default function DashTrades() {
   
   // Function to open the edit modal and pre-fill form
   const handleEditClick = (trade) => {
-    setNewTrade(trade); // Pre-fill with existing trade data
+    setNewTrade({
+      ...trade,
+      UseBreakeven: trade.UseBreakeven === true || trade.UseBreakeven === "true" ? "true" : "false",
+      UseTrail: trade.UseTrail === true || trade.UseTrail === "true" ? "true" : "false",
+    });
     setSelectedTradeId(trade.id); // Save the trade ID
     setIsEditMode(true); // Set to edit mode
     setShowModal(true); // Open the modal
   };
-
+  
   const handleChange = (e) => {
     setNewTrade({
       ...newTrade,
@@ -248,13 +253,17 @@ export default function DashTrades() {
                 <TableCell>{trade.Quantity}</TableCell>
                 <TableCell>{trade.StopLoss}</TableCell>
                 <TableCell>{trade.Profit}</TableCell>
-                <TableCell>{trade.UseBreakeven === "true" ? "Yes" : "No"}</TableCell>
+                <TableCell>{trade.UseBreakeven === true ? "Yes" : "No"}</TableCell>
                 <TableCell>{trade.BreakevenTrigger}</TableCell>
                 <TableCell>{trade.BreakevenOffset}</TableCell>
-                <TableCell>{trade.UseTrail === "true" ? "Yes" : "No"}</TableCell>
+                <TableCell>{trade.UseTrail === true ? "Yes" : "No"}</TableCell>
                 <TableCell>{trade.TrailTrigger}</TableCell>
                 <TableCell>{trade.Trail}</TableCell>
-                <TableCell>{trade.TradeTypeId}</TableCell>
+                <TableCell>
+                  {
+                    tradeTypes.find((type) => type.id === trade.TradeTypeId)?.TypeName || "Unknown"
+                  }
+                </TableCell>
                 <TableCell>
                   <Button.Group>
                     <Button
