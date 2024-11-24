@@ -48,6 +48,7 @@ export default function DashTradingComp() {
   const [startTime, setStartTime] = useState("06:30");
   const [interval, setInterval] = useState(15);
   const [rowCount, setRowCount] = useState(0);
+  const [isDirectionSet, setIsDirectionSet] = useState(false);
 
   const formattedTodayDate = new Intl.DateTimeFormat("en-US", {
     year: "numeric",
@@ -146,6 +147,7 @@ export default function DashTradingComp() {
       setShowAddTimeButton(false);
       setshowAddDirectionButton(false);
       setShowTime(false);
+      setIsDirectionSet(false);
     }
     
     useEffect(() => {
@@ -313,7 +315,8 @@ export default function DashTradingComp() {
   };
 
   const handleSetDirection = () => {
-    alert('set direction');
+    setIsDirectionSet(true);
+    alert('Direction has been set');
   }
   
   return (
@@ -472,7 +475,7 @@ export default function DashTradingComp() {
                       Find Match
                     </Button>
                     {/* Add Time Button */}
-                    {showAddTimeButton && (
+                    {!isDirectionSet && showAddTimeButton && (
                       <>
                         <Button gradientDuoTone='purpleToPink' onClick={handleAddTime}>
                           Add Time
@@ -502,6 +505,7 @@ export default function DashTradingComp() {
                         )}
                       </>
                     )}
+                    
                     {showAddDirectionButton && (
                       <>
                         <Button gradientDuoTone='tealToLime' onClick={handleSetDirection}>
@@ -540,16 +544,20 @@ export default function DashTradingComp() {
                               <TableCell>
                                 {row.balance1 !== "-" ? `$${row.balance1}` : "-"}
                               </TableCell>
-                              {showTime && (
-                                <TableCell>
-                                  <input
-                                    type="time"
-                                    value={row.time} // Ensure row.time is in HH:mm format
-                                    onChange={(e) => handleTimeChange(index, e.target.value)}
-                                    className="text-center border rounded-md p-1 w-full"
-                                  />
-                                </TableCell>
-                              )}
+                                {showTime && (
+                                  <TableCell>
+                                    {isDirectionSet ? (
+                                        row.time
+                                      ) : (
+                                        <input
+                                          type="time"
+                                          value={row.time} // Ensure row.time is in HH:mm format
+                                          onChange={(e) => handleTimeChange(index, e.target.value)}
+                                          className="text-center border rounded-md p-1 w-full"
+                                        />
+                                      )}
+                                  </TableCell>
+                                )}
                               <TableCell>
                                 {row.balance2 !== "-" ? `$${row.balance2}` : "-"}
                               </TableCell>
