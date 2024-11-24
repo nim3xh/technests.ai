@@ -4,7 +4,11 @@ const { Model } = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
   class Trade extends Model {
     static associate(models) {
-      // define associations here
+      // Define association: A Trade belongs to a TradeType
+      Trade.belongsTo(models.TradeType, {
+        foreignKey: 'TradeTypeId',
+        as: 'TradeType',
+      });
     }
   }
 
@@ -56,17 +60,21 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.INTEGER,
         allowNull: true,
       },
-      TradeType: {
-        type: DataTypes.STRING,
-        allowNull: true, // You can set this to true if it's optional
+      TradeTypeId: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+        references: {
+          model: 'TradeTypes', // Matches the table name
+          key: 'id',
+        },
       },
     },
     {
       sequelize,
       modelName: 'Trade',
-      paranoid: true, // Enables soft delete
-      timestamps: true, // Adds `createdAt` and `updatedAt` fields
-      deletedAt: 'deletedAt', // Adds `deletedAt` field for soft delete
+      paranoid: true,
+      timestamps: true,
+      deletedAt: 'deletedAt',
     }
   );
 

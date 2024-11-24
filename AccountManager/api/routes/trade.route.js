@@ -1,5 +1,4 @@
 const express = require("express");
-const multer = require("multer");
 const tradeController = require("../controllers/trade.controller");
 const verifyToken = require("../utils/verifyUser");
 const router = express.Router();

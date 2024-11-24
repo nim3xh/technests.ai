@@ -214,6 +214,7 @@ export default function DashTrades() {
             <TableHeadCell>Use Trail</TableHeadCell>
             <TableHeadCell>Trail Trigger</TableHeadCell>
             <TableHeadCell>Trail</TableHeadCell>
+            <TableHeadCell>Trade Type</TableHeadCell>
             <TableHeadCell></TableHeadCell>
           </TableHead>
           <TableBody>
@@ -231,6 +232,7 @@ export default function DashTrades() {
                 <TableCell>{trade.UseTrail ? "TRUE" : "FALSE"}</TableCell>
                 <TableCell>{trade.TrailTrigger}</TableCell>
                 <TableCell>{trade.Trail}</TableCell>
+                <TableCell>{trade.TradeType}</TableCell>
                 <TableCell>
                   <Button.Group>
                     <Button
@@ -385,6 +387,17 @@ export default function DashTrades() {
                 name="Trail"
                 placeholder="Trail"
                 value={newTrade.Trail}
+                onChange={handleChange}
+                required
+              />
+            </div>
+            <div>
+              <Label htmlFor="TradeType" value="TradeType">TradeType</Label>
+              <TextInput
+                id="TradeType"
+                name="TradeType"
+                placeholder="TradeType"
+                value={newTrade.TradeType}
                 onChange={handleChange}
                 required
               />

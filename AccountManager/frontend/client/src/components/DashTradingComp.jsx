@@ -594,18 +594,27 @@ export default function DashTradingComp() {
                       <Table>
                         {/* Table Header */}
                         <TableHead>
+                          {isTradeSelected && (
+                            <TableHeadCell>Trade</TableHeadCell>
+                          )}
                           {isDirectionSet && (
                             <TableHeadCell>Direction (First)</TableHeadCell>
                           )}
                           <TableHeadCell className="w-64">Account (First)</TableHeadCell>
                           <TableHeadCell>Account Balance (First)</TableHeadCell>
                           {showTime && (
-                            <TableHeadCell className="w-64">Time</TableHeadCell>
+                            <TableHeadCell>Time</TableHeadCell>
                           )}
                           <TableHeadCell>Account Balance (Second)</TableHeadCell>
                           <TableHeadCell className="w-64">Account (Second)</TableHeadCell>
                           {isDirectionSet && (
                             <TableHeadCell>Direction (Second)</TableHeadCell>
+                          )}
+                          {isTradeSelected && (
+                            <>
+                              <TableHeadCell>Trade</TableHeadCell>
+                              <TableHeadCell>Select Accounts</TableHeadCell>
+                            </> 
                           )}
                         </TableHead>
                         {/* Table Body */}
@@ -615,6 +624,11 @@ export default function DashTradingComp() {
                               key={index}
                               className={row.isMatch ? "bg-green-100" : "bg-white"} // Highlight matching rows
                             >
+                              {isTradeSelected && (
+                                <TableCell>
+                                  {row.isMatch ? "Match" : "No Match"}
+                                </TableCell>
+                              )}
                               {isDirectionSet && (
                                 <TableCell>
                                   {isTradeSelected ? (
@@ -667,6 +681,19 @@ export default function DashTradingComp() {
                                     )
                                   }
                               </TableCell>
+                              )}
+                              {isTradeSelected && (
+                                <>
+                                <TableCell>
+                                {row.isMatch ? "Match" : "No Match"}
+                                </TableCell>
+                                <TableCell>
+                                  <Button gradientDuoTone='pinkToOrange'>
+                                    Select
+                                  </Button>
+                                </TableCell>
+                                </>
+                                
                               )}
                             </TableRow>
                           ))}
