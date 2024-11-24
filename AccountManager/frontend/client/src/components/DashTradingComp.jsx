@@ -137,6 +137,7 @@ export default function DashTradingComp() {
 
     const handleFindMatch = () => {
       if (selectedAccounts.length === 2) {
+        setIsFindingMatch(true);
         setShowTable(true);
         setShowAddTimeButton(true); 
       } else {
@@ -153,6 +154,7 @@ export default function DashTradingComp() {
       setShowTime(false);
       setIsDirectionSet(false);
       setIsTradeSelected(false);
+      setIsFindingMatch(false);
     }
     
     useEffect(() => {
@@ -510,13 +512,29 @@ export default function DashTradingComp() {
                             ))}
                   </Dropdown>
                   <div className="flex items-center space-x-4 mt-4">
-                    {/* Find Match Button */}
-                    <Button
-                      gradientDuoTone="greenToBlue"
-                      onClick={handleFindMatch}
-                    >
-                      Find Match
-                    </Button>
+                    {!isFindingMatch && (
+                      <>
+                        {/* Find Match Button */}
+                        <Button
+                          gradientDuoTone="greenToBlue"
+                          onClick={handleFindMatch}
+                        >
+                          Find Match
+                        </Button>
+                      </> 
+                    )}
+
+                    {isFindingMatch && (
+                      <>
+                      {/*Clear Selection Button */}
+                      <Button
+                        gradientDuoTone='pinkToOrange'
+                        onClick={handleClearSelection}
+                      >
+                        Clear Selection
+                      </Button>
+                      </>
+                    )}
                     {/* Add Time Button */}
                     {!isDirectionSet && showAddTimeButton && (
                       <>
