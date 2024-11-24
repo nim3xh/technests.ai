@@ -23,6 +23,7 @@ module.exports = (sequelize, DataTypes) => {
     {
       sequelize,
       modelName: 'TradeType',
+      tableName: 'TradeTypes', // Explicitly set table name
       timestamps: true,
     }
   );

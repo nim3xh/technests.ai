@@ -13,6 +13,7 @@ import {
   Label,
   TextInput,
   Select,
+  Checkbox,
 } from "flowbite-react";
 import { HiHome, HiPlusCircle } from "react-icons/hi";
 import { useSelector } from "react-redux";
@@ -41,8 +42,10 @@ export default function DashTrades() {
     BreakevenOffset: "",
     UseTrail: "",
     TrailTrigger: "",
-    Trail : ""
+    Trail : "",
+    TradeTypeId: "",
   });
+  const [tradeTypes, setTradeTypes] = useState([]);
 
   const fetchData = async () => {
     try {
@@ -62,8 +65,25 @@ export default function DashTrades() {
     }
   };
 
+  const fetchTradeTypes = async () => {
+    try {
+      const token = currentUser.token;
+      const headers = {
+        Authorization: `Bearer ${token}`,
+      };
+
+      const tradeTypesResponse = await axios.get(`${BaseURL}tradeType`, {
+        headers,
+      });
+      setTradeTypes(tradeTypesResponse.data);
+    } catch (err) {
+      setError("Something went wrong while fetching trade types.");
+    }
+  }
+
   useEffect(() => {
     fetchData();
+    fetchTradeTypes();
   }, [currentUser]);
 
   // Reset the form
@@ -79,7 +99,8 @@ export default function DashTrades() {
       BreakevenOffset: "",
       UseTrail: "",
       TrailTrigger: "",
-      Trail : ""
+      Trail : "",
+      TradeTypeId: "",
     });
     setIsEditMode(false);
     setSelectedTradeId(null);
@@ -103,6 +124,7 @@ export default function DashTrades() {
         BreakevenOffset: newTrade.BreakevenOffset.toString(),
         TrailTrigger: newTrade.TrailTrigger.toString(),
         Trail: newTrade.Trail.toString(),
+        TradeTypeId: newTrade.TradeTypeId.toString(),
       };
   
       if (isEditMode) {
@@ -226,13 +248,13 @@ export default function DashTrades() {
                 <TableCell>{trade.Quantity}</TableCell>
                 <TableCell>{trade.StopLoss}</TableCell>
                 <TableCell>{trade.Profit}</TableCell>
-                <TableCell>{trade.UseBreakeven ? "TRUE" : "FALSE"}</TableCell>
+                <TableCell>{trade.UseBreakeven === "true" ? "Yes" : "No"}</TableCell>
                 <TableCell>{trade.BreakevenTrigger}</TableCell>
-                <TableCell>{trade.BreakevenOffset}</TableCell>'
-                <TableCell>{trade.UseTrail ? "TRUE" : "FALSE"}</TableCell>
+                <TableCell>{trade.BreakevenOffset}</TableCell>
+                <TableCell>{trade.UseTrail === "true" ? "Yes" : "No"}</TableCell>
                 <TableCell>{trade.TrailTrigger}</TableCell>
                 <TableCell>{trade.Trail}</TableCell>
-                <TableCell>{trade.TradeType}</TableCell>
+                <TableCell>{trade.TradeTypeId}</TableCell>
                 <TableCell>
                   <Button.Group>
                     <Button
@@ -262,154 +284,177 @@ export default function DashTrades() {
       <Modal show={showModal} onClose={() => setShowModal(false)}>
         <Modal.Header>{isEditMode ? "Edit Trade" : "Add Trade"}</Modal.Header>
         <Modal.Body>
-          <div className="space-y-6">
+          <form className="space-y-6">
             <div>
-              <Label htmlFor="TradeName" value="TradeName">TradeName</Label>
+              <Label htmlFor="TradeName" value="Trade Name" />
               <TextInput
                 id="TradeName"
                 name="TradeName"
-                placeholder="TradeName"
+                placeholder="Enter Trade Name"
                 value={newTrade.TradeName}
                 onChange={handleChange}
                 required
               />
             </div>
             <div>
-              <Label htmlFor="Instrument" value="Instrument">Instrument</Label>
+              <Label htmlFor="Instrument" value="Instrument" />
               <TextInput
                 id="Instrument"
                 name="Instrument"
-                placeholder="Instrument"
+                placeholder="Enter Instrument"
                 value={newTrade.Instrument}
                 onChange={handleChange}
                 required
               />
             </div>
             <div>
-              <Label htmlFor="Quantity" value="Quantity">Quantity</Label>
+              <Label htmlFor="Quantity" value="Quantity" />
               <TextInput
                 type="number"
                 id="Quantity"
                 name="Quantity"
-                placeholder="Quantity"
+                placeholder="Enter Quantity"
                 value={newTrade.Quantity}
                 onChange={handleChange}
                 required
               />
             </div>
             <div>
-              <Label htmlFor="StopLoss" value="StopLoss">StopLoss</Label>
+              <Label htmlFor="StopLoss" value="Stop Loss" />
               <TextInput
                 type="number"
                 id="StopLoss"
                 name="StopLoss"
-                placeholder="StopLoss"
+                placeholder="Enter Stop Loss"
                 value={newTrade.StopLoss}
                 onChange={handleChange}
                 required
               />
             </div>
             <div>
-              <Label htmlFor="Profit" value="Profit">Profit</Label>
+              <Label htmlFor="Profit" value="Profit" />
               <TextInput
                 type="number"
                 id="Profit"
                 name="Profit"
-                placeholder="Profit"
+                placeholder="Enter Profit"
                 value={newTrade.Profit}
                 onChange={handleChange}
                 required
               />
             </div>
-            <div>
-              <Label htmlFor="UseBreakeven" value="UseBreakeven">UseBreakeven</Label>
-              <TextInput
+            <div className="flex items-center gap-2">
+              <Checkbox
                 id="UseBreakeven"
                 name="UseBreakeven"
-                placeholder="UseBreakeven"
-                value={newTrade.UseBreakeven}
-                onChange={handleChange}
-                required
+                checked={newTrade.UseBreakeven === "true"}
+                onChange={(e) =>
+                  setNewTrade({
+                    ...newTrade,
+                    UseBreakeven: e.target.checked ? "true" : "false",
+                  })
+                }
               />
+              <Label htmlFor="UseBreakeven">Enable Breakeven</Label>
             </div>
             <div>
-              <Label htmlFor="BreakevenTrigger" value="BreakevenTrigger">BreakevenTrigger</Label>
+              <Label htmlFor="BreakevenTrigger" value="Breakeven Trigger" />
               <TextInput
                 type="number"
                 id="BreakevenTrigger"
                 name="BreakevenTrigger"
-                placeholder="BreakevenTrigger"
+                placeholder="Enter Breakeven Trigger"
                 value={newTrade.BreakevenTrigger}
                 onChange={handleChange}
                 required
               />
             </div>
             <div>
-              <Label htmlFor="BreakevenOffset" value="BreakevenOffset">BreakevenOffset</Label>
+              <Label htmlFor="BreakevenOffset" value="Breakeven Offset" />
               <TextInput
                 type="number"
                 id="BreakevenOffset"
                 name="BreakevenOffset"
-                placeholder="BreakevenOffset"
+                placeholder="Enter Breakeven Offset"
                 value={newTrade.BreakevenOffset}
                 onChange={handleChange}
                 required
               />
             </div>
-            <div>
-              <Label htmlFor="UseTrail" value="UseTrail">UseTrail</Label>
-              <TextInput
+            <div className="flex items-center gap-2">
+              <Checkbox
                 id="UseTrail"
                 name="UseTrail"
-                placeholder="UseTrail"
-                value={newTrade.UseTrail}
-                onChange={handleChange}
-                required
+                checked={newTrade.UseTrail === "true"}
+                onChange={(e) =>
+                  setNewTrade({
+                    ...newTrade,
+                    UseTrail: e.target.checked ? "true" : "false",
+                  })
+                }
               />
+              <Label htmlFor="UseTrail">Enable Trail</Label>
             </div>
             <div>
-              <Label htmlFor="TrailTrigger" value="TrailTrigger">TrailTrigger</Label>
+              <Label htmlFor="TrailTrigger" value="Trail Trigger" />
               <TextInput
                 type="number"
                 id="TrailTrigger"
                 name="TrailTrigger"
-                placeholder="TrailTrigger"
+                placeholder="Enter Trail Trigger"
                 value={newTrade.TrailTrigger}
                 onChange={handleChange}
                 required
               />
             </div>
             <div>
-              <Label htmlFor="Trail" value="Trail">Trail</Label>
+              <Label htmlFor="Trail" value="Trail" />
               <TextInput
                 type="number"
                 id="Trail"
                 name="Trail"
-                placeholder="Trail"
+                placeholder="Enter Trail"
                 value={newTrade.Trail}
                 onChange={handleChange}
                 required
               />
             </div>
             <div>
-              <Label htmlFor="TradeType" value="TradeType">TradeType</Label>
-              <TextInput
-                id="TradeType"
-                name="TradeType"
-                placeholder="TradeType"
-                value={newTrade.TradeType}
-                onChange={handleChange}
+              <Label htmlFor="TradeTypeId" value="Trade Type" />
+              <Select
+                id="TradeTypeId"
+                name="TradeTypeId"
+                value={newTrade.TradeTypeId || ""}
+                onChange={(e) =>
+                  setNewTrade({
+                    ...newTrade,
+                    TradeTypeId: e.target.value,
+                  })
+                }
                 required
-              />
+              >
+                <option value="" disabled>
+                  Select a Trade Type
+                </option>
+                {tradeTypes.map((type) => (
+                  <option key={type.id} value={type.id}>
+                    {type.TypeName}
+                  </option>
+                ))}
+              </Select>
             </div>
-          </div>
+          </form>
         </Modal.Body>
         <Modal.Footer>
           <Button gradientMonochrome="success" onClick={handleSaveTrade}>
             {isEditMode ? "Save Changes" : "Add Trade"}
           </Button>
+          <Button gradientMonochrome="failure" onClick={() => setShowModal(false)}>
+            Cancel
+          </Button>
         </Modal.Footer>
       </Modal>
+
 
     </div>
   );
