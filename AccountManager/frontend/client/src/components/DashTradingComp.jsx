@@ -42,6 +42,7 @@ export default function DashTradingComp() {
     PA4: 0,
   });
   const [showAddTimeButton, setShowAddTimeButton] = useState(false);
+  const [showAddDirectionButton, setshowAddDirectionButton] = useState(false);
   const [showTime, setShowTime] = useState(false);
   const [timeSlots, setTimeSlots] = useState([]);
   const [startTime, setStartTime] = useState("06:30");
@@ -119,6 +120,7 @@ export default function DashTradingComp() {
         const times = generateTimes("6:30", 15, rowsCount); // Default start time 6:30 AM
         setTimeSlots(times);
         setShowTime(true);
+        setshowAddDirectionButton(true);
       }
     };
 
@@ -142,6 +144,7 @@ export default function DashTradingComp() {
       setSelectedAccounts([]);
       setShowTable(false);
       setShowAddTimeButton(false);
+      setshowAddDirectionButton(false);
       setShowTime(false);
     }
     
@@ -308,6 +311,10 @@ export default function DashTradingComp() {
     const updatedTimes = generateTimes(startTime, newInterval, rowCount);
     setTimeSlots(updatedTimes);
   };
+
+  const handleSetDirection = () => {
+    alert('set direction');
+  }
   
   return (
     <div className="p-3 w-full">
@@ -470,27 +477,36 @@ export default function DashTradingComp() {
                         <Button gradientDuoTone='purpleToPink' onClick={handleAddTime}>
                           Add Time
                         </Button>
-                        <div className="flex space-x-4 mt-4">
-                          <div>
-                            <TextInput
-                              id="startTime"
-                              type="time"
-                              value={startTime}
-                              onChange={(e) => handleStartTimeUpdate(e.target.value)}
-                            />
-                            <Label htmlFor="startTime">Start Time</Label>
-                          </div>
-                          <div>
-                            <TextInput
-                              id="interval"
-                              type="number"
-                              min={1}
-                              value={interval}
-                              onChange={(e) => handleIntervalUpdate(parseInt(e.target.value, 10))}
-                            />
-                            <Label htmlFor="interval">Interval (Minutes)</Label>
-                          </div>
-                        </div>
+                        {showTime && (
+                            <div className="flex space-x-4 mt-4">
+                              <div>
+                                <TextInput
+                                  id="startTime"
+                                  type="time"
+                                  value={startTime}
+                                  onChange={(e) => handleStartTimeUpdate(e.target.value)}
+                                />
+                                <Label htmlFor="startTime">Start Time</Label>
+                              </div>
+                              <div>
+                                <TextInput
+                                  id="interval"
+                                  type="number"
+                                  min={1}
+                                  value={interval}
+                                  onChange={(e) => handleIntervalUpdate(parseInt(e.target.value, 10))}
+                                />
+                                <Label htmlFor="interval">Interval (Minutes)</Label>
+                              </div>
+                            </div>
+                        )}
+                      </>
+                    )}
+                    {showAddDirectionButton && (
+                      <>
+                        <Button gradientDuoTone='tealToLime' onClick={handleSetDirection}>
+                          Set Direction
+                        </Button>
                       </>
                     )}
                   </div>
