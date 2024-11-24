@@ -472,16 +472,15 @@ export default function DashTradingComp() {
                         </Button>
                         <div className="flex space-x-4 mt-4">
                           <div>
-                            <Label htmlFor="startTime">Start Time</Label>
                             <TextInput
                               id="startTime"
                               type="time"
                               value={startTime}
                               onChange={(e) => handleStartTimeUpdate(e.target.value)}
                             />
+                            <Label htmlFor="startTime">Start Time</Label>
                           </div>
                           <div>
-                            <Label htmlFor="interval">Interval (Minutes)</Label>
                             <TextInput
                               id="interval"
                               type="number"
@@ -489,6 +488,7 @@ export default function DashTradingComp() {
                               value={interval}
                               onChange={(e) => handleIntervalUpdate(parseInt(e.target.value, 10))}
                             />
+                            <Label htmlFor="interval">Interval (Minutes)</Label>
                           </div>
                         </div>
                       </>
