@@ -37,10 +37,10 @@ export default function DashTrades() {
     Quantity: "",
     StopLoss: "",
     Profit: "",
-    UseBreakeven: "",
+    UseBreakeven: "false",
     BreakevenTrigger: "",
     BreakevenOffset: "",
-    UseTrail: "",
+    UseTrail: "false",
     TrailTrigger: "",
     Trail : "",
     TradeTypeId: "",
@@ -95,10 +95,10 @@ export default function DashTrades() {
       Quantity: "",
       StopLoss: "",
       Profit: "",
-      UseBreakeven: "",
+      UseBreakeven: "false",
       BreakevenTrigger: "",
       BreakevenOffset: "",
-      UseTrail: "",
+      UseTrail: "false",
       TrailTrigger: "",
       Trail : "",
       TradeTypeId: "",
@@ -259,7 +259,11 @@ export default function DashTrades() {
                 <TableCell>{trade.UseTrail === true ? "Yes" : "No"}</TableCell>
                 <TableCell>{trade.TrailTrigger}</TableCell>
                 <TableCell>{trade.Trail}</TableCell>
-                <TableCell>{trade.TradeTypeId}</TableCell>
+                <TableCell>
+                  {
+                    tradeTypes.find((type) => type.id === trade.TradeTypeId)?.TypeName || "Unknown"
+                  }
+                </TableCell>
                 <TableCell>
                   <Button.Group>
                     <Button
