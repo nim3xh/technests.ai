@@ -49,6 +49,7 @@ export default function DashTradingComp() {
   const [interval, setInterval] = useState(15);
   const [rowCount, setRowCount] = useState(0);
   const [isDirectionSet, setIsDirectionSet] = useState(false);
+  const [directions, setDirections] = useState([]); 
 
   const formattedTodayDate = new Intl.DateTimeFormat("en-US", {
     year: "numeric",
@@ -262,8 +263,14 @@ export default function DashTradingComp() {
   );
   const totalUniqueAccountsDisplayed = uniqueAccountsInFilteredData.size;
 
+  // Helper function to check if two balances are within the specified range
+  const withinRange = (balance1, balance2, range = 125) => {
+    if (!balance1 || !balance2) return false; // Skip invalid or missing balances
+    const diff = Math.abs(parseFloat(balance1) - parseFloat(balance2));
+    return diff <= range;
+  };
+
   const createTableData = () => {
-    // Filter and find data for the selected accounts
     const account1Data = combinedData.filter(
       (account) => `${account.accountNumber} (${account.name})` === selectedAccounts[0]
     );
@@ -271,31 +278,29 @@ export default function DashTradingComp() {
       (account) => `${account.accountNumber} (${account.name})` === selectedAccounts[1]
     );
   
-    // Determine the maximum number of rows to display
     const maxRows = Math.max(account1Data.length, account2Data.length);
   
-    // Helper function to check if two balances are within the $125 range
-    const withinRange = (balance1, balance2) => {
-      if (!balance1 || !balance2) return false; // Skip invalid or missing balances
-      const diff = Math.abs(parseFloat(balance1) - parseFloat(balance2));
-      return diff <= 125;
-    };
-  
-    // Generate rows for the table
-    const rows = [];
-    for (let i = 0; i < maxRows; i++) {
-      const account1 = account1Data[i] || {}; // Default to empty object if no more rows
+    const rows = Array.from({ length: maxRows }, (_, i) => {
+      const account1 = account1Data[i] || {};
       const account2 = account2Data[i] || {};
   
       const isMatch = withinRange(account1.accountBalance, account2.accountBalance);
   
-      // Randomly assign a direction for the first account
-      const direction1 = isDirectionSet ? (Math.random() < 0.5 ? "Long" : "Short") : null;
+      // Randomly initialize directions if not set
+      if (!directions[i]) {
+        const initialDirection1 = Math.random() < 0.5 ? "Long" : "Short";
+        const initialDirection2 = initialDirection1 === "Long" ? "Short" : "Long";
+        directions[i] = {
+          direction1: initialDirection1,
+          direction2: initialDirection2,
+        };
+        setDirections([...directions]); // Update state with initial values
+      }
   
-      // Automatically assign the opposite direction for the second account
-      const direction2 = direction1 === "Long" ? "Short" : "Long";
+      const direction1 = directions[i]?.direction1;
+      const direction2 = directions[i]?.direction2;
   
-      rows.push({
+      return {
         direction1,
         account1: account1.account || "-",
         balance1: account1.accountBalance || "-",
@@ -304,11 +309,12 @@ export default function DashTradingComp() {
         account2: account2.account || "-",
         direction2,
         isMatch,
-      });
-    }
+      };
+    });
   
     return rows;
   };
+  
   
   const handleStartTimeUpdate = (newStartTime) => {
     setStartTime(newStartTime);
@@ -326,6 +332,25 @@ export default function DashTradingComp() {
     setIsDirectionSet(true);
     alert('Direction has been set');
   }
+
+  const handleDirectionChange = (index, directionType, newDirection) => {
+    const updatedDirections = [...directions];
+  
+    if (!updatedDirections[index]) {
+      updatedDirections[index] = { direction1: "Long", direction2: "Short" }; // Default initialization
+    }
+  
+    // Update the selected direction
+    updatedDirections[index][directionType] = newDirection;
+  
+    // If changing direction1, automatically update direction2 to the opposite
+    if (directionType === "direction1") {
+      updatedDirections[index].direction2 = newDirection === "Long" ? "Short" : "Long";
+    }
+  
+    setDirections(updatedDirections);
+  };
+  
   
   return (
     <div className="p-3 w-full">
@@ -555,7 +580,15 @@ export default function DashTradingComp() {
                               className={row.isMatch ? "bg-green-100" : "bg-white"} // Highlight matching rows
                             >
                               {isDirectionSet && (
-                                <TableCell>{row.direction1 || "-"}</TableCell>
+                                <TableCell>
+                                <Select
+                                  value={row.direction1}
+                                  onChange={(e) => handleDirectionChange(index, "direction1", e.target.value)}
+                                >
+                                  <option value="Long">Long</option>
+                                  <option value="Short">Short</option>
+                                </Select>
+                              </TableCell>
                               )}
                               <TableCell>{row.account1 || "-"}</TableCell>
                               <TableCell>
@@ -580,7 +613,15 @@ export default function DashTradingComp() {
                               </TableCell>
                               <TableCell>{row.account2 || "-"}</TableCell>
                               {isDirectionSet && (
-                                <TableCell>{row.direction2 || "-"}</TableCell>
+                                <TableCell>
+                                <Select
+                                  value={row.direction2}
+                                  onChange={(e) => handleDirectionChange(index, "direction2", e.target.value)}
+                                >
+                                  <option value="Long">Long</option>
+                                  <option value="Short">Short</option>
+                                </Select>
+                              </TableCell>
                               )}
                             </TableRow>
                           ))}
