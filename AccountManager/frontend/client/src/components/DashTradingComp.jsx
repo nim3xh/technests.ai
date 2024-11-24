@@ -41,12 +41,33 @@ export default function DashTradingComp() {
     PA4: 0,
   });
   const [showAddTimeButton, setShowAddTimeButton] = useState(false);
+  const [showTime, setShowTime] = useState(false);
+  const [timeSlots, setTimeSlots] = useState([]);
 
   const formattedTodayDate = new Intl.DateTimeFormat("en-US", {
     year: "numeric",
     month: "long",
     day: "numeric",
   }).format(todayDate);
+
+  // Helper to generate time slots
+  const generateTimes = (startTime, interval, rows) => {
+    const times = [];
+    let currentTime = new Date();
+    currentTime.setHours(...startTime.split(":").map(Number), 0, 0);
+
+    for (let i = 0; i < rows; i++) {
+      times.push(
+        new Intl.DateTimeFormat("en-US", {
+          hour: "numeric",
+          minute: "numeric",
+          hour12: true,
+        }).format(currentTime)
+      );
+      currentTime.setMinutes(currentTime.getMinutes() + interval);
+    }
+    return times;
+  };
 
   // Function to merge users and account details data
   const mergeData = (users, accountDetails) => {
@@ -90,9 +111,19 @@ export default function DashTradingComp() {
       }
     };
 
-     // Function to handle the "Add Time" button click
     const handleAddTime = () => {
-      alert("Add Time functionality goes here!");
+      if (!showTime) {
+        const rowsCount = createTableData().length;
+        const times = generateTimes("6:30", 15, rowsCount); // Default start time 6:30 AM
+        setTimeSlots(times);
+        setShowTime(true);
+      }
+    };
+
+    const handleTimeChange = (index, newTime) => {
+      const updatedTimes = [...timeSlots];
+      updatedTimes[index] = newTime;
+      setTimeSlots(updatedTimes);
     };
 
     const handleFindMatch = () => {
@@ -108,6 +139,7 @@ export default function DashTradingComp() {
       setSelectedAccounts([]);
       setShowTable(false);
       setShowAddTimeButton(false);
+      setShowTime(false);
     }
     
     useEffect(() => {
@@ -250,11 +282,12 @@ export default function DashTradingComp() {
       const isMatch = withinRange(account1.accountBalance, account2.accountBalance);
   
       rows.push({
-        account1: account1.account || "-", // Display "-" for missing data
+        account1: account1.account || "-",
         balance1: account1.accountBalance || "-",
-        balance2: account2.accountBalance || "-",
+        time: timeSlots[i] || "-",
         account2: account2.account || "-",
-        isMatch, // Add match status for highlighting
+        balance2: account2.accountBalance || "-",
+        isMatch,
       });
     }
   
@@ -425,71 +458,51 @@ export default function DashTradingComp() {
                     )}
                   </div>
 
-
                   {showTable && selectedAccounts.length === 2 && (
-                  <div className="flex flex-col justify-center items-center mt-5">
-                    <h3 className="text-center font-bold text-lg mb-4">Summary of Accounts</h3>
-                    <div className="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4">
-                      {/* First Account Section */}
-                      <div className="w-full md:w-1/2">
-                        <h4 className="text-center font-semibold text-md mb-2">{selectedAccounts[0]}</h4>
-                        <Table>
-                          {/* Table Header */}
-                          <TableHead>
-                            <TableHeadCell className="border border-gray-200 w-64">Account</TableHeadCell>
-                            <TableHeadCell className="border border-gray-200">Account Balance</TableHeadCell>
-                          </TableHead>
-                          {/* Table Body */}
-                          <TableBody>
-                            {createTableData()
-                              .filter((row) => row.account1) // Filter out empty rows
-                              .map((row, index) => (
-                                <TableRow
-                                  key={index}
-                                  className={row.isMatch ? "bg-green-100" : "bg-white"} // Highlight matching rows
-                                >
-                                  <TableCell className="border border-gray-200">{row.account1}</TableCell>
-                                  <TableCell className="border border-gray-200">
-                                    {row.balance1 !== "-" ? `$${row.balance1}` : "-"}
-                                  </TableCell>
-                                </TableRow>
-                              ))}
-                          </TableBody>
-                        </Table>
-                      </div>
-
-                      {/* Second Account Section */}
-                      <div className="w-full md:w-1/2">
-                        <h4 className="text-center font-semibold text-md mb-2">{selectedAccounts[1]}</h4>
-                        <Table>
-                          {/* Table Header */}
-                          <TableHead>
-                            <TableHeadCell className="border border-gray-200 w-64">Account</TableHeadCell>
-                            <TableHeadCell className="border border-gray-200">Account Balance</TableHeadCell>
-                          </TableHead>
-                          {/* Table Body */}
-                          <TableBody>
-                            {createTableData()
-                              .filter((row) => row.account2) // Filter out empty rows
-                              .map((row, index) => (
-                                <TableRow
-                                  key={index}
-                                  className={row.isMatch ? "bg-green-100" : "bg-white"} // Highlight matching rows
-                                >
-                                  <TableCell className="border border-gray-200">{row.account2}</TableCell>
-                                  <TableCell className="border border-gray-200">
-                                    {row.balance2 !== "-" ? `$${row.balance2}` : "-"}
-                                  </TableCell>
-                                </TableRow>
-                              ))}
-                          </TableBody>
-                        </Table>
-                      </div>
+                    <div className="flex flex-col justify-center items-center mt-5">
+                      <h3 className="text-center font-bold text-lg mb-4">Summary of Accounts</h3>
+                      <Table>
+                        {/* Table Header */}
+                        <TableHead>
+                          <TableHeadCell className="border border-gray-200 w-64">Account (First)</TableHeadCell>
+                          <TableHeadCell className="border border-gray-200">Account Balance (First)</TableHeadCell>
+                          {showTime && (
+                            <TableHeadCell className="border border-gray-200 w-64">Time</TableHeadCell>
+                          )}
+                          <TableHeadCell className="border border-gray-200 w-64">Account (Second)</TableHeadCell>
+                          <TableHeadCell className="border border-gray-200">Account Balance (Second)</TableHeadCell>
+                        </TableHead>
+                        {/* Table Body */}
+                        <TableBody>
+                          {createTableData().map((row, index) => (
+                            <TableRow
+                              key={index}
+                              className={row.isMatch ? "bg-green-100" : "bg-white"} // Highlight matching rows
+                            >
+                              <TableCell className="border border-gray-200">{row.account1 || "-"}</TableCell>
+                              <TableCell className="border border-gray-200">
+                                {row.balance1 !== "-" ? `$${row.balance1}` : "-"}
+                              </TableCell>
+                              {showTime && (
+                                <TableCell className="border border-gray-200">
+                                  <TextInput
+                                    type="text"
+                                    value={row.time}
+                                    onChange={(e) => handleTimeChange(index, e.target.value)}
+                                    className="text-center"
+                                  />
+                                </TableCell>
+                              )}
+                              <TableCell className="border border-gray-200">{row.account2 || "-"}</TableCell>
+                              <TableCell className="border border-gray-200">
+                                {row.balance2 !== "-" ? `$${row.balance2}` : "-"}
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
                     </div>
-                  </div>
-                )}
-
-
+                  )}
               </>
           )}
         </>
