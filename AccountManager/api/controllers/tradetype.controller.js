@@ -1,6 +1,12 @@
 const models = require("../models");
 
 function save(req, res) {
+    if (!req.body.TypeName) {
+        return res.status(400).json({
+            message: "TypeName is required",
+        });
+    }
+
     const tradeType = {
         TypeName: req.body.TypeName,
     };
@@ -19,6 +25,65 @@ function save(req, res) {
             });
         });
 }
+
+function savebulk(req, res) {
+    const tradeTypes = req.body; // Expecting an array of objects or a single object
+
+    // Check if the input is an array
+    if (Array.isArray(tradeTypes)) {
+        // Validate each entry in the array
+        const invalidEntries = tradeTypes.filter((item) => !item.TypeName || item.TypeName.trim() === "");
+
+        if (invalidEntries.length > 0) {
+            return res.status(400).json({
+                message: "All entries must have a valid TypeName.",
+                invalidEntries,
+            });
+        }
+
+        // Perform bulk insert
+        models.TradeType.bulkCreate(tradeTypes)
+            .then((result) => {
+                res.status(201).json({
+                    message: "TradeTypes created successfully",
+                    tradeTypes: result,
+                });
+            })
+            .catch((error) => {
+                res.status(500).json({
+                    message: "Something went wrong",
+                    error: error,
+                });
+            });
+    } else {
+        // Handle single entry
+        if (!tradeTypes.TypeName || tradeTypes.TypeName.trim() === "") {
+            return res.status(400).json({
+                message: "TypeName is required.",
+            });
+        }
+
+        const tradeType = {
+            TypeName: tradeTypes.TypeName,
+        };
+
+        models.TradeType.create(tradeType)
+            .then((result) => {
+                res.status(201).json({
+                    message: "TradeType created successfully",
+                    tradeType: result,
+                });
+            })
+            .catch((error) => {
+                res.status(500).json({
+                    message: "Something went wrong",
+                    error: error,
+                });
+            });
+    }
+}
+
+
 
 function index(req, res) {
     models.TradeType.findAll()
@@ -107,4 +172,5 @@ module.exports = {
     show: show,
     update: update,
     destroy: destroy,
+    savebulk: savebulk,
 };
