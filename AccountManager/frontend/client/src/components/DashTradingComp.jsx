@@ -21,6 +21,7 @@ import { HiHome, HiPlusCircle } from "react-icons/hi";
 import axios from "axios";
 import { MdAccountBalance, MdPerson, MdTableRows } from "react-icons/md";
 import { CiMemoPad } from "react-icons/ci";
+import { set } from 'lodash';
 
 const BaseURL = import.meta.env.VITE_BASE_URL;
 
@@ -43,6 +44,9 @@ export default function DashTradingComp() {
   const [showAddTimeButton, setShowAddTimeButton] = useState(false);
   const [showTime, setShowTime] = useState(false);
   const [timeSlots, setTimeSlots] = useState([]);
+  const [startTime, setStartTime] = useState("06:30");
+  const [interval, setInterval] = useState(15);
+  const [rowCount, setRowCount] = useState(0);
 
   const formattedTodayDate = new Intl.DateTimeFormat("en-US", {
     year: "numeric",
@@ -111,6 +115,7 @@ export default function DashTradingComp() {
     const handleAddTime = () => {
       if (!showTime) {
         const rowsCount = createTableData().length;
+        setRowCount(rowsCount);
         const times = generateTimes("6:30", 15, rowsCount); // Default start time 6:30 AM
         setTimeSlots(times);
         setShowTime(true);
@@ -291,8 +296,19 @@ export default function DashTradingComp() {
   
     return rows;
   };
-  
 
+  const handleStartTimeUpdate = (newStartTime) => {
+    setStartTime(newStartTime);
+    const updatedTimes = generateTimes(newStartTime, interval, rowCount);
+    setTimeSlots(updatedTimes);
+  };
+  
+  const handleIntervalUpdate = (newInterval) => {
+    setInterval(newInterval);
+    const updatedTimes = generateTimes(startTime, newInterval, rowCount);
+    setTimeSlots(updatedTimes);
+  };
+  
   return (
     <div className="p-3 w-full">
       <Breadcrumb aria-label="Default breadcrumb example">
@@ -450,9 +466,32 @@ export default function DashTradingComp() {
                     </Button>
                     {/* Add Time Button */}
                     {showAddTimeButton && (
-                      <Button gradientDuoTone='purpleToPink' onClick={handleAddTime}>
-                        Add Time
-                      </Button>
+                      <>
+                        <Button gradientDuoTone='purpleToPink' onClick={handleAddTime}>
+                          Add Time
+                        </Button>
+                        <div className="flex space-x-4 mt-4">
+                          <div>
+                            <Label htmlFor="startTime">Start Time</Label>
+                            <TextInput
+                              id="startTime"
+                              type="time"
+                              value={startTime}
+                              onChange={(e) => handleStartTimeUpdate(e.target.value)}
+                            />
+                          </div>
+                          <div>
+                            <Label htmlFor="interval">Interval (Minutes)</Label>
+                            <TextInput
+                              id="interval"
+                              type="number"
+                              min={1}
+                              value={interval}
+                              onChange={(e) => handleIntervalUpdate(parseInt(e.target.value, 10))}
+                            />
+                          </div>
+                        </div>
+                      </>
                     )}
                   </div>
 
