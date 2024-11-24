@@ -289,19 +289,27 @@ export default function DashTradingComp() {
   
       const isMatch = withinRange(account1.accountBalance, account2.accountBalance);
   
+      // Randomly assign a direction for the first account
+      const direction1 = isDirectionSet ? (Math.random() < 0.5 ? "Long" : "Short") : null;
+  
+      // Automatically assign the opposite direction for the second account
+      const direction2 = direction1 === "Long" ? "Short" : "Long";
+  
       rows.push({
+        direction1,
         account1: account1.account || "-",
         balance1: account1.accountBalance || "-",
         time: timeSlots[i] || "-",
-        account2: account2.account || "-",
         balance2: account2.accountBalance || "-",
+        account2: account2.account || "-",
+        direction2,
         isMatch,
       });
     }
   
     return rows;
   };
-
+  
   const handleStartTimeUpdate = (newStartTime) => {
     setStartTime(newStartTime);
     const updatedTimes = generateTimes(newStartTime, interval, rowCount);
@@ -525,6 +533,9 @@ export default function DashTradingComp() {
                       <Table>
                         {/* Table Header */}
                         <TableHead>
+                          {isDirectionSet && (
+                            <TableHeadCell>Direction (First)</TableHeadCell>
+                          )}
                           <TableHeadCell className="w-64">Account (First)</TableHeadCell>
                           <TableHeadCell>Account Balance (First)</TableHeadCell>
                           {showTime && (
@@ -532,6 +543,9 @@ export default function DashTradingComp() {
                           )}
                           <TableHeadCell>Account Balance (Second)</TableHeadCell>
                           <TableHeadCell className="w-64">Account (Second)</TableHeadCell>
+                          {isDirectionSet && (
+                            <TableHeadCell>Direction (Second)</TableHeadCell>
+                          )}
                         </TableHead>
                         {/* Table Body */}
                         <TableBody>
@@ -540,6 +554,9 @@ export default function DashTradingComp() {
                               key={index}
                               className={row.isMatch ? "bg-green-100" : "bg-white"} // Highlight matching rows
                             >
+                              {isDirectionSet && (
+                                <TableCell>{row.direction1 || "-"}</TableCell>
+                              )}
                               <TableCell>{row.account1 || "-"}</TableCell>
                               <TableCell>
                                 {row.balance1 !== "-" ? `$${row.balance1}` : "-"}
@@ -562,6 +579,9 @@ export default function DashTradingComp() {
                                 {row.balance2 !== "-" ? `$${row.balance2}` : "-"}
                               </TableCell>
                               <TableCell>{row.account2 || "-"}</TableCell>
+                              {isDirectionSet && (
+                                <TableCell>{row.direction2 || "-"}</TableCell>
+                              )}
                             </TableRow>
                           ))}
                         </TableBody>
