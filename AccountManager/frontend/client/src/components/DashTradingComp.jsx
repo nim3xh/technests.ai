@@ -43,12 +43,15 @@ export default function DashTradingComp() {
   });
   const [showAddTimeButton, setShowAddTimeButton] = useState(false);
   const [showAddDirectionButton, setshowAddDirectionButton] = useState(false);
+  const [showSelectTradeButton, setShowSelectTradeButton] = useState(false);
   const [showTime, setShowTime] = useState(false);
   const [timeSlots, setTimeSlots] = useState([]);
   const [startTime, setStartTime] = useState("06:30");
   const [interval, setInterval] = useState(15);
   const [rowCount, setRowCount] = useState(0);
   const [isDirectionSet, setIsDirectionSet] = useState(false);
+  const [isTradeSelected, setIsTradeSelected] = useState(false);
+  const [isFindingMatch, setIsFindingMatch] = useState(false);
   const [directions, setDirections] = useState([]); 
 
   const formattedTodayDate = new Intl.DateTimeFormat("en-US", {
@@ -72,7 +75,6 @@ export default function DashTradingComp() {
     return times;
   };
   
-
   // Function to merge users and account details data
   const mergeData = (users, accountDetails) => {
     return accountDetails.map((account) => {
@@ -147,8 +149,10 @@ export default function DashTradingComp() {
       setShowTable(false);
       setShowAddTimeButton(false);
       setshowAddDirectionButton(false);
+      setShowSelectTradeButton(false);
       setShowTime(false);
       setIsDirectionSet(false);
+      setIsTradeSelected(false);
     }
     
     useEffect(() => {
@@ -330,7 +334,7 @@ export default function DashTradingComp() {
 
   const handleSetDirection = () => {
     setIsDirectionSet(true);
-    alert('Direction has been set');
+    setShowSelectTradeButton(true);
   }
 
   const handleDirectionChange = (index, directionType, newDirection) => {
@@ -350,6 +354,11 @@ export default function DashTradingComp() {
   
     setDirections(updatedDirections);
   };
+  
+  const handleSelectTrade = () => {
+    setIsTradeSelected(true);
+    alert("Trade selected!");
+  }
   
   
   return (
@@ -501,6 +510,7 @@ export default function DashTradingComp() {
                             ))}
                   </Dropdown>
                   <div className="flex items-center space-x-4 mt-4">
+                    {/* Find Match Button */}
                     <Button
                       gradientDuoTone="greenToBlue"
                       onClick={handleFindMatch}
@@ -539,10 +549,18 @@ export default function DashTradingComp() {
                       </>
                     )}
                     
-                    {showAddDirectionButton && (
+                    {!isTradeSelected && showAddDirectionButton && (
                       <>
                         <Button gradientDuoTone='tealToLime' onClick={handleSetDirection}>
                           Set Direction
+                        </Button>
+                      </>
+                    )}
+
+                    {showSelectTradeButton && (
+                      <>
+                        <Button gradientDuoTone='purpleToPink' onClick={handleSelectTrade}>
+                          Select Trade
                         </Button>
                       </>
                     )}
@@ -581,13 +599,17 @@ export default function DashTradingComp() {
                             >
                               {isDirectionSet && (
                                 <TableCell>
-                                <Select
-                                  value={row.direction1}
-                                  onChange={(e) => handleDirectionChange(index, "direction1", e.target.value)}
-                                >
-                                  <option value="Long">Long</option>
-                                  <option value="Short">Short</option>
-                                </Select>
+                                  {isTradeSelected ? (
+                                    row.direction1
+                                  ) : (
+                                    <Select
+                                      value={row.direction1}
+                                      onChange={(e) => handleDirectionChange(index, "direction1", e.target.value)}
+                                    >
+                                      <option value="Long">Long</option>
+                                      <option value="Short">Short</option>
+                                    </Select>
+                                  )}
                               </TableCell>
                               )}
                               <TableCell>{row.account1 || "-"}</TableCell>
@@ -614,13 +636,18 @@ export default function DashTradingComp() {
                               <TableCell>{row.account2 || "-"}</TableCell>
                               {isDirectionSet && (
                                 <TableCell>
-                                <Select
-                                  value={row.direction2}
-                                  onChange={(e) => handleDirectionChange(index, "direction2", e.target.value)}
-                                >
-                                  <option value="Long">Long</option>
-                                  <option value="Short">Short</option>
-                                </Select>
+                                    {isTradeSelected ? (
+                                      row.direction2
+                                    ) : (
+                                      <Select
+                                        value={row.direction2}
+                                        onChange={(e) => handleDirectionChange(index, "direction2", e.target.value)}
+                                      >
+                                        <option value="Long">Long</option>
+                                        <option value="Short">Short</option>
+                                      </Select>
+                                    )
+                                  }
                               </TableCell>
                               )}
                             </TableRow>
