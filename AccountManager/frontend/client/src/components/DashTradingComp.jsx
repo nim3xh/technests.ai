@@ -55,19 +55,16 @@ export default function DashTradingComp() {
     const times = [];
     let currentTime = new Date();
     currentTime.setHours(...startTime.split(":").map(Number), 0, 0);
-
+  
     for (let i = 0; i < rows; i++) {
-      times.push(
-        new Intl.DateTimeFormat("en-US", {
-          hour: "numeric",
-          minute: "numeric",
-          hour12: true,
-        }).format(currentTime)
-      );
+      const hours = currentTime.getHours().toString().padStart(2, "0");
+      const minutes = currentTime.getMinutes().toString().padStart(2, "0");
+      times.push(`${hours}:${minutes}`);
       currentTime.setMinutes(currentTime.getMinutes() + interval);
     }
     return times;
   };
+  
 
   // Function to merge users and account details data
   const mergeData = (users, accountDetails) => {
@@ -122,9 +119,10 @@ export default function DashTradingComp() {
 
     const handleTimeChange = (index, newTime) => {
       const updatedTimes = [...timeSlots];
-      updatedTimes[index] = newTime;
+      updatedTimes[index] = newTime; 
       setTimeSlots(updatedTimes);
     };
+    
 
     const handleFindMatch = () => {
       if (selectedAccounts.length === 2) {
@@ -464,13 +462,13 @@ export default function DashTradingComp() {
                       <Table>
                         {/* Table Header */}
                         <TableHead>
-                          <TableHeadCell className="border border-gray-200 w-64">Account (First)</TableHeadCell>
-                          <TableHeadCell className="border border-gray-200">Account Balance (First)</TableHeadCell>
+                          <TableHeadCell className="w-64">Account (First)</TableHeadCell>
+                          <TableHeadCell>Account Balance (First)</TableHeadCell>
                           {showTime && (
-                            <TableHeadCell className="border border-gray-200 w-64">Time</TableHeadCell>
+                            <TableHeadCell className="w-64">Time</TableHeadCell>
                           )}
-                          <TableHeadCell className="border border-gray-200 w-64">Account (Second)</TableHeadCell>
-                          <TableHeadCell className="border border-gray-200">Account Balance (Second)</TableHeadCell>
+                          <TableHeadCell className="w-64">Account (Second)</TableHeadCell>
+                          <TableHeadCell>Account Balance (Second)</TableHeadCell>
                         </TableHead>
                         {/* Table Body */}
                         <TableBody>
@@ -479,22 +477,22 @@ export default function DashTradingComp() {
                               key={index}
                               className={row.isMatch ? "bg-green-100" : "bg-white"} // Highlight matching rows
                             >
-                              <TableCell className="border border-gray-200">{row.account1 || "-"}</TableCell>
-                              <TableCell className="border border-gray-200">
+                              <TableCell>{row.account1 || "-"}</TableCell>
+                              <TableCell>
                                 {row.balance1 !== "-" ? `$${row.balance1}` : "-"}
                               </TableCell>
                               {showTime && (
-                                <TableCell className="border border-gray-200">
-                                  <TextInput
-                                    type="text"
-                                    value={row.time}
+                                <TableCell>
+                                  <input
+                                    type="time"
+                                    value={row.time} // Ensure row.time is in HH:mm format
                                     onChange={(e) => handleTimeChange(index, e.target.value)}
-                                    className="text-center"
+                                    className="text-center border rounded-md p-1 w-full"
                                   />
                                 </TableCell>
                               )}
-                              <TableCell className="border border-gray-200">{row.account2 || "-"}</TableCell>
-                              <TableCell className="border border-gray-200">
+                              <TableCell>{row.account2 || "-"}</TableCell>
+                              <TableCell>
                                 {row.balance2 !== "-" ? `$${row.balance2}` : "-"}
                               </TableCell>
                             </TableRow>
