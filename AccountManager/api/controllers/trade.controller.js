@@ -13,7 +13,7 @@ function save(req, res) {
         UseTrail: req.body.UseTrail,
         TrailTrigger: req.body.TrailTrigger,
         Trail: req.body.Trail,
-        TradeType: req.body.TradeType,
+        TradeTypeId: req.body.TradeTypeId,
     };
 
     models.Trade.create(trade)
@@ -78,7 +78,7 @@ function update(req, res) {
         UseTrail: req.body.UseTrail,
         TrailTrigger: req.body.TrailTrigger,
         Trail: req.body.Trail,
-        TradeType: req.body.TradeType,
+        TradeTypeId: req.body.TradeTypeId,
     };
 
     models.Trade.update(updatedTrade, { where: { id: id } })

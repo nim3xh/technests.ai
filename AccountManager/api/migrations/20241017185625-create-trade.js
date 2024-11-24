@@ -55,9 +55,11 @@ module.exports = {
         type: Sequelize.INTEGER,
         allowNull: true,
       },
-      TradeType: {
-        type: Sequelize.STRING,
+      TradeTypeId: {
+        type: Sequelize.INTEGER,
         allowNull: true,
+        onUpdate: 'CASCADE',
+        onDelete: 'SET NULL',
       },
       createdAt: {
         allowNull: false,

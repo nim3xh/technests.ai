@@ -1,7 +1,7 @@
 'use strict';
-
+/** @type {import('sequelize-cli').Migration} */
 module.exports = {
-  up: async (queryInterface, Sequelize) => {
+  async up(queryInterface, Sequelize) {
     await queryInterface.createTable('TradeTypes', {
       id: {
         allowNull: false,
@@ -23,22 +23,9 @@ module.exports = {
         type: Sequelize.DATE,
       },
     });
-
-    // Add TradeTypeId foreign key to Trades table
-    await queryInterface.addColumn('Trades', 'TradeTypeId', {
-      type: Sequelize.INTEGER,
-      allowNull: true,
-      references: {
-        model: 'TradeTypes',
-        key: 'id',
-      },
-      onUpdate: 'CASCADE',
-      onDelete: 'SET NULL',
-    });
   },
 
-  down: async (queryInterface, Sequelize) => {
-    await queryInterface.removeColumn('Trades', 'TradeTypeId');
+  async down(queryInterface, Sequelize) {
     await queryInterface.dropTable('TradeTypes');
   },
 };

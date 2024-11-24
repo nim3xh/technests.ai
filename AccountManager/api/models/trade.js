@@ -72,7 +72,8 @@ module.exports = (sequelize, DataTypes) => {
     {
       sequelize,
       modelName: 'Trade',
-      paranoid: true,
+      tableName: 'Trades', // Explicitly set table name
+      paranoid: true, // Enable soft deletes
       timestamps: true,
       deletedAt: 'deletedAt',
     }
