@@ -48,6 +48,7 @@ export default function DashTrades() {
     ApexId: "",
   });
   const [combinedData, setCombinedData] = useState([]);
+  const [selectedApexId, setSelectedApexId] = useState("");
   
    // Function to merge users and account details data
    const mergeData = (users, accountDetails) => {
@@ -59,6 +60,12 @@ export default function DashTrades() {
       };
     });
   };
+
+  const filteredTrades = selectedApexId
+  ? tradesData.filter(
+      (trade) => Number(trade.ApexId) === Number(selectedApexId)
+    )
+  : tradesData;
 
   const uploadCsvs = async () => {
     const input = document.createElement("input");
@@ -285,6 +292,29 @@ export default function DashTrades() {
             All Trades
           </h1>
           <div className="ml-auto flex space-x-3">
+          <div className="flex items-center justify-start mb-4">
+            
+            <Dropdown
+              label={selectedApexId || "Select Apex ID"}
+              className="ml-2"
+              inline
+            >
+              <Dropdown.Item onClick={() => setSelectedApexId("")}>
+                All
+              </Dropdown.Item>
+              {uniqueAccountNumbers.map((account) => (
+                <Dropdown.Item
+                  key={account}
+                  onClick={() => {
+                    const extractedAccountNumber = account.replace(/APEX-/, "");
+                    setSelectedApexId(extractedAccountNumber.split(" ")[0]);
+                  }}
+                >
+                  {account.replace(/APEX-/, "")} {/* Display without "APEX-" */}
+                </Dropdown.Item>
+              ))}
+            </Dropdown>
+          </div>
             {currentUser.user.role === "admin" && (
               <Button
                 gradientDuoTone="greenToBlue"
@@ -340,7 +370,7 @@ export default function DashTrades() {
             <TableHeadCell></TableHeadCell>
           </TableHead>
           <TableBody>
-            {tradesData.map((trade, index) => (
+            {filteredTrades.map((trade, index) => (
               <TableRow key={index}>
                 <TableCell>{index + 1}</TableCell>
                 <TableCell>{trade.TradeName}</TableCell>
