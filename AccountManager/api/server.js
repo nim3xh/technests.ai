@@ -31,61 +31,77 @@ const getCsvFiles = (directory) => {
   return csvFiles;
 };
 
-// Function to upload and process CSV files
-const uploadCsvFiles = async () => {
-  const directoryPath = path.join(__dirname, "dashboards"); // Root CSV folder path
+const addUsers = async (filePath) => {
+  const formData = new FormData();
+  formData.append("csvFiles", fs.createReadStream(filePath));
 
   try {
-    // Get all CSV files in the directory and its subdirectories
+    const response = await axios.post(
+      "http://localhost:3000/users/add-users-auto",
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      }
+    );
+    // console.log(`Successfully uploaded ${filePath} to add-users-auto:`, response.data);
+  } catch (error) {
+    console.error(
+      `Failed to upload ${filePath} to add-users-auto:`,
+      error.code || error.message || error.response?.data
+    );
+  }
+};
+
+
+const uploadCsvFiles = async () => {
+  const directoryPath = path.join(__dirname, "dashboards");
+
+  try {
     const files = getCsvFiles(directoryPath);
 
     if (files.length === 0) {
       console.log("No CSV files found, skipping the upload process.");
-      return; // Exit the function if no CSV files are found
+      return;
     }
 
-    // Clear the existing database before uploading
     await axios.delete("http://localhost:3000/accountDetails/");
 
-    const uploadPromises = files.map(async (filePath) => {
+    for (const filePath of files) {
       const formData = new FormData();
       formData.append("csvFiles", fs.createReadStream(filePath));
 
       try {
-        // Post the CSV to the first endpoint
-        await axios.post(
+        // Upload to the accountDetails endpoint
+        const accountResponse = await axios.post(
           "http://localhost:3000/accountDetails/add-acc-auto",
           formData,
           {
-            headers: { "Content-Type": "multipart/form-data" },
+            headers: {
+              "Content-Type": "multipart/form-data",
+            },
           }
         );
-
-        // // Post the CSV to the second endpoint
-        // await axios.post(
-        //   "http://localhost:3000/users/add-users-auto",
-        //   formData,
-        //   {
-        //     headers: { "Content-Type": "multipart/form-data" },
-        //   }
-        // );
+        // console.log(`Successfully uploaded ${filePath} to add-acc-auto:`, accountResponse.data);
       } catch (error) {
-        // Handle any errors during the upload
         console.error(
-          `Failed to upload ${filePath}:`,
-          error.code || error.message || error.response?.status
+          `Failed to upload ${filePath} to add-acc-auto:`,
+          error.code || error.message || error.response?.data
         );
       }
-    });
 
-    // Wait for all files to be uploaded
-    await Promise.all(uploadPromises);
-    deleteDashboards(); // Delete the CSV files after uploading
+      // Call the addUsers function
+      await addUsers(filePath);
+    }
+
+    deleteDashboards();
   } catch (error) {
-    // Handle errors during the database clearing or upload process
     console.error(`Error during CSV upload process: ${error.message}`);
   }
 };
+
+
 
 app.post("/upload-csv", async (req, res) => {
   try {
@@ -112,6 +128,13 @@ cron.schedule("0 8 * * *", () => {
   console.log("Running scheduled task to upload CSV files at 12:00 AM PST...");
   uploadCsvFiles();
 });
+
+// // Schedule the task to run every minute
+// cron.schedule("* * * * *", () => {
+//   console.log("Running scheduled task to upload CSV files...");
+//   uploadCsvFiles();
+// });
+
 
 // HTTP server creation
 const server = http.createServer(app);
