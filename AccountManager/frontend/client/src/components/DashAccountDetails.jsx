@@ -607,10 +607,12 @@ export default function DashAccountDetails() {
           </div>
 
           <div className="flex gap-3 justify-between mt-4 overflow-x-auto flex-nowrap">
-            <Dropdown
+          <Dropdown
               label={
                 selectedAccounts.length > 0
-                  ? selectedAccounts.join(", ")
+                  ? selectedAccounts
+                      .map((account) => account.replace(/APEX-/, "")) // Remove "APEX-"
+                      .join(", ")
                   : "Select Account"
               }
               className="w-full text-left dark:bg-gray-800 dark:text-gray-200"
@@ -624,10 +626,12 @@ export default function DashAccountDetails() {
                   key={account}
                   onClick={() => handleAccountSelection(account)}
                 >
-                  {selectedAccounts.includes(account) ? "✓ " : ""} {account}
+                  {selectedAccounts.includes(account) ? "✓ " : ""}{" "}
+                  {account.replace(/APEX-/, "")} {/* Display without "APEX-" */}
                 </Dropdown.Item>
               ))}
             </Dropdown>
+
             <Dropdown
               label={selectedProcessRange || "Select Range"}
               disabled={setsMade}

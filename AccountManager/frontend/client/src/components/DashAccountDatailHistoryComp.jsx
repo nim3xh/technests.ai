@@ -474,7 +474,9 @@ export default function DashTradeHistoryComp() {
           <Dropdown
               label={
                 selectedAccounts.length > 0
-                  ? selectedAccounts.join(", ")
+                  ? selectedAccounts
+                      .map((account) => account.replace(/APEX-/, "")) // Remove "APEX-"
+                      .join(", ")
                   : "Select Account"
               }
               className="w-full text-left dark:bg-gray-800 dark:text-gray-200"
@@ -488,7 +490,8 @@ export default function DashTradeHistoryComp() {
                   key={account}
                   onClick={() => handleAccountSelection(account)}
                 >
-                  {selectedAccounts.includes(account) ? "✓ " : ""} {account}
+                  {selectedAccounts.includes(account) ? "✓ " : ""}{" "}
+                  {account.replace(/APEX-/, "")} {/* Display without "APEX-" */}
                 </Dropdown.Item>
               ))}
             </Dropdown>
