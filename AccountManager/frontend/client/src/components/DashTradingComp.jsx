@@ -134,13 +134,12 @@ export default function DashTradingComp() {
       updatedTimes[index] = newTime; 
       setTimeSlots(updatedTimes);
     };
-    
-
+  
     const handleFindMatch = () => {
       if (selectedAccounts.length === 2) {
         setIsFindingMatch(true);
         setShowTable(true);
-        setShowAddTimeButton(true); 
+        // setShowAddTimeButton(true); 
       } else {
         alert("Please select exactly two accounts.");
       }
