@@ -68,6 +68,10 @@ module.exports = (sequelize, DataTypes) => {
           key: 'id',
         },
       },
+      ApexId:{
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      }
     },
     {
       sequelize,

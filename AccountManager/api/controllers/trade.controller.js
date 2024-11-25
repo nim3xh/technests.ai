@@ -14,6 +14,7 @@ function save(req, res) {
         TrailTrigger: req.body.TrailTrigger,
         Trail: req.body.Trail,
         TradeTypeId: req.body.TradeTypeId,
+        ApexId: req.body.ApexId,
     };
 
     models.Trade.create(trade)
@@ -79,6 +80,7 @@ function update(req, res) {
         TrailTrigger: req.body.TrailTrigger,
         Trail: req.body.Trail,
         TradeTypeId: req.body.TradeTypeId,
+        ApexId: req.body.ApexId,
     };
 
     models.Trade.update(updatedTrade, { where: { id: id } })

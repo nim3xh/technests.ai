@@ -241,7 +241,7 @@ export default function DashTrades() {
             <TableHeadCell>Use Trail</TableHeadCell>
             <TableHeadCell>Trail Trigger</TableHeadCell>
             <TableHeadCell>Trail</TableHeadCell>
-            <TableHeadCell>Trade Type</TableHeadCell>
+            <TableHeadCell>Apex ID</TableHeadCell>
             <TableHeadCell></TableHeadCell>
           </TableHead>
           <TableBody>
@@ -260,9 +260,7 @@ export default function DashTrades() {
                 <TableCell>{trade.TrailTrigger}</TableCell>
                 <TableCell>{trade.Trail}</TableCell>
                 <TableCell>
-                  {
-                    tradeTypes.find((type) => type.id === trade.TradeTypeId)?.TypeName || "Unknown"
-                  }
+                 {trade.ApexId}
                 </TableCell>
                 <TableCell>
                   <Button.Group>
