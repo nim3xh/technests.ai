@@ -14,6 +14,7 @@ import {
   TextInput,
   Select,
   Checkbox,
+  Dropdown,
 } from "flowbite-react";
 import { HiHome, HiPlusCircle } from "react-icons/hi";
 import { useSelector } from "react-redux";
@@ -43,9 +44,45 @@ export default function DashTrades() {
     UseTrail: "false",
     TrailTrigger: "",
     Trail : "",
-    TradeTypeId: "",
+    ApexId: "",
   });
-  const [tradeTypes, setTradeTypes] = useState([]);
+  const [uniqueAccountNumbers, setUniqueAccountNumbers] = useState([]);
+
+  
+  const fetchUniqueApexAccountNumber = async () => {
+    try {
+      const token = currentUser.token;
+      const headers = {
+        Authorization: `Bearer ${token}`,
+      };
+  
+      // Fetch only user data
+      const usersResponse = await axios.get(`${BaseURL}users`, { headers });
+      const userData = usersResponse.data;
+  
+      // Create a Set to track encountered APEX account numbers
+      const encounteredAccounts = new Set();
+  
+      // Extract and filter unique APEX account numbers
+      const uniqueApexAccounts = userData
+        .filter((user) => user.accountNumber.startsWith("APEX-"))
+        .map((user) => {
+          const accountNumber = user.accountNumber;
+          if (!encounteredAccounts.has(accountNumber)) {
+            encounteredAccounts.add(accountNumber);
+            return `${accountNumber} (${user.name})`;
+          }
+          return null;
+        })
+        .filter(Boolean); // Filter out null values
+  
+      return uniqueApexAccounts;
+    } catch (error) {
+      console.error("Error fetching unique APEX account numbers:", error);
+      return [];
+    }
+  };
+  
 
   const fetchData = async () => {
     try {
@@ -66,25 +103,15 @@ export default function DashTrades() {
     }
   };
 
-  const fetchTradeTypes = async () => {
-    try {
-      const token = currentUser.token;
-      const headers = {
-        Authorization: `Bearer ${token}`,
-      };
-
-      const tradeTypesResponse = await axios.get(`${BaseURL}tradeType`, {
-        headers,
-      });
-      setTradeTypes(tradeTypesResponse.data);
-    } catch (err) {
-      setError("Something went wrong while fetching trade types.");
-    }
-  }
-
   useEffect(() => {
     fetchData();
-    fetchTradeTypes();
+
+    const getUniqueApexAccounts = async () => {
+      const accounts = await fetchUniqueApexAccountNumber();
+      setUniqueAccountNumbers(accounts);
+    };
+
+    getUniqueApexAccounts();
   }, [currentUser]);
 
   // Reset the form
@@ -101,7 +128,7 @@ export default function DashTrades() {
       UseTrail: "false",
       TrailTrigger: "",
       Trail : "",
-      TradeTypeId: "",
+      ApexId: "",
     });
     setIsEditMode(false);
     setSelectedTradeId(null);
@@ -125,7 +152,7 @@ export default function DashTrades() {
         BreakevenOffset: newTrade.BreakevenOffset.toString(),
         TrailTrigger: newTrade.TrailTrigger.toString(),
         Trail: newTrade.Trail.toString(),
-        TradeTypeId: newTrade.TradeTypeId.toString(),
+        ApexId: newTrade.ApexId.toString(),
       };
   
       if (isEditMode) {
@@ -197,6 +224,9 @@ export default function DashTrades() {
     }
   };
 
+
+
+
   return (
     <div className="p-3 w-full">
       <Breadcrumb aria-label="Default breadcrumb example">
@@ -259,9 +289,7 @@ export default function DashTrades() {
                 <TableCell>{trade.UseTrail === true ? "Yes" : "No"}</TableCell>
                 <TableCell>{trade.TrailTrigger}</TableCell>
                 <TableCell>{trade.Trail}</TableCell>
-                <TableCell>
-                 {trade.ApexId}
-                </TableCell>
+                <TableCell>{trade.ApexId}</TableCell>
                 <TableCell>
                   <Button.Group>
                     <Button
@@ -427,28 +455,28 @@ export default function DashTrades() {
               />
             </div>
             <div>
-              <Label htmlFor="TradeTypeId" value="Trade Type" />
-              <Select
-                id="TradeTypeId"
-                name="TradeTypeId"
-                value={newTrade.TradeTypeId || ""}
-                onChange={(e) =>
-                  setNewTrade({
-                    ...newTrade,
-                    TradeTypeId: e.target.value,
-                  })
-                }
-                required
+              <Label htmlFor="apexAccountNumber" value="Apex Account Number" />
+              <Dropdown
+                label={newTrade.ApexId || "Select Apex ID"}
+                className="w-full text-left dark:bg-gray-800 dark:text-gray-200"
+                inline
               >
-                <option value="" disabled>
-                  Select a Trade Type
-                </option>
-                {tradeTypes.map((type) => (
-                  <option key={type.id} value={type.id}>
-                    {type.TypeName}
-                  </option>
+                {uniqueAccountNumbers.map((account) => (
+                  <Dropdown.Item
+                    key={account}
+                    onClick={() => {
+                      // Extract the account number before the first space
+                      const extractedAccountNumber = account.replace(/APEX-/, ""); 
+                      setNewTrade((prevState) => ({
+                        ...prevState,
+                        ApexId: extractedAccountNumber.split(" ")[0],
+                      }));
+                    }}
+                  >
+                    {account.replace(/APEX-/, "")} {/* Display without "APEX-" */}
+                  </Dropdown.Item>
                 ))}
-              </Select>
+              </Dropdown>
             </div>
           </form>
         </Modal.Body>
