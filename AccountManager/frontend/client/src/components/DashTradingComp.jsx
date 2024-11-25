@@ -16,6 +16,7 @@ import {
   Label,
   TextInput,
   Select,
+  Checkbox,
 } from "flowbite-react";
 import { HiHome, HiPlusCircle } from "react-icons/hi";
 import axios from "axios";
@@ -30,7 +31,6 @@ export default function DashTradingComp() {
   const [error, setError] = useState(null);
   const { currentUser } = useSelector((state) => state.user);
   const [userStats, setUserStats] = useState([]);
-  const [selectedDate, setSelectedDate] = useState(null);
   const [todayDate, setTodayDate] = useState(new Date());
   const [selectedAccounts, setSelectedAccounts] = useState([]);
   const [showTable, setShowTable] = useState(false);
@@ -40,12 +40,16 @@ export default function DashTradingComp() {
     PA3: 0,
     PA4: 0,
   });
-  const [showTime, setShowTime] = useState(false);
   const [timeSlots, setTimeSlots] = useState([]);
-  const [rowCount, setRowCount] = useState(0);
   const [isFindingMatch, setIsFindingMatch] = useState(false);
   const [directions, setDirections] = useState([]);
   const [tradesData, setTradesData] = useState([]);
+  const [showSetTradesButton, setshowSetTradesButton] = useState(false);
+  const [isTradeSet, setIsTradeSet] = useState(false);
+  const [selectedFilters, setSelectedFilters] = useState({
+    EVAL: true,
+    PA: true,
+  });
 
   const formattedTodayDate = new Intl.DateTimeFormat("en-US", {
     year: "numeric",
@@ -53,20 +57,6 @@ export default function DashTradingComp() {
     day: "numeric",
   }).format(todayDate);
 
-  // Helper to generate time slots
-  const generateTimes = (startTime, interval, rows) => {
-    const times = [];
-    let currentTime = new Date();
-    currentTime.setHours(...startTime.split(":").map(Number), 0, 0);
-  
-    for (let i = 0; i < rows; i++) {
-      const hours = currentTime.getHours().toString().padStart(2, "0");
-      const minutes = currentTime.getMinutes().toString().padStart(2, "0");
-      times.push(`${hours}:${minutes}`);
-      currentTime.setMinutes(currentTime.getMinutes() + interval);
-    }
-    return times;
-  };
   
   // Function to merge users and account details data
   const mergeData = (users, accountDetails) => {
@@ -110,26 +100,10 @@ export default function DashTradingComp() {
       }
     };
 
-    const handleAddTime = () => {
-      if (!showTime) {
-        const rowsCount = createTableData().length;
-        setRowCount(rowsCount);
-        const times = generateTimes("6:30", 15, rowsCount); // Default start time 6:30 AM
-        setTimeSlots(times);
-        setShowTime(true);
-        setshowAddDirectionButton(true);
-      }
-    };
-
-    const handleTimeChange = (index, newTime) => {
-      const updatedTimes = [...timeSlots];
-      updatedTimes[index] = newTime; 
-      setTimeSlots(updatedTimes);
-    };
-  
     const handleFindMatch = () => {
       if (selectedAccounts.length === 2) {
         setIsFindingMatch(true);
+        setshowSetTradesButton(true);
         setShowTable(true);
         // setShowAddTimeButton(true); 
       } else {
@@ -141,6 +115,8 @@ export default function DashTradingComp() {
       setSelectedAccounts([]);
       setShowTable(false);
       setIsFindingMatch(false);
+      setshowSetTradesButton(false);
+      setIsTradeSet(false);
     }
         
     const fetchTrades = async () => {
@@ -274,40 +250,75 @@ export default function DashTradingComp() {
   );
 
   const totalUniqueAccountsDisplayed = uniqueAccountsInFilteredData.size;
+
+
+  const getTradeName = (accountNumber) => {
+    if (!accountNumber) return "-"; // Handle case when accountNumber is null/undefined
+    const apexIdMatch = accountNumber.match(/APEX-(\d+)/);
+    if (apexIdMatch) {
+      const apexId = Number(apexIdMatch[1]); // Convert extracted apexId to a number
+  
+      // Filter all trades that match the apexId
+      const matchingTrades = tradesData?.filter(
+        (trade) => Number(trade?.ApexId) === apexId // Convert trade.ApexId to a number and compare
+      );
+  
+      // If matches exist, return a random trade name
+      if (matchingTrades && matchingTrades.length > 0) {
+        const randomIndex = Math.floor(Math.random() * matchingTrades.length);
+        return matchingTrades[randomIndex]?.TradeName || "-";
+      }
+    }
+    return "-"; // Return fallback value if no match
+  };
+  
   const createTableData = () => {
-    // Combine both account data
-    const account1Data = combinedData.filter(
+    // Filter out rows with status "admin only"
+    let filtered = combinedData.filter((account) => account.status !== "admin only");
+  
+    // Apply filters based on selectedFilters
+    if (selectedFilters.PA) {
+      filtered = filtered.filter((item) => item.account.startsWith("PA"));
+    }
+  
+    if (selectedFilters.EVAL) {
+      filtered = filtered.filter((item) => item.account.startsWith("APEX"));
+    }
+  
+    // Filter based on selected accounts from dropdown
+    const account1Data = filtered.filter(
       (account) => `${account.accountNumber} (${account.name})` === selectedAccounts[0]
     );
-    const account2Data = combinedData.filter(
+    const account2Data = filtered.filter(
       (account) => `${account.accountNumber} (${account.name})` === selectedAccounts[1]
     );
   
-    // Sort the account data by account number
     const sortedAccount1Data = account1Data.sort((a, b) => a.account.localeCompare(b.account));
     const sortedAccount2Data = account2Data.sort((a, b) => a.account.localeCompare(b.account));
   
-    // Determine the maximum number of rows
     const maxRows = Math.max(sortedAccount1Data.length, sortedAccount2Data.length);
   
-    // Generate the rows
+    // Build table rows
     const rows = Array.from({ length: maxRows }, (_, i) => {
       const account1 = sortedAccount1Data[i] || {};
       const account2 = sortedAccount2Data[i] || {};
   
-      // Initialize directions randomly if not set
-      if (!directions[i]) {
-        const initialDirection1 = Math.random() < 0.5 ? "Long" : "Short";
-        const initialDirection2 = initialDirection1 === "Long" ? "Short" : "Long";
-        directions[i] = {
-          direction1: initialDirection1,
-          direction2: initialDirection2,
-        };
-        setDirections([...directions]); // Update state with initial values
+      let direction1 = "-";
+      let direction2 = "-";
+  
+      if (account1.account) {
+        direction1 = directions[i]?.direction1 || (Math.random() < 0.5 ? "Long" : "Short");
       }
   
-      const direction1 = directions[i]?.direction1;
-      const direction2 = directions[i]?.direction2;
+      if (account2.account) {
+        direction2 = directions[i]?.direction2 || (direction1 === "Long" ? "Short" : "Long");
+      }
+  
+      // Update directions array
+      if (!directions[i] && (account1.account || account2.account)) {
+        directions[i] = { direction1, direction2 };
+        setDirections([...directions]);
+      }
   
       return {
         direction1,
@@ -317,11 +328,29 @@ export default function DashTradingComp() {
         balance2: account2.accountBalance || "-",
         account2: account2.account || "-",
         direction2,
+        trade1: account1.account ? getTradeName(account1.account) : "-",
+        trade2: account2.account ? getTradeName(account2.account) : "-",
       };
     });
   
     return rows;
   };
+  
+  
+
+  const handleFilterChange = (filter) => {
+    setSelectedFilters((prevFilters) => ({
+      ...prevFilters,
+      [filter]: !prevFilters[filter], // Toggle the filter
+    }));
+  
+    // Clear selection if filters change
+    handleClearSelection();
+  };
+  
+  const setTrades = async () => {
+    setIsTradeSet(true);
+  }
 
   return (
     <div className="p-3 w-full">
@@ -498,8 +527,39 @@ export default function DashTradingComp() {
                       </Button>
                       </>
                     )}
+                    {showSetTradesButton && (
+                      <Button
+                        gradientDuoTone='greenToBlue'
+                        onClick={setTrades}
+                      >
+                        Set Trades
+                      </Button>
+                    )}
                   </div>
 
+                  {/* Filters */}
+                  <div className="flex space-x-4 mb-4">
+                    <div className="flex items-center">
+                      <Checkbox
+                        id="eval"
+                        checked={selectedFilters.EVAL}
+                        onChange={() => handleFilterChange("EVAL")}
+                      />
+                      <label htmlFor="eval" className="ml-2 text-sm font-medium">
+                        EVAL Accounts
+                      </label>
+                    </div>
+                    <div className="flex items-center">
+                      <Checkbox
+                        id="pa"
+                        checked={selectedFilters.PA}
+                        onChange={() => handleFilterChange("PA")}
+                      />
+                      <label htmlFor="pa" className="ml-2 text-sm font-medium">
+                        PA Accounts
+                      </label>
+                    </div>
+                  </div>
                   {showTable && selectedAccounts.length === 2 && (
                     <div className="flex flex-col justify-center items-center mt-5">
                       <h3 className="text-center font-bold text-lg mb-4">Summary of Accounts</h3>
@@ -510,10 +570,24 @@ export default function DashTradingComp() {
                       <Table>
                         {/* Table Header */}
                         <TableHead>
+                          {isTradeSet && (
+                              <>
+                              <TableHeadCell>Trade ({selectedAccounts[0].replace(/APEX-/, "").split(" ")[0]})</TableHeadCell>
+                              <TableHeadCell>Direction ({selectedAccounts[0].replace(/APEX-/, "").split(" ")[0]})</TableHeadCell>
+                            </>
+                            )
+                          }
                           <TableHeadCell className="w-64">Account ({selectedAccounts[0].replace(/APEX-/, "").split(" ")[0]})</TableHeadCell>
                           <TableHeadCell>Account Balance ({selectedAccounts[0].replace(/APEX-/, "").split(" ")[0]})</TableHeadCell>
                           <TableHeadCell>Account Balance ({selectedAccounts[1].replace(/APEX-/, "").split(" ")[0]})</TableHeadCell>
                           <TableHeadCell className="w-64">Account ({selectedAccounts[1].replace(/APEX-/, "").split(" ")[0]})</TableHeadCell>
+                          {isTradeSet && (
+                              <>
+                              <TableHeadCell>Trade ({selectedAccounts[1].replace(/APEX-/, "").split(" ")[0]})</TableHeadCell>
+                              <TableHeadCell>Direction ({selectedAccounts[1].replace(/APEX-/, "").split(" ")[0]})</TableHeadCell>
+                            </>
+                            )
+                          }
                         </TableHead>
                         {/* Table Body */}
                         <TableBody>
@@ -521,6 +595,13 @@ export default function DashTradingComp() {
                             <TableRow
                               key={index}
                             >
+                              {isTradeSet && (
+                                <>
+                                <TableCell>{row.trade1}</TableCell>
+                                <TableCell>{row.direction1}</TableCell>
+                                </>
+                              )
+                              }
                               <TableCell>{row.account1 || "-"}</TableCell>
                               <TableCell>
                                 {row.balance1 !== "-" ? `$${row.balance1}` : "-"}
@@ -529,6 +610,13 @@ export default function DashTradingComp() {
                                 {row.balance2 !== "-" ? `$${row.balance2}` : "-"}
                               </TableCell>
                               <TableCell>{row.account2 || "-"}</TableCell>
+                              {isTradeSet && (
+                                <>
+                                <TableCell>{row.trade2}</TableCell>
+                                <TableCell>{row.direction2}</TableCell>
+                                </>
+                              )
+                              }
                             </TableRow>
                           ))}
                         </TableBody>
