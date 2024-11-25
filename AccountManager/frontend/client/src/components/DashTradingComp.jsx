@@ -491,25 +491,28 @@ export default function DashTradingComp() {
                   </div>
                   <br />
                   <Dropdown
-                        label={
-                          selectedAccounts.length > 0
-                            ? selectedAccounts.join(", ")
-                            : "Select Pair"
-                        }
-                        className="w-full text-left dark:bg-gray-800 dark:text-gray-200"
-                        inline
+                    label={
+                      selectedAccounts.length > 0
+                        ? selectedAccounts
+                            .map((account) => account.replace(/APEX-/, "")) // Remove "APEX-"
+                            .join(", ")
+                        : "Select Pair"
+                    }
+                    className="w-full text-left dark:bg-gray-800 dark:text-gray-200"
+                    inline
+                  >
+                    <Dropdown.Item onClick={() => handleClearSelection()}>
+                      Clear Selection
+                    </Dropdown.Item>
+                    {uniqueAccountNumbers.map((account) => (
+                      <Dropdown.Item
+                        key={account}
+                        onClick={() => handleAccountSelection(account)}
                       >
-                      <Dropdown.Item onClick={() => handleClearSelection()}>
-                              Clear Selection
-                            </Dropdown.Item>
-                            {uniqueAccountNumbers.map((account) => (
-                              <Dropdown.Item
-                                key={account}
-                                onClick={() => handleAccountSelection(account)}
-                              >
-                                {selectedAccounts.includes(account) ? "✓ " : ""} {account}
-                              </Dropdown.Item>
-                            ))}
+                        {selectedAccounts.includes(account) ? "✓ " : ""}{" "}
+                        {account.replace(/APEX-/, "")} {/* Display without "APEX-" */}
+                      </Dropdown.Item>
+                    ))}
                   </Dropdown>
                   <div className="flex items-center space-x-4 mt-4">
                     {!isFindingMatch && (
