@@ -477,7 +477,7 @@ export default function DashTradeHistoryComp() {
                   ? selectedAccounts
                       .map((account) => account.replace(/APEX-/, "")) // Remove "APEX-"
                       .join(", ")
-                  : "Select Account"
+                  : "Select Apex ID"
               }
               className="w-full text-left dark:bg-gray-800 dark:text-gray-200"
               inline
@@ -709,12 +709,12 @@ export default function DashTradeHistoryComp() {
               {/* Account Dropdown */}
               <div className="w-full sm:w-1/2">
                 <Dropdown
-                  label={accountFilter || "Select Account"}
+                  label={accountFilter || "Select Apex ID"}
                   className="w-full text-left dark:bg-gray-800 dark:text-gray-200"
                   inline
                 >
                   <Dropdown.Item onClick={() => setAccountFilter("")}>
-                    Select Account
+                    Select Apex ID
                   </Dropdown.Item>
                   {uniqueAccountNumbers.map((account) => (
                     <Dropdown.Item
