@@ -36,6 +36,7 @@ export default function DashTrades() {
     TradeName: "",
     Instrument: "",
     Quantity: "",
+    Time: "",
     StopLoss: "",
     Profit: "",
     UseBreakeven: "false",
@@ -46,42 +47,91 @@ export default function DashTrades() {
     Trail : "",
     ApexId: "",
   });
-  const [uniqueAccountNumbers, setUniqueAccountNumbers] = useState([]);
-
+  const [combinedData, setCombinedData] = useState([]);
   
-  const fetchUniqueApexAccountNumber = async () => {
+   // Function to merge users and account details data
+   const mergeData = (users, accountDetails) => {
+    return accountDetails.map((account) => {
+      const user = users.find((u) => u.accountNumber === account.accountNumber);
+      return {
+        ...account,
+        name: user ? user.name : "Unknown",
+      };
+    });
+  };
+
+  const uploadCsvs = async () => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = ".csv,.xlsx";
+    input.onchange = async (event) => {
+      const file = event.target.files[0];
+      if (!file) return;
+  
+      const formData = new FormData();
+      formData.append("file", file);
+  
+      try {
+        const token = currentUser.token;
+        const headers = {
+          Authorization: `Bearer ${token}`,
+        };
+  
+        const response = await axios.post(`${BaseURL}trades/upload`, formData, {
+          headers,
+        });
+  
+        if (response.status === 201) {
+          alert("File uploaded successfully!");
+          fetchData(); // Refresh trades
+        }
+      } catch (err) {
+        console.error("File upload error:", err.response || err);
+        setError("Something went wrong while uploading the file.");
+      }
+    };
+    input.click();
+  };
+  
+
+  const fetchAccountDetails = async() => {
     try {
       const token = currentUser.token;
       const headers = {
         Authorization: `Bearer ${token}`,
       };
-  
-      // Fetch only user data
-      const usersResponse = await axios.get(`${BaseURL}users`, { headers });
-      const userData = usersResponse.data;
-  
-      // Create a Set to track encountered APEX account numbers
-      const encounteredAccounts = new Set();
-  
-      // Extract and filter unique APEX account numbers
-      const uniqueApexAccounts = userData
-        .filter((user) => user.accountNumber.startsWith("APEX-"))
-        .map((user) => {
-          const accountNumber = user.accountNumber;
-          if (!encounteredAccounts.has(accountNumber)) {
-            encounteredAccounts.add(accountNumber);
-            return `${accountNumber} (${user.name})`;
-          }
-          return null;
-        })
-        .filter(Boolean); // Filter out null values
-  
-      return uniqueApexAccounts;
-    } catch (error) {
-      console.error("Error fetching unique APEX account numbers:", error);
-      return [];
+      const [usersResponse, accountDetailsResponse] = await Promise.all([
+        axios.get(`${BaseURL}users`, { headers }),
+        axios.get(`${BaseURL}accountDetails`, { headers }),
+      ]);
+
+      const mergedData = mergeData(
+        usersResponse.data,
+        accountDetailsResponse.data
+      );
+      
+      setCombinedData(mergedData);
+    }catch(err) {
+      console.error("Error fetching account details:", err);
     }
-  };
+  }
+  
+  const encounteredAccounts = new Set();
+
+  const uniqueAccountNumbers = combinedData
+    .map((item) => {
+      // Match and extract the account number pattern APEX-245360
+      const match = item.accountNumber.match(/^(APEX-\d+)/);
+      if (match) {
+        const accountNumber = match[1];
+        if (!encounteredAccounts.has(accountNumber)) {
+          encounteredAccounts.add(accountNumber);
+          return `${accountNumber} (${item.name})`;
+        }
+      }
+      return null; // Skip if already encountered or no match
+    })
+    .filter(Boolean); // Filter out null values
   
 
   const fetchData = async () => {
@@ -104,13 +154,7 @@ export default function DashTrades() {
 
   useEffect(() => {
     fetchData();
-
-    const getUniqueApexAccounts = async () => {
-      const accounts = await fetchUniqueApexAccountNumber();
-      setUniqueAccountNumbers(accounts);
-    };
-
-    getUniqueApexAccounts();
+    fetchAccountDetails();
   }, [currentUser]);
 
   // Reset the form
@@ -119,6 +163,7 @@ export default function DashTrades() {
       TradeName: "",
       Instrument: "",
       Quantity: "",
+      Time: "",
       StopLoss: "",
       Profit: "",
       UseBreakeven: "false",
@@ -145,6 +190,7 @@ export default function DashTrades() {
       const formattedTrade = {
         ...newTrade,
         Quantity: newTrade.Quantity.toString(),
+        Time: newTrade.Time.toString(),
         StopLoss: newTrade.StopLoss.toString(),
         Profit: newTrade.Profit.toString(),
         BreakevenTrigger: newTrade.BreakevenTrigger.toString(),
@@ -235,20 +281,39 @@ export default function DashTrades() {
         <Breadcrumb.Item>Trades</Breadcrumb.Item>
       </Breadcrumb>
       <div className="flex items-center justify-between mb-3">
-        <h1 className="mt-3 mb-3 text-left font-semibold text-xl">
-          All Trades
-        </h1>
-        {currentUser.user.role === "admin" && (
-          <Button
-            gradientDuoTone="greenToBlue"
-            onClick={() => handleAddClick()}
-            className="ml-3"
-          >
-            <HiPlusCircle className="mr-2 h-6 w-4" />
-            Add Trade
-          </Button>
-        )}
-      </div>
+          <h1 className="mt-3 mb-3 text-left font-semibold text-xl">
+            All Trades
+          </h1>
+          <div className="ml-auto flex space-x-3">
+            {currentUser.user.role === "admin" && (
+              <Button
+                gradientDuoTone="greenToBlue"
+                onClick={uploadCsvs}
+                disabled={loading}
+              >
+                {loading ? (
+                  <>
+                    <Spinner size="sm" />
+                    <span className="pl-3">Loading...</span>
+                  </>
+                ) : (
+                  <>Upload CSV</>
+                )}
+              </Button>
+            )}
+            {currentUser.user.role === "admin" && (
+              <Button
+                gradientDuoTone="greenToBlue"
+                onClick={() => handleAddClick()}
+                className="ml-3"
+              >
+                <HiPlusCircle className="mr-2 h-6 w-4" />
+                Add Trade
+              </Button>
+            )}
+          </div>
+        </div>
+    
       {loading ? (
         <div className="flex justify-center items-center h-96">
           <Spinner size="xl" />
@@ -262,6 +327,7 @@ export default function DashTrades() {
             <TableHeadCell>Trade Name</TableHeadCell>
             <TableHeadCell>Instrument</TableHeadCell>
             <TableHeadCell>Quantity</TableHeadCell>
+            <TableHeadCell>Time</TableHeadCell>
             <TableHeadCell>Stop Loss</TableHeadCell>
             <TableHeadCell>Profit</TableHeadCell>
             <TableHeadCell>Use Breakeven</TableHeadCell>
@@ -280,6 +346,7 @@ export default function DashTrades() {
                 <TableCell>{trade.TradeName}</TableCell>
                 <TableCell>{trade.Instrument}</TableCell>
                 <TableCell>{trade.Quantity}</TableCell>
+                <TableCell>{trade.Time}</TableCell>
                 <TableCell>{trade.StopLoss}</TableCell>
                 <TableCell>{trade.Profit}</TableCell>
                 <TableCell>{trade.UseBreakeven === true ? "Yes" : "No"}</TableCell>
@@ -349,6 +416,18 @@ export default function DashTrades() {
                 name="Quantity"
                 placeholder="Enter Quantity"
                 value={newTrade.Quantity}
+                onChange={handleChange}
+                required
+              />
+            </div>
+            <div>
+              <Label htmlFor="Time" value="Time" />
+              <TextInput
+                type="time"
+                id="Time"
+                name="Time"
+                placeholder="Enter Time"
+                value={newTrade.Time}
                 onChange={handleChange}
                 required
               />
