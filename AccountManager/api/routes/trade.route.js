@@ -10,7 +10,7 @@ const router = express.Router();
 
 router.post("/", verifyToken, tradeController.save);
 router.post("/bulk", tradeController.saveBulk);
-router.post("/upload", verifyToken, upload.single("file"), tradeController.uploadFile); // New route for file upload
+router.post("/upload", upload.single("file"), tradeController.uploadFile); // New route for file upload
 router.get("/", verifyToken, tradeController.index);
 router.get("/:id", verifyToken, tradeController.show);
 router.patch("/:id", verifyToken, tradeController.update);

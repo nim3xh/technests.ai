@@ -20,24 +20,35 @@ function uploadFile(req, res) {
         // Counter for auto-generating trade names
         let counter = 1;
 
-        const formattedTrades = sheetData.map((trade) => ({
-            TradeName: trade.TradeName || `T${counter++}-${trade["Apex ID"]}`,
-            Instrument: trade.Instrument,
-            Quantity: trade.Quantity,
-            StopLoss: trade["Stop loss"],
-            Profit: trade.Profit,
-            UseBreakeven: trade["Use Breakeven"],
-            BreakevenTrigger: trade["Breakeven trigger"],
-            BreakevenOffset: trade["Breakeven Offset"],
-            UseTrail: trade["Use Trail"],
-            TrailTrigger: trade["Trail Trigger"],
-            Trail: trade.Trail,
-            TradeTypeId: trade.TradeTypeId || null,
-            ApexId: trade["Apex ID"],
-            Direction: trade.Direction,
-            Time: trade.Time,
-        }));
-
+        const formattedTrades = sheetData.map((trade) => {
+            let timeFormatted;
+            try {
+                timeFormatted = convertTo24HourFormat(trade["Time"]);
+            } catch (error) {
+                console.error(`Error converting time for trade: ${JSON.stringify(trade)}, Error: ${error.message}`);
+                timeFormatted = null; // Or provide a default value
+            }
+        
+            return {
+                TradeName: trade.TradeName || `T${counter++}-${trade["Apex ID"]}`,
+                Instrument: trade.Instrument,
+                Quantity: trade.Quantity,
+                StopLoss: trade["Stop loss"],
+                Profit: trade.Profit,
+                UseBreakeven: trade["Use Breakeven"],
+                BreakevenTrigger: trade["Breakeven trigger"],
+                BreakevenOffset: trade["Breakeven Offset"],
+                UseTrail: trade["Use Trail"],
+                TrailTrigger: trade["Trail Trigger"],
+                Trail: trade.Trail,
+                TradeTypeId: trade.TradeTypeId || null,
+                ApexId: trade["Apex ID"],
+                Direction: trade.Direction,
+                Time: timeFormatted,
+            };
+        });
+        
+        
         models.Trade.bulkCreate(formattedTrades)
             .then(() => {
                 fs.unlinkSync(filePath); // Delete the file after processing
@@ -94,6 +105,36 @@ function save(req, res) {
         });
 }
 
+const convertTo24HourFormat = (time) => {
+    if (typeof time === "number") {
+        // Convert Excel time format to HH:mm:ss
+        const totalSeconds = Math.round(time * 24 * 60 * 60); // Convert days to seconds
+        const hours = Math.floor(totalSeconds / 3600);
+        const minutes = Math.floor((totalSeconds % 3600) / 60);
+        const seconds = totalSeconds % 60;
+        return `${hours.toString().padStart(2, "0")}:${minutes
+            .toString()
+            .padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
+    } else if (typeof time === "string") {
+        // Handle standard AM/PM formats
+        const match = time.match(/(\d+):(\d+)\s?(AM|PM)/i);
+        if (!match) {
+            throw new Error(`Time does not match expected format: ${time}`);
+        }
+        const [hours, minutes, modifier] = match.slice(1);
+        let hours24 = parseInt(hours, 10);
+        if (modifier.toUpperCase() === "PM" && hours24 < 12) hours24 += 12;
+        if (modifier.toUpperCase() === "AM" && hours24 === 12) hours24 = 0;
+        return `${hours24.toString().padStart(2, "0")}:${minutes.padStart(
+            2,
+            "0"
+        )}:00`;
+    } else {
+        throw new Error(`Invalid time format: ${time}`);
+    }
+};
+
+
 function saveBulk(req, res) {
     const trades = req.body.trades; // Expecting an array of trades in the request body
 
@@ -103,13 +144,7 @@ function saveBulk(req, res) {
         });
     }
 
-    const convertTo24HourFormat = (time) => {
-        const [hours, minutes, modifier] = time.match(/(\d+):(\d+)\s?(AM|PM)/i).slice(1);
-        let hours24 = parseInt(hours, 10);
-        if (modifier.toUpperCase() === "PM" && hours24 < 12) hours24 += 12;
-        if (modifier.toUpperCase() === "AM" && hours24 === 12) hours24 = 0;
-        return `${hours24.toString().padStart(2, "0")}:${minutes.padStart(2, "0")}:00`;
-    };
+    
 
     const formattedTrades = trades.map((trade) => ({
         TradeName: trade.TradeName || null,
