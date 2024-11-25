@@ -288,15 +288,8 @@ export default function DashTradingComp() {
     combinedData.map((item) => `${item.accountNumber} (${item.name})`)
   );
   const totalUniqueAccountsDisplayed = uniqueAccountsInFilteredData.size;
-
-  // Helper function to check if two balances are within the specified range
-  const withinRange = (balance1, balance2, range = 125) => {
-    if (!balance1 || !balance2) return false; // Skip invalid or missing balances
-    const diff = Math.abs(parseFloat(balance1) - parseFloat(balance2));
-    return diff <= range;
-  };
-
   const createTableData = () => {
+    // Combine both account data
     const account1Data = combinedData.filter(
       (account) => `${account.accountNumber} (${account.name})` === selectedAccounts[0]
     );
@@ -304,15 +297,19 @@ export default function DashTradingComp() {
       (account) => `${account.accountNumber} (${account.name})` === selectedAccounts[1]
     );
   
-    const maxRows = Math.max(account1Data.length, account2Data.length);
+    // Sort the account data by account number
+    const sortedAccount1Data = account1Data.sort((a, b) => a.account.localeCompare(b.account));
+    const sortedAccount2Data = account2Data.sort((a, b) => a.account.localeCompare(b.account));
   
+    // Determine the maximum number of rows
+    const maxRows = Math.max(sortedAccount1Data.length, sortedAccount2Data.length);
+  
+    // Generate the rows
     const rows = Array.from({ length: maxRows }, (_, i) => {
-      const account1 = account1Data[i] || {};
-      const account2 = account2Data[i] || {};
+      const account1 = sortedAccount1Data[i] || {};
+      const account2 = sortedAccount2Data[i] || {};
   
-      const isMatch = withinRange(account1.accountBalance, account2.accountBalance);
-  
-      // Randomly initialize directions if not set
+      // Initialize directions randomly if not set
       if (!directions[i]) {
         const initialDirection1 = Math.random() < 0.5 ? "Long" : "Short";
         const initialDirection2 = initialDirection1 === "Long" ? "Short" : "Long";
@@ -334,7 +331,6 @@ export default function DashTradingComp() {
         balance2: account2.accountBalance || "-",
         account2: account2.account || "-",
         direction2,
-        isMatch,
       };
     });
   
