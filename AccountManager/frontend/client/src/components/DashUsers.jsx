@@ -228,7 +228,7 @@ export default function DashUsers() {
           <TableHead>
             <TableHeadCell>First Name</TableHeadCell>
             <TableHeadCell>Last Name</TableHeadCell>
-            <TableHeadCell>Account Number</TableHeadCell>
+            <TableHeadCell>APEX ID</TableHeadCell>
             <TableHeadCell>Email</TableHeadCell>
             <TableHeadCell>Role</TableHeadCell>
             <TableHeadCell></TableHeadCell>
@@ -310,7 +310,7 @@ export default function DashUsers() {
             <div>
               <Label htmlFor="apexAccountNumber" value="Apex Account Number" />
               <Dropdown
-                label={newUser.apexAccountNumber || "Select Account"}
+                label={newUser.apexAccountNumber || "Select Apex ID"}
                 className="w-full text-left dark:bg-gray-800 dark:text-gray-200"
                 inline
               >
@@ -319,14 +319,14 @@ export default function DashUsers() {
                     key={account}
                     onClick={() => {
                       // Extract the account number before the first space
-                      const extractedAccountNumber = account.split(" ")[0];
+                      const extractedAccountNumber = account.replace(/APEX-/, ""); 
                       setNewUser((prevState) => ({
                         ...prevState,
-                        apexAccountNumber: extractedAccountNumber,
+                        apexAccountNumber: extractedAccountNumber.split(" ")[0],
                       }));
                     }}
                   >
-                    {account}
+                    {account.replace(/APEX-/, "")} {/* Display without "APEX-" */}
                   </Dropdown.Item>
                 ))}
               </Dropdown>
@@ -407,7 +407,11 @@ export default function DashUsers() {
             <div>
               <Label htmlFor="apexAccountNumber" value="Apex Account Number" />
               <Dropdown
-                label={editUserDetails.ApexAccountNumber || "Select Account"}
+                label={
+                  editUserDetails.ApexAccountNumber
+                    ? editUserDetails.ApexAccountNumber.replace(/APEX-/, "") // Display without "APEX-"
+                    : "Select Apex ID"
+                }
                 className="w-full text-left dark:bg-gray-800 dark:text-gray-200"
                 inline
               >
@@ -415,14 +419,14 @@ export default function DashUsers() {
                   <Dropdown.Item
                     key={account}
                     onClick={() => {
-                      const extractedAccountNumber = account.split(" ")[0]; // Extract account number before first space
+                      const extractedAccountNumber = account.replace(/APEX-/, ""); // Remove "APEX-" prefix
                       setEditUserDetails((prevState) => ({
                         ...prevState,
-                        apexAccountNumber: extractedAccountNumber,
+                        apexAccountNumber: extractedAccountNumber.split(" ")[0], // Set without "APEX-"
                       }));
                     }}
                   >
-                    {account}
+                    {account.replace(/APEX-/, "")} {/* Display without "APEX-" */}
                   </Dropdown.Item>
                 ))}
               </Dropdown>
@@ -486,7 +490,7 @@ export default function DashUsers() {
                   <strong>Email:</strong> {selectedUser.email}
                 </div>
                 <div>
-                  <strong>Apex Account Number:</strong> {selectedUser.ApexAccountNumber}
+                  <strong>Apex ID:</strong> {selectedUser.ApexAccountNumber}
                 </div>
                 <div>
                   <strong>Role:</strong> {getUserRoleDisplay(selectedUser.role)}

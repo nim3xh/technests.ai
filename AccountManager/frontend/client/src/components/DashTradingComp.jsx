@@ -52,7 +52,7 @@ export default function DashTradingComp() {
   const [isDirectionSet, setIsDirectionSet] = useState(false);
   const [isTradeSelected, setIsTradeSelected] = useState(false);
   const [isFindingMatch, setIsFindingMatch] = useState(false);
-  const [directions, setDirections] = useState([]); 
+  const [directions, setDirections] = useState([]);
 
   const formattedTodayDate = new Intl.DateTimeFormat("en-US", {
     year: "numeric",
@@ -631,7 +631,7 @@ export default function DashTradingComp() {
                               )}
                               {isDirectionSet && (
                                 <TableCell>
-                                  {isTradeSelected ? (
+                                  {/* {isTradeSelected ? (
                                     row.direction1
                                   ) : (
                                     <Select
@@ -641,7 +641,8 @@ export default function DashTradingComp() {
                                       <option value="Long">Long</option>
                                       <option value="Short">Short</option>
                                     </Select>
-                                  )}
+                                  )} */}
+                                  {row.direction1}
                               </TableCell>
                               )}
                               <TableCell>{row.account1 || "-"}</TableCell>
@@ -668,7 +669,7 @@ export default function DashTradingComp() {
                               <TableCell>{row.account2 || "-"}</TableCell>
                               {isDirectionSet && (
                                 <TableCell>
-                                    {isTradeSelected ? (
+                                    {/* {isTradeSelected ? (
                                       row.direction2
                                     ) : (
                                       <Select
@@ -679,7 +680,8 @@ export default function DashTradingComp() {
                                         <option value="Short">Short</option>
                                       </Select>
                                     )
-                                  }
+                                  } */}
+                                  {row.direction2}
                               </TableCell>
                               )}
                               {isTradeSelected && (
