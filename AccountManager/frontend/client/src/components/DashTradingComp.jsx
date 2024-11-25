@@ -21,7 +21,6 @@ import { HiHome, HiPlusCircle } from "react-icons/hi";
 import axios from "axios";
 import { MdAccountBalance, MdPerson, MdTableRows } from "react-icons/md";
 import { CiMemoPad } from "react-icons/ci";
-import { set } from 'lodash';
 
 const BaseURL = import.meta.env.VITE_BASE_URL;
 
@@ -41,16 +40,9 @@ export default function DashTradingComp() {
     PA3: 0,
     PA4: 0,
   });
-  const [showAddTimeButton, setShowAddTimeButton] = useState(false);
-  const [showAddDirectionButton, setshowAddDirectionButton] = useState(false);
-  const [showSelectTradeButton, setShowSelectTradeButton] = useState(false);
   const [showTime, setShowTime] = useState(false);
   const [timeSlots, setTimeSlots] = useState([]);
-  const [startTime, setStartTime] = useState("06:30");
-  const [interval, setInterval] = useState(15);
   const [rowCount, setRowCount] = useState(0);
-  const [isDirectionSet, setIsDirectionSet] = useState(false);
-  const [isTradeSelected, setIsTradeSelected] = useState(false);
   const [isFindingMatch, setIsFindingMatch] = useState(false);
   const [directions, setDirections] = useState([]);
   const [tradesData, setTradesData] = useState([]);
@@ -148,12 +140,6 @@ export default function DashTradingComp() {
     const handleClearSelection = () => {
       setSelectedAccounts([]);
       setShowTable(false);
-      setShowAddTimeButton(false);
-      setshowAddDirectionButton(false);
-      setShowSelectTradeButton(false);
-      setShowTime(false);
-      setIsDirectionSet(false);
-      setIsTradeSelected(false);
       setIsFindingMatch(false);
     }
         
@@ -286,6 +272,7 @@ export default function DashTradingComp() {
   const uniqueAccountsInFilteredData = new Set(
     combinedData.map((item) => `${item.accountNumber} (${item.name})`)
   );
+
   const totalUniqueAccountsDisplayed = uniqueAccountsInFilteredData.size;
   const createTableData = () => {
     // Combine both account data
@@ -335,47 +322,6 @@ export default function DashTradingComp() {
   
     return rows;
   };
-  
-  
-  const handleStartTimeUpdate = (newStartTime) => {
-    setStartTime(newStartTime);
-    const updatedTimes = generateTimes(newStartTime, interval, rowCount);
-    setTimeSlots(updatedTimes);
-  };
-  
-  const handleIntervalUpdate = (newInterval) => {
-    setInterval(newInterval);
-    const updatedTimes = generateTimes(startTime, newInterval, rowCount);
-    setTimeSlots(updatedTimes);
-  };
-
-  const handleSetDirection = () => {
-    setIsDirectionSet(true);
-    setShowSelectTradeButton(true);
-  }
-
-  const handleDirectionChange = (index, directionType, newDirection) => {
-    const updatedDirections = [...directions];
-  
-    if (!updatedDirections[index]) {
-      updatedDirections[index] = { direction1: "Long", direction2: "Short" }; // Default initialization
-    }
-  
-    // Update the selected direction
-    updatedDirections[index][directionType] = newDirection;
-  
-    // If changing direction1, automatically update direction2 to the opposite
-    if (directionType === "direction1") {
-      updatedDirections[index].direction2 = newDirection === "Long" ? "Short" : "Long";
-    }
-  
-    setDirections(updatedDirections);
-  };
-  
-  const handleSelectTrade = () => {
-    setIsTradeSelected(true);
-    alert("Trade selected!");
-  }
 
   return (
     <div className="p-3 w-full">
@@ -552,53 +498,6 @@ export default function DashTradingComp() {
                       </Button>
                       </>
                     )}
-                    {/* Add Time Button */}
-                    {!isDirectionSet && showAddTimeButton && (
-                      <>
-                        <Button gradientDuoTone='purpleToPink' onClick={handleAddTime}>
-                          Add Time
-                        </Button>
-                        {showTime && (
-                            <div className="flex space-x-4 mt-4">
-                              <div>
-                                <TextInput
-                                  id="startTime"
-                                  type="time"
-                                  value={startTime}
-                                  onChange={(e) => handleStartTimeUpdate(e.target.value)}
-                                />
-                                <Label htmlFor="startTime">Start Time</Label>
-                              </div>
-                              <div>
-                                <TextInput
-                                  id="interval"
-                                  type="number"
-                                  min={1}
-                                  value={interval}
-                                  onChange={(e) => handleIntervalUpdate(parseInt(e.target.value, 10))}
-                                />
-                                <Label htmlFor="interval">Interval (Minutes)</Label>
-                              </div>
-                            </div>
-                        )}
-                      </>
-                    )}
-                    
-                    {!isTradeSelected && showAddDirectionButton && (
-                      <>
-                        <Button gradientDuoTone='tealToLime' onClick={handleSetDirection}>
-                          Set Direction
-                        </Button>
-                      </>
-                    )}
-
-                    {showSelectTradeButton && (
-                      <>
-                        <Button gradientDuoTone='purpleToPink' onClick={handleSelectTrade}>
-                          Select Trade
-                        </Button>
-                      </>
-                    )}
                   </div>
 
                   {showTable && selectedAccounts.length === 2 && (
@@ -611,103 +510,25 @@ export default function DashTradingComp() {
                       <Table>
                         {/* Table Header */}
                         <TableHead>
-                          {isTradeSelected && (
-                            <TableHeadCell>Trade</TableHeadCell>
-                          )}
-                          {isDirectionSet && (
-                            <TableHeadCell>Direction ({selectedAccounts[0].replace(/APEX-/, "").split(" ")[0]})</TableHeadCell>
-                          )}
                           <TableHeadCell className="w-64">Account ({selectedAccounts[0].replace(/APEX-/, "").split(" ")[0]})</TableHeadCell>
                           <TableHeadCell>Account Balance ({selectedAccounts[0].replace(/APEX-/, "").split(" ")[0]})</TableHeadCell>
-                          {showTime && (
-                            <TableHeadCell>Time</TableHeadCell>
-                          )}
                           <TableHeadCell>Account Balance ({selectedAccounts[1].replace(/APEX-/, "").split(" ")[0]})</TableHeadCell>
                           <TableHeadCell className="w-64">Account ({selectedAccounts[1].replace(/APEX-/, "").split(" ")[0]})</TableHeadCell>
-                          {isDirectionSet && (
-                            <TableHeadCell>Direction ({selectedAccounts[1].replace(/APEX-/, "").split(" ")[0]})</TableHeadCell>
-                          )}
-                          {isTradeSelected && (
-                            <>
-                              <TableHeadCell>Trade</TableHeadCell>
-                            </> 
-                          )}
                         </TableHead>
                         {/* Table Body */}
                         <TableBody>
                           {createTableData().map((row, index) => (
                             <TableRow
                               key={index}
-                              className={row.isMatch ? "bg-green-100" : "bg-white"} // Highlight matching rows
                             >
-                              {isTradeSelected && (
-                                <TableCell>
-                                  {row.isMatch ? "Match" : "No Match"}
-                                </TableCell>
-                              )}
-                              {isDirectionSet && (
-                                <TableCell>
-                                  {/* {isTradeSelected ? (
-                                    row.direction1
-                                  ) : (
-                                    <Select
-                                      value={row.direction1}
-                                      onChange={(e) => handleDirectionChange(index, "direction1", e.target.value)}
-                                    >
-                                      <option value="Long">Long</option>
-                                      <option value="Short">Short</option>
-                                    </Select>
-                                  )} */}
-                                  {row.direction1}
-                              </TableCell>
-                              )}
                               <TableCell>{row.account1 || "-"}</TableCell>
                               <TableCell>
                                 {row.balance1 !== "-" ? `$${row.balance1}` : "-"}
                               </TableCell>
-                                {showTime && (
-                                  <TableCell>
-                                    {isDirectionSet ? (
-                                        row.time
-                                      ) : (
-                                        <input
-                                          type="time"
-                                          value={row.time} // Ensure row.time is in HH:mm format
-                                          onChange={(e) => handleTimeChange(index, e.target.value)}
-                                          className="text-center border rounded-md p-1 w-full"
-                                        />
-                                      )}
-                                  </TableCell>
-                                )}
                               <TableCell>
                                 {row.balance2 !== "-" ? `$${row.balance2}` : "-"}
                               </TableCell>
                               <TableCell>{row.account2 || "-"}</TableCell>
-                              {isDirectionSet && (
-                                <TableCell>
-                                    {/* {isTradeSelected ? (
-                                      row.direction2
-                                    ) : (
-                                      <Select
-                                        value={row.direction2}
-                                        onChange={(e) => handleDirectionChange(index, "direction2", e.target.value)}
-                                      >
-                                        <option value="Long">Long</option>
-                                        <option value="Short">Short</option>
-                                      </Select>
-                                    )
-                                  } */}
-                                  {row.direction2}
-                              </TableCell>
-                              )}
-                              {isTradeSelected && (
-                                <>
-                                <TableCell>
-                                {row.isMatch ? "Match" : "No Match"}
-                                </TableCell>
-                                </>
-                                
-                              )}
                             </TableRow>
                           ))}
                         </TableBody>
