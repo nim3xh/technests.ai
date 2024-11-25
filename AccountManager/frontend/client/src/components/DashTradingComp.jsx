@@ -53,6 +53,7 @@ export default function DashTradingComp() {
   const [isTradeSelected, setIsTradeSelected] = useState(false);
   const [isFindingMatch, setIsFindingMatch] = useState(false);
   const [directions, setDirections] = useState([]);
+  const [tradesData, setTradesData] = useState([]);
 
   const formattedTodayDate = new Intl.DateTimeFormat("en-US", {
     year: "numeric",
@@ -156,7 +157,25 @@ export default function DashTradingComp() {
       setIsTradeSelected(false);
       setIsFindingMatch(false);
     }
-    
+        
+    const fetchTrades = async () => {
+      try {
+        const token = currentUser.token;
+        const headers = {
+          Authorization: `Bearer ${token}`,
+        };
+
+        const tradesResponse = await axios.get(`${BaseURL}trades`, {
+          headers,
+        });
+        setTradesData(tradesResponse.data);
+        setLoading(false);
+      } catch (err) {
+        setError("Something went wrong while fetching data.");
+        setLoading(false);
+      }
+    };
+
     useEffect(() => {
       const fetchData = async () => {
         try {
@@ -260,6 +279,7 @@ export default function DashTradingComp() {
       };
     
       fetchData();
+      fetchTrades();
     }, [BaseURL, currentUser]);
     
 
@@ -361,8 +381,7 @@ export default function DashTradingComp() {
     setIsTradeSelected(true);
     alert("Trade selected!");
   }
-  
-  
+
   return (
     <div className="p-3 w-full">
       <Breadcrumb aria-label="Default breadcrumb example">
@@ -591,8 +610,8 @@ export default function DashTradingComp() {
                     <div className="flex flex-col justify-center items-center mt-5">
                       <h3 className="text-center font-bold text-lg mb-4">Summary of Accounts</h3>
                       <div className="flex justify-center space-x-4">
-                        <h4 className="text-center font-bold text-sm text-gray-500">{selectedAccounts[0]}</h4>
-                        <h4 className="text-center font-bold text-sm text-gray-500">{selectedAccounts[1]}</h4>
+                        <h4 className="text-center font-bold text-sm text-gray-500">{selectedAccounts[0].replace(/APEX-/, "")}</h4>
+                        <h4 className="text-center font-bold text-sm text-gray-500">{selectedAccounts[1].replace(/APEX-/, "")}</h4>
                       </div>
                       <Table>
                         {/* Table Header */}
@@ -601,22 +620,21 @@ export default function DashTradingComp() {
                             <TableHeadCell>Trade</TableHeadCell>
                           )}
                           {isDirectionSet && (
-                            <TableHeadCell>Direction (First)</TableHeadCell>
+                            <TableHeadCell>Direction ({selectedAccounts[0].replace(/APEX-/, "").split(" ")[0]})</TableHeadCell>
                           )}
-                          <TableHeadCell className="w-64">Account (First)</TableHeadCell>
-                          <TableHeadCell>Account Balance (First)</TableHeadCell>
+                          <TableHeadCell className="w-64">Account ({selectedAccounts[0].replace(/APEX-/, "").split(" ")[0]})</TableHeadCell>
+                          <TableHeadCell>Account Balance ({selectedAccounts[0].replace(/APEX-/, "").split(" ")[0]})</TableHeadCell>
                           {showTime && (
                             <TableHeadCell>Time</TableHeadCell>
                           )}
-                          <TableHeadCell>Account Balance (Second)</TableHeadCell>
-                          <TableHeadCell className="w-64">Account (Second)</TableHeadCell>
+                          <TableHeadCell>Account Balance ({selectedAccounts[1].replace(/APEX-/, "").split(" ")[0]})</TableHeadCell>
+                          <TableHeadCell className="w-64">Account ({selectedAccounts[1].replace(/APEX-/, "").split(" ")[0]})</TableHeadCell>
                           {isDirectionSet && (
-                            <TableHeadCell>Direction (Second)</TableHeadCell>
+                            <TableHeadCell>Direction ({selectedAccounts[1].replace(/APEX-/, "").split(" ")[0]})</TableHeadCell>
                           )}
                           {isTradeSelected && (
                             <>
                               <TableHeadCell>Trade</TableHeadCell>
-                              <TableHeadCell>Select Accounts</TableHeadCell>
                             </> 
                           )}
                         </TableHead>
@@ -691,11 +709,6 @@ export default function DashTradingComp() {
                                 <>
                                 <TableCell>
                                 {row.isMatch ? "Match" : "No Match"}
-                                </TableCell>
-                                <TableCell>
-                                  <Button gradientDuoTone='pinkToOrange'>
-                                    Select
-                                  </Button>
                                 </TableCell>
                                 </>
                                 

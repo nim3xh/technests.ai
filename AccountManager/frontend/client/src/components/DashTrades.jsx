@@ -95,7 +95,6 @@ export default function DashTrades() {
         headers,
       });
       setTradesData(tradesResponse.data);
-      console.log(tradesResponse.data);
       setLoading(false);
     } catch (err) {
       setError("Something went wrong while fetching data.");
