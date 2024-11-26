@@ -464,11 +464,11 @@ export default function DashTradingComp() {
     // Dynamic file names
     const account1FileName = `${selectedAccounts[0]
       .replace(/APEX-/, "")
-      .split(" ")[0]}_${filterSuffix}.csv`;
+      .split(" ")[0]}${filterSuffix}.csv`;
 
     const account2FileName = `${selectedAccounts[1]
       .replace(/APEX-/, "")
-      .split(" ")[0]}_${filterSuffix}.csv`;
+      .split(" ")[0]}${filterSuffix}.csv`;
 
     // Download the three CSV files
     const downloadCSV = (content, filename) => {
