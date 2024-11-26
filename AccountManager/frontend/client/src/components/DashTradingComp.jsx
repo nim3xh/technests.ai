@@ -362,146 +362,176 @@ export default function DashTradingComp() {
     setshowExportCSVButton(true);
   }
 
-  const exportCSV = () => {
-    const tableData = createTableData();
-  
-    // Generate headers for table data CSV
-    const tableHeaders = [
-      `Trade (${selectedAccounts[0].replace(/APEX-/, "").split(" ")[0]})`,
-      `Direction (${selectedAccounts[0].replace(/APEX-/, "").split(" ")[0]})`,
-      `Account (${selectedAccounts[0].replace(/APEX-/, "").split(" ")[0]})`,
-      `Account Balance (${selectedAccounts[0].replace(/APEX-/, "").split(" ")[0]})`,
-      `Account Balance (${selectedAccounts[1].replace(/APEX-/, "").split(" ")[0]})`,
-      `Account (${selectedAccounts[1].replace(/APEX-/, "").split(" ")[0]})`,
-      `Trade (${selectedAccounts[1].replace(/APEX-/, "").split(" ")[0]})`,
-      `Direction (${selectedAccounts[1].replace(/APEX-/, "").split(" ")[0]})`,
-    ];
-  
-    const tableCSV = [tableHeaders.join(",")];
-    tableData.forEach((row) => {
-      tableCSV.push(
-        [
-          row.trade1,
-          row.direction1,
-          row.account1,
-          row.balance1,
-          row.balance2,
-          row.account2,
-          row.direction2,
-          row.trade2,
-        ].join(",")
-      );
-    });
-  
-    // Helper function to create trade-specific CSV
-    const createTradeCSV = (tradeData, accountLabel, accountNumbers,accountDirection) => {
-      const tradeHeaders = [
-        `Direction (${accountLabel})`,
-        "Instrument",
-        "Quantity",
-        "Time",
-        "Stop Loss",
-        "Profit",
-        "Use Breakeven",
-        "Breakeven Trigger",
-        "Breakeven Offset",
-        "Use Trail",
-        "Trail Trigger",
-        "Trail",
-        "Account Number", // Add account number as the last column
+  const exportCSV = async () => {
+      const tableData = createTableData();
+
+      // Generate headers for table data CSV
+      const tableHeaders = [
+          `Trade (${selectedAccounts[0].replace(/APEX-/, "").split(" ")[0]})`,
+          `Direction (${selectedAccounts[0].replace(/APEX-/, "").split(" ")[0]})`,
+          `Account (${selectedAccounts[0].replace(/APEX-/, "").split(" ")[0]})`,
+          `Account Balance (${selectedAccounts[0].replace(/APEX-/, "").split(" ")[0]})`,
+          `Account Balance (${selectedAccounts[1].replace(/APEX-/, "").split(" ")[0]})`,
+          `Account (${selectedAccounts[1].replace(/APEX-/, "").split(" ")[0]})`,
+          `Trade (${selectedAccounts[1].replace(/APEX-/, "").split(" ")[0]})`,
+          `Direction (${selectedAccounts[1].replace(/APEX-/, "").split(" ")[0]})`,
       ];
-  
-      const tradeCSV = [tradeHeaders.join(",")];
-      tradeData.forEach((trade, index) => {
-        tradeCSV.push(
-          [
-            accountDirection[index],
-            trade.Instrument,
-            trade.Quantity,
-            trade.Time,
-            trade.StopLoss,
-            trade.Profit,
-            trade.UseBreakeven,
-            trade.BreakevenTrigger,
-            trade.BreakevenOffset,
-            trade.UseTrail,
-            trade.TrailTrigger,
-            trade.Trail,
-            accountNumbers[index] || "-", // Add account number or "-" if not available
-          ].join(",")
-        );
+
+      const tableCSV = [tableHeaders.join(",")];
+      tableData.forEach((row) => {
+          tableCSV.push(
+              [
+                  row.trade1,
+                  row.direction1,
+                  row.account1,
+                  row.balance1,
+                  row.balance2,
+                  row.account2,
+                  row.direction2,
+                  row.trade2,
+              ].join(",")
+          );
       });
-  
-      return tradeCSV.join("\n");
-    };
-  
-    // Extract relevant trades and account numbers for each account
-    const account1Trades = tableData
-      .map((row) => ({
-        trade: tradesData.find((trade) => trade.TradeName === row.trade1),
-        accountNumber: row.account1,
-        directions: row.direction1,
-      }))
-      .filter((item) => item.trade);
-  
-    const account2Trades = tableData
-      .map((row) => ({
-        trade: tradesData.find((trade) => trade.TradeName === row.trade2),
-        accountNumber: row.account2,
-        directions: row.direction2,
-      }))
-      .filter((item) => item.trade);
-  
-    // Prepare data for trade CSVs
-    const account1TradeCSV = createTradeCSV(
-      account1Trades.map((item) => item.trade),
-      selectedAccounts[0].replace(/APEX-/, "").split(" ")[0],
-      account1Trades.map((item) => item.accountNumber),
-      account1Trades.map((item) => item.directions)
-    );
-  
-    const account2TradeCSV = createTradeCSV(
-      account2Trades.map((item) => item.trade),
-      selectedAccounts[1].replace(/APEX-/, "").split(" ")[0],
-      account2Trades.map((item) => item.accountNumber),
-      account2Trades.map((item) => item.directions)
-    );
-  
-    // Determine filter suffix for filenames
-    let filterSuffix = selectedFilters.PA ? "_PA" : selectedFilters.EVAL ? "_EVAL" : "";
 
-    // If neither PA nor EVAL is set, set filterSuffix to "_trades"
-    if (!selectedFilters.PA && !selectedFilters.EVAL) {
-        filterSuffix = "_trades";
-    }
+      // Helper function to create trade-specific CSV
+      const createTradeCSV = (tradeData, accountLabel, accountNumbers, accountDirection) => {
+          const tradeHeaders = [
+              `Direction (${accountLabel})`,
+              "Instrument",
+              "Quantity",
+              "Time",
+              "Stop Loss",
+              "Profit",
+              "Use Breakeven",
+              "Breakeven Trigger",
+              "Breakeven Offset",
+              "Use Trail",
+              "Trail Trigger",
+              "Trail",
+              "Account Number", // Add account number as the last column
+          ];
 
-    // Dynamic file names
-    const account1FileName = `${selectedAccounts[0]
-      .replace(/APEX-/, "")
-      .split(" ")[0]}${filterSuffix}.csv`;
+          const tradeCSV = [tradeHeaders.join(",")];
+          tradeData.forEach((trade, index) => {
+              tradeCSV.push(
+                  [
+                      accountDirection[index],
+                      trade.Instrument,
+                      trade.Quantity,
+                      trade.Time,
+                      trade.StopLoss,
+                      trade.Profit,
+                      trade.UseBreakeven,
+                      trade.BreakevenTrigger,
+                      trade.BreakevenOffset,
+                      trade.UseTrail,
+                      trade.TrailTrigger,
+                      trade.Trail,
+                      accountNumbers[index] || "-", // Add account number or "-" if not available
+                  ].join(",")
+              );
+          });
 
-    const account2FileName = `${selectedAccounts[1]
-      .replace(/APEX-/, "")
-      .split(" ")[0]}${filterSuffix}.csv`;
+          return tradeCSV.join("\n");
+      };
 
-    // Download the three CSV files
-    const downloadCSV = (content, filename) => {
-      const blob = new Blob([content], { type: "text/csv" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = filename;
-      a.click();
-      URL.revokeObjectURL(url);
-    };
+      // Extract relevant trades and account numbers for each account
+      const account1Trades = tableData
+          .map((row) => ({
+              trade: tradesData.find((trade) => trade.TradeName === row.trade1),
+              accountNumber: row.account1,
+              directions: row.direction1,
+          }))
+          .filter((item) => item.trade);
 
-    downloadCSV(
-      tableCSV.join("\n"),
-      `trade_table_data_${new Date().toISOString()}${filterSuffix}.csv`
-    );
-    downloadCSV(account1TradeCSV, account1FileName);
-    downloadCSV(account2TradeCSV, account2FileName);
+      const account2Trades = tableData
+          .map((row) => ({
+              trade: tradesData.find((trade) => trade.TradeName === row.trade2),
+              accountNumber: row.account2,
+              directions: row.direction2,
+          }))
+          .filter((item) => item.trade);
+
+      // Prepare data for trade CSVs
+      const account1TradeCSV = createTradeCSV(
+          account1Trades.map((item) => item.trade),
+          selectedAccounts[0].replace(/APEX-/, "").split(" ")[0],
+          account1Trades.map((item) => item.accountNumber),
+          account1Trades.map((item) => item.directions)
+      );
+
+      const account2TradeCSV = createTradeCSV(
+          account2Trades.map((item) => item.trade),
+          selectedAccounts[1].replace(/APEX-/, "").split(" ")[0],
+          account2Trades.map((item) => item.accountNumber),
+          account2Trades.map((item) => item.directions)
+      );
+
+      // Determine filter suffix for filenames
+      let filterSuffix = selectedFilters.PA ? "_PA" : selectedFilters.EVAL ? "_EVAL" : "";
+
+      // If neither PA nor EVAL is set, set filterSuffix to "_trades"
+      if (!selectedFilters.PA && !selectedFilters.EVAL) {
+          filterSuffix = "_trades";
+      }
+
+      // Dynamic file names
+      const account1FileName = `${selectedAccounts[0]
+          .replace(/APEX-/, "")
+          .split(" ")[0]}${filterSuffix}.csv`;
+
+      const account2FileName = `${selectedAccounts[1]
+          .replace(/APEX-/, "")
+          .split(" ")[0]}${filterSuffix}.csv`;
+
+      // Function to save CSV to backend using POST request
+        const saveCSVToBackend = async (csvData, filename, apexid) => {
+          const formData = new FormData();
+          
+          // Ensure the field name matches what the backend expects (csvFile)
+          formData.append("csvFile", new Blob([csvData], { type: "text/csv" }), filename);
+          formData.append("apexid", apexid);  // Append apexid to the form data
+
+          try {
+              const response = await axios.post(`${BaseURL}upload-trade`, formData, {
+                  headers: {
+                      "Content-Type": "multipart/form-data",
+                  },
+              });
+              // console.log("File uploaded successfully:", response.data);
+          } catch (error) {
+              console.error("Error uploading file:", error);
+          }
+        };
+
+
+        // Helper function to download CSV
+        const downloadCSV = (content, filename) => {
+          const blob = new Blob([content], { type: "text/csv" });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = filename;
+          a.click();
+          URL.revokeObjectURL(url); // Clean up after the download
+        };
+
+        // Download the three CSV files
+        downloadCSV(
+          tableCSV.join("\n"),
+          `trade_table_data_${new Date().toISOString().slice(0, 19).replace(/:/g, "-")}${filterSuffix}.csv`
+        );
+        downloadCSV(account1TradeCSV, account1FileName);
+        downloadCSV(account2TradeCSV, account2FileName);
+
+
+        // Save files to backend
+        // await saveCSVToBackend(tableCSV.join("\n"), `trade_table_data_${new Date().toISOString()}${filterSuffix}.csv`);
+        await saveCSVToBackend(account1TradeCSV, account1FileName,selectedAccounts[0].replace(/APEX-/, "").split(" ")[0]);
+        await saveCSVToBackend(account2TradeCSV, account2FileName,selectedAccounts[1].replace(/APEX-/, "").split(" ")[0]);
   };
+
+
 
   return (
     <div className="p-3 w-full">
@@ -662,7 +692,7 @@ export default function DashTradingComp() {
                           gradientDuoTone="greenToBlue"
                           onClick={handleFindMatch}
                         >
-                          Find Match
+                          Sort Account Balances
                         </Button>
                       </> 
                     )}
@@ -683,7 +713,7 @@ export default function DashTradingComp() {
                         gradientDuoTone='greenToBlue'
                         onClick={setTrades}
                       >
-                        Set Trades
+                        Add Trade Data
                       </Button>
                     )}
                     {showExportCSVButton && (
@@ -705,7 +735,7 @@ export default function DashTradingComp() {
                         onChange={() => handleFilterChange("EVAL")}
                       />
                       <label htmlFor="eval" className="ml-2 text-sm font-medium">
-                        EVAL Accounts
+                        EVAL Only
                       </label>
                     </div>
                     <div className="flex items-center">
@@ -715,7 +745,7 @@ export default function DashTradingComp() {
                         onChange={() => handleFilterChange("PA")}
                       />
                       <label htmlFor="pa" className="ml-2 text-sm font-medium">
-                        PA Accounts
+                        PA Only
                       </label>
                     </div>
                   </div>
