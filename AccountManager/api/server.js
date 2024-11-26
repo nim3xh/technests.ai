@@ -123,6 +123,59 @@ app.post("/upload-csv", async (req, res) => {
   }
 });
 
+
+// Function to handle the file upload, save it in the correct folder based on apexid
+const uploadFile = (file, apexid) => {
+  const folderPath = path.join(__dirname, "dashboards", apexid); // Folder path based on apexid
+
+  if (!fs.existsSync(folderPath)) {
+    fs.mkdirSync(folderPath, { recursive: true }); // Create the folder if it doesn't exist
+  }
+
+  const filePath = path.join(folderPath, file.originalname); // Save the file with the original name
+
+  // Use the file path to move the uploaded file
+  return new Promise((resolve, reject) => {
+    // If using diskStorage, the file is already written to disk with `file.path`
+    fs.rename(file.path, filePath, (err) => {
+      if (err) {
+        return reject(err);
+      }
+      resolve(filePath); // Return the final file path
+    });
+  });
+};
+
+
+app.post("/upload-trade", upload.single("csvFile"), async (req, res) => {
+  try {
+      const { apexid } = req.body; // Retrieve apexid from the request body
+      const file = req.file;
+
+      // Log request body and file details
+      console.log("Request body:", req.body);  // Should show apexid
+      console.log("Uploaded file:", req.file);  // Should show file details
+
+      if (!apexid) {
+          return res.status(400).send("Apexid is required to upload the file.");
+      }
+
+      if (!file) {
+          return res.status(400).send("No file uploaded.");
+      }
+
+      // Upload file to the correct folder based on apexid
+      const filePath = await uploadFile(file, apexid);
+
+      res.status(200).send(`CSV file uploaded successfully to ${filePath}`);
+  } catch (error) {
+      console.error("Error during CSV upload:", error);  // Log the actual error
+      res.status(500).send("Failed to upload CSV file.");
+  }
+});
+
+
+
 // Schedule the task to run every day at 12:00 AM PST
 cron.schedule("0 8 * * *", () => {
   console.log("Running scheduled task to upload CSV files at 12:00 AM PST...");
