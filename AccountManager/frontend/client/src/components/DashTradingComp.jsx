@@ -277,68 +277,75 @@ export default function DashTradingComp() {
   const createTableData = () => {
     // Filter out rows with status "admin only"
     let filtered = combinedData.filter((account) => account.status !== "admin only");
-  
+
     // Apply filters based on selectedFilters
     if (selectedFilters.PA) {
-      filtered = filtered.filter((item) => item.account.startsWith("PA"));
+        filtered = filtered.filter((item) => item.account.startsWith("PA"));
     }
-  
+
     if (selectedFilters.EVAL) {
-      filtered = filtered.filter((item) => item.account.startsWith("APEX"));
+        filtered = filtered.filter((item) => item.account.startsWith("APEX"));
     }
-  
+
     // Filter based on selected accounts from dropdown
     const account1Data = filtered.filter(
-      (account) => `${account.accountNumber} (${account.name})` === selectedAccounts[0]
+        (account) => `${account.accountNumber} (${account.name})` === selectedAccounts[0]
     );
     const account2Data = filtered.filter(
-      (account) => `${account.accountNumber} (${account.name})` === selectedAccounts[1]
+        (account) => `${account.accountNumber} (${account.name})` === selectedAccounts[1]
     );
-  
-    const sortedAccount1Data = account1Data.sort((a, b) => a.account.localeCompare(b.account));
-    const sortedAccount2Data = account2Data.sort((a, b) => a.account.localeCompare(b.account));
-  
+
+    // Sort by accountBalance in ascending order
+    const sortedAccount1Data = account1Data.sort((a, b) => a.accountBalance - b.accountBalance);
+    const sortedAccount2Data = account2Data.sort((a, b) => a.accountBalance - b.accountBalance);
+
     const maxRows = Math.max(sortedAccount1Data.length, sortedAccount2Data.length);
-  
+
+    // Directions array to hold directions for each row
+    let directions = [];
+
     // Build table rows
     const rows = Array.from({ length: maxRows }, (_, i) => {
-      const account1 = sortedAccount1Data[i] || {};
-      const account2 = sortedAccount2Data[i] || {};
-  
-      let direction1 = "-";
-      let direction2 = "-";
-  
-      if (account1.account) {
-        direction1 = directions[i]?.direction1 || (Math.random() < 0.5 ? "Long" : "Short");
-      }
-  
-      if (account2.account) {
-        direction2 = directions[i]?.direction2 || (direction1 === "Long" ? "Short" : "Long");
-      }
-  
-      // Update directions array
-      if (!directions[i] && (account1.account || account2.account)) {
-        directions[i] = { direction1, direction2 };
-        setDirections([...directions]);
-      }
-  
-      return {
-        direction1,
-        account1: account1.account || "-",
-        balance1: account1.accountBalance || "-",
-        time: timeSlots[i] || "-",
-        balance2: account2.accountBalance || "-",
-        account2: account2.account || "-",
-        direction2,
-        trade1: account1.account ? getTradeName(account1.account) : "-",
-        trade2: account2.account ? getTradeName(account2.account) : "-",
-      };
+        const account1 = sortedAccount1Data[i] || {};
+        const account2 = sortedAccount2Data[i] || {};
+
+        // Initialize directions
+        let direction1 = "-";
+        let direction2 = "-";
+
+        // Set direction1 if account1 exists, otherwise leave it as default "-"
+        if (account1.account) {
+            direction1 = directions[i]?.direction1 || (Math.random() < 0.5 ? "Long" : "Short");
+        }
+
+        // Set direction2 based on direction1 if account2 exists
+        if (account2.account) {
+            direction2 = directions[i]?.direction2 || (direction1 === "Long" ? "Short" : "Long");
+        }
+
+        // Update directions array to store direction1 and direction2 for this row
+        if (!directions[i] && (account1.account || account2.account)) {
+            directions[i] = { direction1, direction2 };
+        }
+
+        // Return row data
+        return {
+            direction1,
+            account1: account1.account || "-",
+            balance1: account1.accountBalance || "-",
+            time: timeSlots[i] || "-",
+            balance2: account2.accountBalance || "-",
+            account2: account2.account || "-",
+            direction2,
+            trade1: account1.account ? getTradeName(account1.account) : "-",
+            trade2: account2.account ? getTradeName(account2.account) : "-",
+        };
     });
-  
+
+    // Return the generated rows
     return rows;
-  };
-  
-  
+};
+
 
   const handleFilterChange = (filter) => {
     setSelectedFilters((prevFilters) => ({
@@ -380,16 +387,16 @@ export default function DashTradingComp() {
           row.balance1,
           row.balance2,
           row.account2,
-          row.trade2,
           row.direction2,
+          row.trade2,
         ].join(",")
       );
     });
   
     // Helper function to create trade-specific CSV
-    const createTradeCSV = (tradeData, accountLabel, accountNumbers) => {
+    const createTradeCSV = (tradeData, accountLabel, accountNumbers,accountDirection) => {
       const tradeHeaders = [
-        `Trade Name (${accountLabel})`,
+        `Direction (${accountLabel})`,
         "Instrument",
         "Quantity",
         "Time",
@@ -401,7 +408,6 @@ export default function DashTradingComp() {
         "Use Trail",
         "Trail Trigger",
         "Trail",
-        "Apex ID",
         "Account Number", // Add account number as the last column
       ];
   
@@ -409,7 +415,7 @@ export default function DashTradingComp() {
       tradeData.forEach((trade, index) => {
         tradeCSV.push(
           [
-            trade.TradeName,
+            accountDirection[index],
             trade.Instrument,
             trade.Quantity,
             trade.Time,
@@ -421,7 +427,6 @@ export default function DashTradingComp() {
             trade.UseTrail,
             trade.TrailTrigger,
             trade.Trail,
-            trade.ApexID,
             accountNumbers[index] || "-", // Add account number or "-" if not available
           ].join(",")
         );
@@ -435,6 +440,7 @@ export default function DashTradingComp() {
       .map((row) => ({
         trade: tradesData.find((trade) => trade.TradeName === row.trade1),
         accountNumber: row.account1,
+        directions: row.direction1,
       }))
       .filter((item) => item.trade);
   
@@ -442,6 +448,7 @@ export default function DashTradingComp() {
       .map((row) => ({
         trade: tradesData.find((trade) => trade.TradeName === row.trade2),
         accountNumber: row.account2,
+        directions: row.direction2,
       }))
       .filter((item) => item.trade);
   
@@ -449,13 +456,15 @@ export default function DashTradingComp() {
     const account1TradeCSV = createTradeCSV(
       account1Trades.map((item) => item.trade),
       selectedAccounts[0].replace(/APEX-/, "").split(" ")[0],
-      account1Trades.map((item) => item.accountNumber)
+      account1Trades.map((item) => item.accountNumber),
+      account1Trades.map((item) => item.directions)
     );
   
     const account2TradeCSV = createTradeCSV(
       account2Trades.map((item) => item.trade),
       selectedAccounts[1].replace(/APEX-/, "").split(" ")[0],
-      account2Trades.map((item) => item.accountNumber)
+      account2Trades.map((item) => item.accountNumber),
+      account2Trades.map((item) => item.directions)
     );
   
     // Determine filter suffix for filenames

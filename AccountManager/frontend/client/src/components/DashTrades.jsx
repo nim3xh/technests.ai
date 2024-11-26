@@ -315,7 +315,7 @@ export default function DashTrades() {
               ))}
             </Dropdown>
           </div>
-            {currentUser.user.role === "admin" && (
+            {currentUser.user.role !== "user" && (
               <Button
                 gradientDuoTone="greenToBlue"
                 onClick={uploadCsvs}
@@ -331,7 +331,7 @@ export default function DashTrades() {
                 )}
               </Button>
             )}
-            {currentUser.user.role === "admin" && (
+            {currentUser.user.role !== "user" && (
               <Button
                 gradientDuoTone="greenToBlue"
                 onClick={() => handleAddClick()}
