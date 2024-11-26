@@ -468,7 +468,12 @@ export default function DashTradingComp() {
     );
   
     // Determine filter suffix for filenames
-    const filterSuffix = selectedFilters.PA ? "_PA" : selectedFilters.EVAL ? "_EVAL" : "";
+    let filterSuffix = selectedFilters.PA ? "_PA" : selectedFilters.EVAL ? "_EVAL" : "";
+
+    // If neither PA nor EVAL is set, set filterSuffix to "_trades"
+    if (!selectedFilters.PA && !selectedFilters.EVAL) {
+        filterSuffix = "_trades";
+    }
 
     // Dynamic file names
     const account1FileName = `${selectedAccounts[0]
