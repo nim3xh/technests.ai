@@ -45,10 +45,11 @@ export default function DashTradingComp() {
   const [directions, setDirections] = useState([]);
   const [tradesData, setTradesData] = useState([]);
   const [showSetTradesButton, setshowSetTradesButton] = useState(false);
+  const [showExportCSVButton,setshowExportCSVButton] = useState(false);
   const [isTradeSet, setIsTradeSet] = useState(false);
   const [selectedFilters, setSelectedFilters] = useState({
-    EVAL: true,
-    PA: true,
+    EVAL: false,
+    PA: false,
   });
 
   const formattedTodayDate = new Intl.DateTimeFormat("en-US", {
@@ -117,6 +118,7 @@ export default function DashTradingComp() {
       setIsFindingMatch(false);
       setshowSetTradesButton(false);
       setIsTradeSet(false);
+      setshowExportCSVButton(false);
     }
         
     const fetchTrades = async () => {
@@ -350,7 +352,142 @@ export default function DashTradingComp() {
   
   const setTrades = async () => {
     setIsTradeSet(true);
+    setshowExportCSVButton(true);
   }
+
+  const exportCSV = () => {
+    const tableData = createTableData();
+  
+    // Generate headers for table data CSV
+    const tableHeaders = [
+      `Trade (${selectedAccounts[0].replace(/APEX-/, "").split(" ")[0]})`,
+      `Direction (${selectedAccounts[0].replace(/APEX-/, "").split(" ")[0]})`,
+      `Account (${selectedAccounts[0].replace(/APEX-/, "").split(" ")[0]})`,
+      `Account Balance (${selectedAccounts[0].replace(/APEX-/, "").split(" ")[0]})`,
+      `Account Balance (${selectedAccounts[1].replace(/APEX-/, "").split(" ")[0]})`,
+      `Account (${selectedAccounts[1].replace(/APEX-/, "").split(" ")[0]})`,
+      `Trade (${selectedAccounts[1].replace(/APEX-/, "").split(" ")[0]})`,
+      `Direction (${selectedAccounts[1].replace(/APEX-/, "").split(" ")[0]})`,
+    ];
+  
+    const tableCSV = [tableHeaders.join(",")];
+    tableData.forEach((row) => {
+      tableCSV.push(
+        [
+          row.trade1,
+          row.direction1,
+          row.account1,
+          row.balance1,
+          row.balance2,
+          row.account2,
+          row.trade2,
+          row.direction2,
+        ].join(",")
+      );
+    });
+  
+    // Helper function to create trade-specific CSV
+    const createTradeCSV = (tradeData, accountLabel, accountNumbers) => {
+      const tradeHeaders = [
+        `Trade Name (${accountLabel})`,
+        "Instrument",
+        "Quantity",
+        "Time",
+        "Stop Loss",
+        "Profit",
+        "Use Breakeven",
+        "Breakeven Trigger",
+        "Breakeven Offset",
+        "Use Trail",
+        "Trail Trigger",
+        "Trail",
+        "Apex ID",
+        "Account Number", // Add account number as the last column
+      ];
+  
+      const tradeCSV = [tradeHeaders.join(",")];
+      tradeData.forEach((trade, index) => {
+        tradeCSV.push(
+          [
+            trade.TradeName,
+            trade.Instrument,
+            trade.Quantity,
+            trade.Time,
+            trade.StopLoss,
+            trade.Profit,
+            trade.UseBreakeven,
+            trade.BreakevenTrigger,
+            trade.BreakevenOffset,
+            trade.UseTrail,
+            trade.TrailTrigger,
+            trade.Trail,
+            trade.ApexID,
+            accountNumbers[index] || "-", // Add account number or "-" if not available
+          ].join(",")
+        );
+      });
+  
+      return tradeCSV.join("\n");
+    };
+  
+    // Extract relevant trades and account numbers for each account
+    const account1Trades = tableData
+      .map((row) => ({
+        trade: tradesData.find((trade) => trade.TradeName === row.trade1),
+        accountNumber: row.account1,
+      }))
+      .filter((item) => item.trade);
+  
+    const account2Trades = tableData
+      .map((row) => ({
+        trade: tradesData.find((trade) => trade.TradeName === row.trade2),
+        accountNumber: row.account2,
+      }))
+      .filter((item) => item.trade);
+  
+    // Prepare data for trade CSVs
+    const account1TradeCSV = createTradeCSV(
+      account1Trades.map((item) => item.trade),
+      selectedAccounts[0].replace(/APEX-/, "").split(" ")[0],
+      account1Trades.map((item) => item.accountNumber)
+    );
+  
+    const account2TradeCSV = createTradeCSV(
+      account2Trades.map((item) => item.trade),
+      selectedAccounts[1].replace(/APEX-/, "").split(" ")[0],
+      account2Trades.map((item) => item.accountNumber)
+    );
+  
+    // Determine filter suffix for filenames
+    const filterSuffix = selectedFilters.PA ? "_PA" : selectedFilters.EVAL ? "_EVAL" : "";
+
+    // Dynamic file names
+    const account1FileName = `${selectedAccounts[0]
+      .replace(/APEX-/, "")
+      .split(" ")[0]}_${filterSuffix}.csv`;
+
+    const account2FileName = `${selectedAccounts[1]
+      .replace(/APEX-/, "")
+      .split(" ")[0]}_${filterSuffix}.csv`;
+
+    // Download the three CSV files
+    const downloadCSV = (content, filename) => {
+      const blob = new Blob([content], { type: "text/csv" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(url);
+    };
+
+    downloadCSV(
+      tableCSV.join("\n"),
+      `trade_table_data_${new Date().toISOString()}${filterSuffix}.csv`
+    );
+    downloadCSV(account1TradeCSV, account1FileName);
+    downloadCSV(account2TradeCSV, account2FileName);
+  };
 
   return (
     <div className="p-3 w-full">
@@ -527,12 +664,20 @@ export default function DashTradingComp() {
                       </Button>
                       </>
                     )}
-                    {showSetTradesButton && (
+                    {showSetTradesButton && !showExportCSVButton && (
                       <Button
                         gradientDuoTone='greenToBlue'
                         onClick={setTrades}
                       >
                         Set Trades
+                      </Button>
+                    )}
+                    {showExportCSVButton && (
+                      <Button
+                        gradientDuoTone='greenToBlue'
+                        onClick={exportCSV}
+                      >
+                        Export CSV
                       </Button>
                     )}
                   </div>
