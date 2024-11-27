@@ -547,6 +547,203 @@ export default function DashTradingComp() {
   };
 
 
+  const createTableDataForOneAccount = () => {
+      // Filter out rows with status "admin only"
+      let filtered = combinedData.filter((account) => account.status !== "admin only");
+
+      // Apply filters based on selectedFilters
+      if (selectedFilters.PA) {
+          filtered = filtered.filter((item) => item.account.startsWith("PA"));
+      }
+
+      if (selectedFilters.EVAL) {
+          filtered = filtered.filter((item) => item.account.startsWith("APEX"));
+      }
+
+      // Filter based on selected account from dropdown (assuming only one account selected)
+      const accountData = filtered.filter(
+          (account) => `${account.accountNumber} (${account.name})` === selectedAccounts[0]
+      );
+
+      // Exclude accounts with a balance greater than 53,000
+      const filteredAccountData = accountData.filter(
+          (account) => account.accountBalance <= 53000
+      );
+
+      // Sort by accountBalance in ascending order
+      const sortedAccountData = filteredAccountData.sort((a, b) => a.accountBalance - b.accountBalance);
+
+      // Maximum number of rows will be based on the filteredAccountData
+      const maxRows = sortedAccountData.length;
+
+      // Directions array to hold directions for each row
+      let directions = [];
+
+      // Build table rows for one account
+      const rows = Array.from({ length: maxRows }, (_, i) => {
+          const account = sortedAccountData[i] || {};
+
+          // Initialize direction
+          let direction = "-";
+
+          // Set direction if account exists
+          if (account.account) {
+              direction = directions[i]?.direction || (Math.random() < 0.5 ? "Long" : "Short");
+          }
+
+          // Update directions array to store direction for this row
+          if (!directions[i] && account.account) {
+              directions[i] = { direction };
+          }
+
+          // Return row data
+          return {
+              direction,
+              account: account.account || "-",
+              balance: account.accountBalance || "-",
+              time: timeSlots[i] || "-",
+              trade: account.account ? getTradeName(account.account) : "-",
+          };
+      });
+
+      // Return the generated rows
+      return rows;
+  };
+
+  const exportCSVForEachAccount = async () => {
+      // Iterate through each account in uniqueAccountNumbers
+      for (let accountString of uniqueAccountNumbers) {
+          // Create a local selectedAccounts array for the current iteration
+          setSelectedAccounts([...selectedAccounts, accountString]);
+
+          // Generate table data for this account
+          const tableData = createTableDataForOneAccount();
+
+          // Generate headers for table data CSV
+          const tableHeaders = [
+              `Trade (${accountString.replace(/APEX-/, "").split(" ")[0]})`,
+              `Direction (${accountString.replace(/APEX-/, "").split(" ")[0]})`,
+              `Account (${accountString.replace(/APEX-/, "").split(" ")[0]})`,
+              `Account Balance (${accountString.replace(/APEX-/, "").split(" ")[0]})`
+          ];
+
+          const tableCSV = [tableHeaders.join(",")];
+          tableData.forEach((row) => {
+              tableCSV.push(
+                  [
+                      row.trade,
+                      row.direction,
+                      row.account,
+                      row.balance,
+                  ].join(",")
+              );
+          });
+
+          // Convert time format for the CSV
+          const convertTo12HourFormat = (time) => {
+              const [hours, minutes, seconds] = time.split(":");
+              let hour = parseInt(hours, 10);
+              const modifier = hour >= 12 ? "PM" : "AM";
+              if (hour === 0) hour = 12; // 0 hour in 24-hour format is 12 AM
+              else if (hour > 12) hour -= 12; // Convert hour greater than 12 to PM format
+              return `${hour.toString().padStart(2, "0")}:${minutes} ${modifier}`;
+          };
+
+          // Helper function to create trade-specific CSV
+          const createTradeCSV = (tradeData, accountLabel, accountNumbers, accountDirection) => {
+              const tradeHeaders = [
+                  `Direction (${accountLabel})`,
+                  "Quantity",
+                  "Time",
+                  "Stop Loss",
+                  "Profit",
+                  "Use Breakeven",
+                  "Breakeven Trigger",
+                  "Breakeven Offset",
+                  "Use Trail",
+                  "Trail Trigger",
+                  "Trail",
+                  "Instrument",
+                  "Account Number", // Add account number as the last column
+              ];
+
+              const tradeCSV = [tradeHeaders.join(",")];
+              tradeData.forEach((trade, index) => {
+                  tradeCSV.push(
+                      [
+                          accountDirection[index],
+                          trade.Quantity,
+                          convertTo12HourFormat(trade.Time),
+                          trade.StopLoss,
+                          trade.Profit,
+                          trade.UseBreakeven,
+                          trade.BreakevenTrigger,
+                          trade.BreakevenOffset,
+                          trade.UseTrail,
+                          trade.TrailTrigger,
+                          trade.Trail,
+                          trade.Instrument,
+                          accountNumbers[index] || "-", // Add account number or "-" if not available
+                      ].join(",")
+                  );
+              });
+
+              return tradeCSV.join("\n");
+          };
+
+          // Extract relevant trades and account numbers for each account
+          const accountTrades = tableData.map((row) => ({
+              trade: tradesData.find((trade) => trade.TradeName === row.trade),
+              accountNumber: row.account,
+              direction: row.direction,
+          })).filter((item) => item.trade);
+
+          // Prepare data for trade CSV
+          const tradeCSV = createTradeCSV(
+              accountTrades.map((item) => item.trade),
+              accountString.replace(/APEX-/, "").split(" ")[0],
+              accountTrades.map((item) => item.accountNumber),
+              accountTrades.map((item) => item.direction)
+          );
+
+          // Dynamic file name for each account's CSV
+          const accountFileName = `${accountString.replace(/APEX-/, "").split(" ")[0]}_trades.csv`;
+
+          // Helper function to download CSV
+          const downloadCSV = (content, filename) => {
+              const blob = new Blob([content], { type: "text/csv" });
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement("a");
+              a.href = url;
+              a.download = filename;
+              a.click();
+              URL.revokeObjectURL(url); // Clean up after the download
+          };
+
+          // Download the CSV for this account
+          // downloadCSV(tableCSV.join("\n"), accountFileName);
+          downloadCSV(tradeCSV, `${accountFileName}`);
+
+          // Save files to backend
+          // await saveCSVToBackend(tableCSV.join("\n"), accountFileName, accountString.replace(/APEX-/, "").split(" ")[0]);
+          await saveCSVToBackend(tradeCSV, `${accountFileName}`, accountString.replace(/APEX-/, "").split(" ")[0]);
+      }
+  };
+
+  // Function to save CSV to backend
+  const saveCSVToBackend = async (csvData, filename, apexid) => {
+      const formData = new FormData();
+      formData.append("csvFile", new Blob([csvData], { type: "text/csv" }), filename);
+      formData.append("apexid", apexid);  // Append apexid to the form data
+
+      try {
+          const response = await axios.post(`${BaseURL}upload-trade`, formData, {
+              headers: { "Content-Type": "multipart/form-data" },
+          });
+      } catch (error) {
+          console.error("Error uploading file:", error);
+      }
+  };
 
   return (
     <div className="p-3 w-full">
@@ -675,74 +872,23 @@ export default function DashTradingComp() {
                     </div>
                   </div>
                   <br />
-                  <Dropdown
-                    label={
-                      selectedAccounts.length > 0
-                        ? selectedAccounts
-                            .map((account) => account.replace(/APEX-/, "")) // Remove "APEX-"
-                            .join(", ")
-                        : "Select Pair"
-                    }
-                    className="w-full text-left dark:bg-gray-800 dark:text-gray-200"
-                    inline
-                  >
-                    <Dropdown.Item onClick={() => handleClearSelection()}>
-                      Clear Selection
-                    </Dropdown.Item>
-                    {uniqueAccountNumbers.map((account) => (
-                      <Dropdown.Item
-                        key={account}
-                        onClick={() => handleAccountSelection(account)}
-                      >
-                        {selectedAccounts.includes(account) ? "✓ " : ""}{" "}
-                        {account.replace(/APEX-/, "")} {/* Display without "APEX-" */}
-                      </Dropdown.Item>
-                    ))}
-                  </Dropdown>
+                  
                   <div className="flex items-center space-x-4 mt-4">
                     {!isFindingMatch && (
                       <>
                         {/* Find Match Button */}
                         <Button
                           gradientDuoTone="greenToBlue"
-                          onClick={handleFindMatch}
+                          onClick={exportCSVForEachAccount}
                         >
-                          Sort Account Balances
+                          Make Trades CSV
                         </Button>
                       </> 
-                    )}
-
-                    {isFindingMatch && (
-                      <>
-                      {/*Clear Selection Button */}
-                      <Button
-                        gradientDuoTone='pinkToOrange'
-                        onClick={handleClearSelection}
-                      >
-                        Clear Selection
-                      </Button>
-                      </>
-                    )}
-                    {showSetTradesButton && !showExportCSVButton && (
-                      <Button
-                        gradientDuoTone='greenToBlue'
-                        onClick={setTrades}
-                      >
-                        Add Trade Data
-                      </Button>
-                    )}
-                    {showExportCSVButton && (
-                      <Button
-                        gradientDuoTone='greenToBlue'
-                        onClick={exportCSV}
-                      >
-                        Export CSV
-                      </Button>
                     )}
                   </div>
 
                   {/* Filters */}
-                  <div className="flex space-x-4 mb-4">
+                  {/* <div className="flex space-x-4 mb-4">
                     <div className="flex items-center">
                       <Checkbox
                         id="eval"
@@ -763,70 +909,7 @@ export default function DashTradingComp() {
                         PA Only
                       </label>
                     </div>
-                  </div>
-                  {showTable && selectedAccounts.length === 2 && (
-                    <div className="flex flex-col justify-center items-center mt-5">
-                      <h3 className="text-center font-bold text-lg mb-4">Summary of Accounts</h3>
-                      <div className="flex justify-center space-x-4">
-                        <h4 className="text-center font-bold text-sm text-gray-500">{selectedAccounts[0].replace(/APEX-/, "")}</h4>
-                        <h4 className="text-center font-bold text-sm text-gray-500">{selectedAccounts[1].replace(/APEX-/, "")}</h4>
-                      </div>
-                      <Table>
-                        {/* Table Header */}
-                        <TableHead>
-                          {isTradeSet && (
-                              <>
-                              <TableHeadCell>Trade ({selectedAccounts[0].replace(/APEX-/, "").split(" ")[0]})</TableHeadCell>
-                              <TableHeadCell>Direction ({selectedAccounts[0].replace(/APEX-/, "").split(" ")[0]})</TableHeadCell>
-                            </>
-                            )
-                          }
-                          <TableHeadCell className="w-64">Account ({selectedAccounts[0].replace(/APEX-/, "").split(" ")[0]})</TableHeadCell>
-                          <TableHeadCell>Account Balance ({selectedAccounts[0].replace(/APEX-/, "").split(" ")[0]})</TableHeadCell>
-                          <TableHeadCell>Account Balance ({selectedAccounts[1].replace(/APEX-/, "").split(" ")[0]})</TableHeadCell>
-                          <TableHeadCell className="w-64">Account ({selectedAccounts[1].replace(/APEX-/, "").split(" ")[0]})</TableHeadCell>
-                          {isTradeSet && (
-                              <>
-                              <TableHeadCell>Trade ({selectedAccounts[1].replace(/APEX-/, "").split(" ")[0]})</TableHeadCell>
-                              <TableHeadCell>Direction ({selectedAccounts[1].replace(/APEX-/, "").split(" ")[0]})</TableHeadCell>
-                            </>
-                            )
-                          }
-                        </TableHead>
-                        {/* Table Body */}
-                        <TableBody>
-                          {createTableData().map((row, index) => (
-                            <TableRow
-                              key={index}
-                            >
-                              {isTradeSet && (
-                                <>
-                                <TableCell>{row.trade1}</TableCell>
-                                <TableCell>{row.direction1}</TableCell>
-                                </>
-                              )
-                              }
-                              <TableCell>{row.account1 || "-"}</TableCell>
-                              <TableCell>
-                                {row.balance1 !== "-" ? `$${row.balance1}` : "-"}
-                              </TableCell>
-                              <TableCell>
-                                {row.balance2 !== "-" ? `$${row.balance2}` : "-"}
-                              </TableCell>
-                              <TableCell>{row.account2 || "-"}</TableCell>
-                              {isTradeSet && (
-                                <>
-                                <TableCell>{row.trade2}</TableCell>
-                                <TableCell>{row.direction2}</TableCell>
-                                </>
-                              )
-                              }
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                    </div>
-                  )}
+                  </div> */}
               </>
           )}
         </>
