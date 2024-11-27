@@ -392,12 +392,26 @@ export default function DashTradingComp() {
               ].join(",")
           );
       });
+      
 
+      const convertTo12HourFormat = (time) => {
+        const [hours, minutes, seconds] = time.split(":");
+        let hour = parseInt(hours, 10);
+        const modifier = hour >= 12 ? "PM" : "AM";
+        
+        if (hour === 0) {
+            hour = 12; // 0 hour in 24-hour format is 12 AM
+        } else if (hour > 12) {
+            hour -= 12; // Convert hour greater than 12 to PM format
+        }
+        
+        return `${hour.toString().padStart(2, "0")}:${minutes} ${modifier}`;
+    };
+      
       // Helper function to create trade-specific CSV
       const createTradeCSV = (tradeData, accountLabel, accountNumbers, accountDirection) => {
           const tradeHeaders = [
               `Direction (${accountLabel})`,
-              "Instrument",
               "Quantity",
               "Time",
               "Stop Loss",
@@ -408,6 +422,7 @@ export default function DashTradingComp() {
               "Use Trail",
               "Trail Trigger",
               "Trail",
+              "Instrument",
               "Account Number", // Add account number as the last column
           ];
 
@@ -416,9 +431,8 @@ export default function DashTradingComp() {
               tradeCSV.push(
                   [
                       accountDirection[index],
-                      trade.Instrument,
                       trade.Quantity,
-                      trade.Time,
+                      convertTo12HourFormat(trade.Time),
                       trade.StopLoss,
                       trade.Profit,
                       trade.UseBreakeven,
@@ -427,6 +441,7 @@ export default function DashTradingComp() {
                       trade.UseTrail,
                       trade.TrailTrigger,
                       trade.Trail,
+                      trade.Instrument,
                       accountNumbers[index] || "-", // Add account number or "-" if not available
                   ].join(",")
               );
