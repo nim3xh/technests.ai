@@ -100,7 +100,7 @@ export default function DashboardComp() {
         let totalPAAdminOnly = 0;
 
         mergedData.forEach((item) => {
-          const userName = item.name;
+          const userName = item.name + " (" + item.accountNumber.replace('APEX-', '') + ")";
           const isPA = item.account.startsWith("PA");
           const isActive = item.status === "active";
           const isEval = item.account.startsWith("APEX");
@@ -156,6 +156,7 @@ export default function DashboardComp() {
   // Calculate unique accounts from filteredData
   const uniqueAccountsInFilteredData = new Set(
     combinedData.map((item) => `${item.accountNumber} (${item.name})`)
+    
   );
   const totalUniqueAccountsDisplayed = uniqueAccountsInFilteredData.size;
 
