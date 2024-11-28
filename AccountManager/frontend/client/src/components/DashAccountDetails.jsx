@@ -26,32 +26,6 @@ import { CSVLink } from "react-csv";
 
 const BaseURL = import.meta.env.VITE_BASE_URL;
 
-const getLuminance = (hex) => {
-  const rgb = parseInt(hex.substring(1), 16);
-  const r = (rgb >> 16) & 0xff;
-  const g = (rgb >> 8) & 0xff;
-  const b = (rgb >> 0) & 0xff;
-
-  const luminance = 0.299 * r + 0.587 * g + 0.114 * b;
-  return luminance;
-};
-
-const assignColorsToAccounts = (data) => {
-  const accountColors = {};
-  const colors = ["#808080", "#D3D3D3"]; // Gray and light gray
-  let colorIndex = 0;
-
-  data.forEach((item) => {
-    const accountName = item.name;
-    if (!accountColors[accountName]) {
-      accountColors[accountName] = colors[colorIndex];
-      colorIndex = (colorIndex + 1) % colors.length; // Alternate between gray and light gray
-    }
-  });
-
-  return accountColors;
-};
-
 export default function DashAccountDetails() {
   const [createLoding, setCreateLoding] = useState(false);
   const { currentUser } = useSelector((state) => state.user);
@@ -133,7 +107,6 @@ export default function DashAccountDetails() {
         }
         setFilteredData(mergedData);
 
-        setAccountColors(assignColorsToAccounts(mergedData));
         setLoading(false);
 
         // Count PA and non-PA accounts in one pass
@@ -324,8 +297,7 @@ export default function DashAccountDetails() {
         setCreatedDateTime(null); // or set it to a default value
       }
       setFilteredData(mergedData);
-
-      setAccountColors(assignColorsToAccounts(mergedData));
+      
       setLoading(false);
 
       // Count PA and non-PA accounts
@@ -736,18 +708,9 @@ export default function DashAccountDetails() {
                     <TableBody>
                       {filteredData.length > 0 ? (
                         filteredData.map((account, index) => {
-                          const backgroundColor = accountColors[account.name];
-                          const luminance = getLuminance(backgroundColor);
-                          const textColor =
-                            luminance > 160 ? "#000000" : "#FFFFFF";
-
                           return (
                             <TableRow
                               key={index}
-                              style={{
-                                backgroundColor,
-                                color: textColor,
-                              }}
                             >
                               <TableCell>
                                 <div className="flex items-center gap-3">
