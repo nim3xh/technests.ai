@@ -60,7 +60,7 @@ export default function DashSidebar() {
                   icon={HiChartPie}
                   as="div"
                 >
-                  Dashboard
+                  Summary
                 </Sidebar.Item>
               </Link>
               </>
@@ -72,7 +72,7 @@ export default function DashSidebar() {
                   icon={HiChartPie}
                   as="div"
                 >
-                  Dashboard
+                  Summary
                 </Sidebar.Item>
               </Link>
             )}
@@ -163,7 +163,7 @@ export default function DashSidebar() {
                 
               </>
             )} */}
-            {currentUser.user.role !== 'user' &&(
+            {/*{currentUser.user.role !== 'user' &&(
               <Link to="/dashboard?tab=accountDetailsHistory">
                 <Sidebar.Item
                   active={tab === "accountDetailsHistory"}
@@ -173,7 +173,7 @@ export default function DashSidebar() {
                   Past Account Details
                 </Sidebar.Item>
               </Link>
-            )}
+            )}*/}
             <Sidebar.Item
               icon={HiArrowSmRight}
               className="cursor-pointer"
