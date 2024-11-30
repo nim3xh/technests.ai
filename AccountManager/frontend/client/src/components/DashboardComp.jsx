@@ -78,7 +78,7 @@ export default function DashboardComp() {
   
         // Categorize and count PA accounts based on account balance
         mergedData.forEach((account) => {
-          if (account.account.startsWith("PA")) {
+          if (account.account.startsWith("PA") && account.status !== "admin only") {
             const balance = parseFloat(account.accountBalance);
             if (balance >= 47500 && balance <= 53200) paStats.PA1++;
             else if (balance >= 53201 && balance <= 55800) paStats.PA2++;

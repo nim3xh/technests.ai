@@ -128,7 +128,7 @@ export default function DashTradingComp() {
     
           // Categorize and count PA accounts based on account balance
           mergedData.forEach((account) => {
-            if (account.account.startsWith("PA")) {
+            if (account.account.startsWith("PA") && account.status === "active") {
               const balance = parseFloat(account.accountBalance);
               if (balance >= 47500 && balance <= 53200) paStats.PA1++;
               else if (balance >= 53201 && balance <= 55800) paStats.PA2++;
@@ -364,7 +364,15 @@ export default function DashTradingComp() {
               accountTrades.map((item) => item.direction)
           );
 
-          const accountFileName = `${accountString.replace(/APEX-/, "").split(" ")[0]}_trades.csv`;
+          let accountFileName = `${accountString.replace(/APEX-/, "").split(" ")[0]}_trades.csv`;
+
+          if(selectedFilters.PA){
+              accountFileName = `${accountString.replace(/APEX-/, "").split(" ")[0]}_PA_trades.csv`;
+          }
+          
+          if(selectedFilters.EVAL){
+              accountFileName = `${accountString.replace(/APEX-/, "").split(" ")[0]}_EVAL_trades.csv`;
+          }
 
           const downloadCSV = (content, filename) => {
               const blob = new Blob([content], { type: "text/csv" });
@@ -394,7 +402,7 @@ export default function DashTradingComp() {
           
               // If the user cancelled, skip download and exit the loop
               if (downloadCancelled) {
-                  console.log("Download cancelled by the user.");
+                  // console.log("Download cancelled by the user.");
               }
           };
           promptDownloadConfirmation();  // Check for confirmation to download
@@ -417,6 +425,23 @@ export default function DashTradingComp() {
           alert("Error uploading file:", error);
       }
   };
+
+  const handleFilterChange = (filter) => {
+    setSelectedFilters((prevFilters) => {
+      // If the 'EVAL' checkbox is clicked, uncheck 'PA'
+      if (filter === "EVAL") {
+        return { EVAL: !prevFilters.EVAL, PA: false };
+      }
+  
+      // If the 'PA' checkbox is clicked, uncheck 'EVAL'
+      if (filter === "PA") {
+        return { EVAL: false, PA: !prevFilters.PA };
+      }
+  
+      return prevFilters;
+    });
+  };
+  
 
   return (
     <div className="p-3 w-full">
@@ -545,25 +570,8 @@ export default function DashTradingComp() {
                     </div>
                   </div>
                   <br />
-                  
-                  <div className="flex items-center space-x-4 mt-4">
-                    {!isFindingMatch && (
-                      <>
-                        {/* Find Match Button */}
-                        <Button
-                          gradientDuoTone="greenToBlue"
-                          onClick={exportCSVForEachAccount}
-                          className="px-6 py-3 rounded-lg text-white font-semibold transition duration-300 transform hover:scale-105 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
-                        >
-                          Make Trades CSV
-                        </Button>
-                      </>
-                    )}
-                  </div>
-
-
-                  {/* Filters */}
-                  {/* <div className="flex space-x-4 mb-4">
+                 {/* Filters */}
+                  <div className="flex space-x-4 mb-4">
                     <div className="flex items-center">
                       <Checkbox
                         id="eval"
@@ -584,7 +592,27 @@ export default function DashTradingComp() {
                         PA Only
                       </label>
                     </div>
-                  </div> */}
+                  </div>
+
+                  
+                  <div className="flex items-center space-x-4 mt-4">
+                    {!isFindingMatch && (
+                      <>
+                        {/* Find Match Button */}
+                        <Button
+                          gradientDuoTone="greenToBlue"
+                          onClick={exportCSVForEachAccount}
+                          className="flex items-center justify-center px-6 py-3 rounded-lg text-white font-semibold transition duration-300 transform hover:scale-105 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+                        >
+                          <HiPlusCircle className="mr-3 text-2xl" /> {/* Adjust icon size here */}
+                          Create New Trade Data Signals
+                        </Button>
+                      </>
+                    )}
+                  </div>
+
+
+                  
               </>
           )}
         </>
