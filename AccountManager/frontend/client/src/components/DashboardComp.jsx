@@ -33,6 +33,7 @@ export default function DashboardComp() {
     PA3: 0,
     PA4: 0,
   });
+  const [createdDateTime, setCreatedDateTime] = useState("");
 
   const formattedTodayDate = useRealTimeDate();
   
@@ -66,6 +67,13 @@ export default function DashboardComp() {
         );
 
         setCombinedData(mergedData);
+        // Check if mergedData is not empty and set createdDateTime from the first item's createdAt
+        if (mergedData.length > 0) {
+          setCreatedDateTime(mergedData[0].createdAt);
+        } else {
+          // Handle the case when mergedData is empty, if needed
+          setCreatedDateTime(null); // or set it to a default value
+        }
         setLoading(false);
 
         // Initialize PA account statistics
@@ -150,6 +158,10 @@ export default function DashboardComp() {
     fetchData();
   }, [BaseURL, currentUser]);
 
+  const formattedDateTime = createdDateTime
+    ? new Date(createdDateTime).toLocaleString()
+    : "";
+
   // Calculate unique accounts from filteredData
   const uniqueAccountsInFilteredData = new Set(
     combinedData.map((item) => `${item.accountNumber} (${item.name})`)
@@ -178,6 +190,7 @@ export default function DashboardComp() {
         </Breadcrumb.Item>
         <Breadcrumb.Item></Breadcrumb.Item>
       </Breadcrumb>
+      
       <div className="text-center mt-4">
       <div className="text-2xl">
           Welcome, {currentUser.user.FirstName} {currentUser.user.LastName}!
@@ -302,15 +315,22 @@ export default function DashboardComp() {
                   <div className="flex flex-col md:flex-row justify-center items-center md:space-x-4">
                     {/* Table Section */}
                     <div className="w-full md:w-1/2 p-3 mt-5">
+                      <p className="mt-3 mb-3 text-left text-m flex justify-center items-center">
+                        <span>
+                          Last Updated:{" "}
+                          {formattedDateTime && `(${formattedDateTime})`}
+                        </span>
+                      </p>
                       <Table hoverable className="shadow-md w-full">
                         <TableHead>
                           <TableHeadCell>#</TableHeadCell>
                           <TableHeadCell>User Name</TableHeadCell>
                           <TableHeadCell>EVAL</TableHeadCell>
                           <TableHeadCell>PA</TableHeadCell>
-                          <TableHeadCell>Eval Admin Only</TableHeadCell>
-                          <TableHeadCell>PA Admin Only</TableHeadCell>
-                          <TableHeadCell>Total</TableHeadCell>
+                          <TableHeadCell>Admin Only</TableHeadCell>
+                          <TableHeadCell><b>Total</b></TableHeadCell>
+                          <TableHeadCell>EVAL to PA</TableHeadCell>
+                          <TableHeadCell>PO</TableHeadCell>
                         </TableHead>
                         <TableBody>
                           {userStats.map((user, index) => (
@@ -319,9 +339,10 @@ export default function DashboardComp() {
                               <TableCell>{user.userName}</TableCell>
                               <TableCell>{user.evalActive}</TableCell>
                               <TableCell>{user.paActive}</TableCell>
-                              <TableCell>{user.evalAdminOnly}</TableCell>
-                              <TableCell>{user.paAdminOnly}</TableCell>
-                              <TableCell>{user.totalAccounts}</TableCell>
+                              <TableCell>{user.evalAdminOnly + user.paAdminOnly}</TableCell>
+                              <TableCell><b>{user.totalAccounts}</b></TableCell>
+                              <TableCell>Pending</TableCell>
+                              <TableCell>Pending</TableCell>
                             </TableRow>
                           ))}
                         </TableBody>
