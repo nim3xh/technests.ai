@@ -429,6 +429,7 @@ export default function DashTradingComp() {
         return;
       } else {
         const tableData = createTableDataForOneAccount();
+        // console.log('user data: ',selectedAccounts[0].replace(/APEX-/, "").split(" ")[0]);
 
         const tableHeaders = [
             `Trade (${selectedAccounts[0].replace(/APEX-/, "").split(" ")[0]})`,
@@ -511,14 +512,15 @@ export default function DashTradingComp() {
   };
 
   const handleAccountSelection = (account) => {
+    // If the account is already selected, unselect it (clear selection)
     if (selectedAccounts.includes(account)) {
-      setSelectedAccounts(selectedAccounts.filter((acc) => acc !== account));
+      setSelectedAccounts([]); // Clear selection
     } else {
-      setSelectedAccounts([...selectedAccounts, account]);
+      // If not selected, select the new account and clear any previous selection
+      setSelectedAccounts([account]); // Replace previous selection with the new account
     }
   };
   
-
   return (
     <div className="p-3 w-full">
       <Breadcrumb aria-label="Default breadcrumb example">
@@ -669,20 +671,22 @@ export default function DashTradingComp() {
                       </label>
                     </div>
                     <div>
-                    <Dropdown
+                      <Dropdown
                         label={
                           selectedAccounts.length > 0
-                            ? selectedAccounts
-                                .map((account) => account.replace(/APEX-/, "")) // Remove "APEX-"
+                            ? selectedAccounts.map((account) => account.replace(/APEX-/, "")) // Remove "APEX-"
                                 .join(", ")
                             : "Select User"
                         }
                         className="w-full text-left dark:bg-gray-800 dark:text-gray-200"
                         inline
                       >
+                        {/* Clear Selection option */}
                         <Dropdown.Item onClick={() => setSelectedAccounts([])}>
                           Clear Selection
                         </Dropdown.Item>
+
+                        {/* Iterate over uniqueAccountNumbers and allow only one selection */}
                         {uniqueAccountNumbers.map((account) => (
                           <Dropdown.Item
                             key={account}
@@ -714,32 +718,41 @@ export default function DashTradingComp() {
                   </div>
                   <div className="flex flex-col md:flex-row justify-center items-center md:space-x-4">
                   <Table hoverable className="shadow-md w-full">
-                    <TableHead>
-                      <TableHeadCell>#</TableHeadCell>
-                      <TableHeadCell>File Name</TableHeadCell>
-                      <TableHeadCell>Creation Time</TableHeadCell>
-                    </TableHead>
-                    <TableBody>
-                      {Array.isArray(fileCreationData) ? (
-                        fileCreationData
-                          .filter(file => 
-                            /(_PA|_EVAL|_Trades)/.test(file.fileName) // Match specific file names
-                          )
-                          .map((file, index) => (
-                            <TableRow key={index}>
-                              <TableCell>{index + 1}</TableCell>
-                              <TableCell>{file.fileName}</TableCell>
-                              <TableCell>{new Date(file.createdAt).toLocaleString()}</TableCell> {/* Format the creation time */}
+                      <TableHead>
+                        <TableHeadCell>#</TableHeadCell>
+                        <TableHeadCell>File Name</TableHeadCell>
+                        <TableHeadCell>Creation Time</TableHeadCell>
+                      </TableHead>
+                      <TableBody>
+                          {Array.isArray(fileCreationData) ? (
+                            fileCreationData
+                              .filter(file => {
+                                // Ensure selectedAccounts is defined and not null
+                                const userNumber = selectedAccounts?.[0]?.replace(/APEX-/, "").split(" ")[0];
+                                
+                                // If userNumber is available and file matches the pattern
+                                if (userNumber) {
+                                  const fileNumber = file.fileName.match(/\d+/)?.[0]; // Extract the first number from the file name
+                                  return /(_PA|_EVAL|_Trades)/.test(file.fileName) && fileNumber === userNumber;
+                                }
+                                
+                                // If selectedAccounts is null or userNumber is not found, show all files matching the pattern
+                                return /(_PA|_EVAL|_Trades)/.test(file.fileName);
+                              })
+                              .map((file, index) => (
+                                <TableRow key={index}>
+                                  <TableCell>{index + 1}</TableCell>
+                                  <TableCell>{file.fileName}</TableCell>
+                                  <TableCell>{new Date(file.createdAt).toLocaleString()}</TableCell> {/* Format the creation time */}
+                                </TableRow>
+                              ))
+                          ) : (
+                            <TableRow>
+                              <TableCell colSpan="3">No data available</TableCell>
                             </TableRow>
-                          ))
-                      ) : (
-                        <TableRow>
-                          <TableCell colSpan="3">No data available</TableCell>
-                        </TableRow>
-                      )}
-                    </TableBody>
-                  </Table>
-      
+                          )}
+                        </TableBody>
+                    </Table>
                   </div>    
               </>
           )}
