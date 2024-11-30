@@ -634,20 +634,25 @@ export default function DashTradingComp() {
                     </TableHead>
                     <TableBody>
                       {Array.isArray(fileCreationData) ? (
-                        fileCreationData.map((file, index) => (
-                          <TableRow key={index}>
-                            <TableCell>{index + 1}</TableCell>
-                            <TableCell>{file.fileName}</TableCell>
-                            <TableCell>{new Date(file.createdAt).toLocaleString()}</TableCell> {/* Format the creation time */}
-                          </TableRow>
-                        ))
+                        fileCreationData
+                          .filter(file => 
+                            /(_PA|_EVAL|_Trades)/.test(file.fileName) // Match specific file names
+                          )
+                          .map((file, index) => (
+                            <TableRow key={index}>
+                              <TableCell>{index + 1}</TableCell>
+                              <TableCell>{file.fileName}</TableCell>
+                              <TableCell>{new Date(file.createdAt).toLocaleString()}</TableCell> {/* Format the creation time */}
+                            </TableRow>
+                          ))
                       ) : (
                         <TableRow>
                           <TableCell colSpan="3">No data available</TableCell>
                         </TableRow>
                       )}
                     </TableBody>
-                  </Table>          
+                  </Table>
+      
                   </div>    
               </>
           )}
