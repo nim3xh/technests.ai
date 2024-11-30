@@ -291,7 +291,7 @@ export default function DashTrades() {
         </Breadcrumb.Item>
         <Breadcrumb.Item>Trades</Breadcrumb.Item>
       </Breadcrumb>
-      <p className="text-lg font-semibold text-gray-600">{formattedTodayDate}</p> 
+      <p className="text-lg font-semibold text-gray-600 dark:text-white">{formattedTodayDate}</p> 
       <div className="flex items-center justify-between mb-3">
           <h1 className="mt-3 mb-3 text-left font-semibold text-xl">
             All Trades

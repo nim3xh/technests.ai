@@ -32,7 +32,7 @@ export default function DashTradeMonitor() {
       <h1 className="mt-3 mb-3 text-left font-semibold text-xl">
       Trade Monitor
       </h1>
-      <p className="text-lg font-semibold text-gray-600">{formattedTodayDate}</p> {/* Display the formatted date */}
+      <p className="text-lg font-semibold text-gray-600 dark:text-white">{formattedTodayDate}</p> {/* Display the formatted date */}
       {/* Under Development Section */}
       <div className="text-center my-8">
         <div className="bg-yellow-100 p-8 rounded-lg">
