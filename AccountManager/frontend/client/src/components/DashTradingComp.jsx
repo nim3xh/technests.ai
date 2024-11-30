@@ -530,7 +530,7 @@ export default function DashTradingComp() {
         <Breadcrumb.Item>Trade</Breadcrumb.Item>
       </Breadcrumb>
     
-      <p className="text-lg font-semibold text-gray-600">{formattedTodayDate}</p> 
+      <p className="text-lg font-semibold text-gray-600 dark:text-white">{formattedTodayDate}</p> 
       <div className="flex items-center justify-between mb-3">
       </div>
 

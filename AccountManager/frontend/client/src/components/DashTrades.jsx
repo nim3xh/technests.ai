@@ -67,7 +67,7 @@ export default function DashTrades() {
 
   const filteredTrades = selectedApexId
   ? tradesData.filter(
-      (trade) => Number(trade.ApexId) === Number(selectedApexId)
+      (trade) => Number(trade.ApexId) === Number(selectedApexId.split(" ")[0])
     )
   : tradesData;
 
@@ -291,7 +291,7 @@ export default function DashTrades() {
         </Breadcrumb.Item>
         <Breadcrumb.Item>Trades</Breadcrumb.Item>
       </Breadcrumb>
-      <p className="text-lg font-semibold text-gray-600">{formattedTodayDate}</p> 
+      <p className="text-lg font-semibold text-gray-600 dark:text-white">{formattedTodayDate}</p> 
       <div className="flex items-center justify-between mb-3">
           <h1 className="mt-3 mb-3 text-left font-semibold text-xl">
             All Trades
@@ -312,7 +312,7 @@ export default function DashTrades() {
                   key={account}
                   onClick={() => {
                     const extractedAccountNumber = account.replace(/APEX-/, "");
-                    setSelectedApexId(extractedAccountNumber.split(" ")[0]);
+                    setSelectedApexId(extractedAccountNumber);
                   }}
                 >
                   {account.replace(/APEX-/, "")} {/* Display without "APEX-" */}
@@ -332,7 +332,7 @@ export default function DashTrades() {
                     <span className="pl-3">Loading...</span>
                   </>
                 ) : (
-                  <>Upload CSV</>
+                  <>Upload New Configuration</>
                 )}
               </Button>
             )}

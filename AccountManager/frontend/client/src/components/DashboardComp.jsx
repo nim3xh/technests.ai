@@ -9,6 +9,7 @@ import {
   TableHeadCell,
   TableRow,
   Spinner,
+  Tooltip,
   Breadcrumb,
 } from "flowbite-react";
 import { MdAccountBalance, MdPerson, MdTableRows } from "react-icons/md";
@@ -195,7 +196,7 @@ export default function DashboardComp() {
       <div className="text-2xl">
           Welcome, {currentUser.user.FirstName} {currentUser.user.LastName}!
         </div>
-      <p className="text-lg font-semibold text-gray-600">{formattedTodayDate}</p> 
+      <p className="text-lg font-semibold text-gray-600 dark:text-white">{formattedTodayDate}</p> 
       </div>
       
       {currentUser.user.role !== "user" && (
@@ -217,7 +218,7 @@ export default function DashboardComp() {
                           </h3>
                           <p className="text-2xl">{totalUniqueAccountsDisplayed}</p>
                         </div>
-                        <MdPerson className="bg-teal-600  text-white rounded-full text-5xl p-3 shadow-lg" />
+                        {/* <MdPerson className="bg-teal-600  text-white rounded-full text-5xl p-3 shadow-lg" /> */}
                       </div>
                     </div>
 
@@ -234,67 +235,75 @@ export default function DashboardComp() {
                             )}
                           </p>
                         </div>
-                        <MdTableRows className="bg-teal-600 text-white rounded-full text-5xl p-3 shadow-lg" />
+                        {/* <MdTableRows className="bg-teal-600 text-white rounded-full text-5xl p-3 shadow-lg" /> */}
                       </div>
                     </div>
 
-                    <div className="flex flex-col p-3 dark:bg-slate-800 gap-4 md:w-40 w-full rounded-md shadow-md">
-                      <div className="flex justify-between">
-                        <div>
-                          <h3 className="text-gray-500 text-md uppercase">
-                            PA1
-                          </h3>
-                          <p className="text-2xl">
-                            {paStats.PA1}
-                          </p>
+                    <Tooltip content="Balance Range: $47,500 - $53,200">
+                      <div className="flex flex-col p-3 dark:bg-slate-800 gap-4 md:w-40 w-full rounded-md shadow-md">
+                        <div className="flex justify-between">
+                          <div>
+                            <h3 className="text-gray-500 text-md uppercase">
+                              PA1
+                            </h3>
+                            <p className="text-2xl">
+                              {paStats.PA1}
+                            </p>
+                          </div>
+                          {/* <MdAccountBalance className="bg-teal-600 text-white rounded-full text-5xl p-3 shadow-lg" /> */}
                         </div>
-                        <MdAccountBalance className="bg-teal-600 text-white rounded-full text-5xl p-3 shadow-lg" />
                       </div>
-                    </div>
-
-                    <div className="flex flex-col p-3 dark:bg-slate-800 gap-4 md:w-40 w-full rounded-md shadow-md">
-                      <div className="flex justify-between">
-                        <div>
-                          <h3 className="text-gray-500 text-md uppercase">
-                            PA2
-                          </h3>
-                          <p className="text-2xl">
-                            {paStats.PA2}
-                          </p>
+                    </Tooltip>
+                    <Tooltip content="Balance Range: $53,201 - $55,800">
+                      <div className="flex flex-col p-3 dark:bg-slate-800 gap-4 md:w-40 w-full rounded-md shadow-md">
+                        <div className="flex justify-between">
+                          <div>
+                            <h3 className="text-gray-500 text-md uppercase">
+                              PA2
+                            </h3>
+                            <p className="text-2xl">
+                              {paStats.PA2}
+                            </p>
+                          </div>
+                          {/* <MdAccountBalance className="bg-teal-600 text-white rounded-full text-5xl p-3 shadow-lg" /> */}
                         </div>
-                        <MdAccountBalance className="bg-teal-600 text-white rounded-full text-5xl p-3 shadow-lg" />
                       </div>
-                    </div>
+                    </Tooltip>
                     
-                    <div className="flex flex-col p-3 dark:bg-slate-800 gap-4 md:w-40 w-full rounded-md shadow-md">
-                      <div className="flex justify-between">
-                        <div>
-                          <h3 className="text-gray-500 text-md uppercase">
-                            PA3
-                          </h3>
-                          <p className="text-2xl">
-                            {paStats.PA3}
-                          </p>
+                    <Tooltip content="Balance Range: $55,801 - $58,000">
+                      <div className="flex flex-col p-3 dark:bg-slate-800 gap-4 md:w-40 w-full rounded-md shadow-md" title="Balance Range: 58,001 - 60,600">
+                        <div className="flex justify-between">
+                          <div>
+                            <h3 className="text-gray-500 text-md uppercase">
+                              PA3
+                            </h3>
+                            <p className="text-2xl">
+                              {paStats.PA3}
+                            </p>
+                          </div>
+                          {/* <MdAccountBalance className="bg-teal-600 text-white rounded-full text-5xl p-3 shadow-lg" /> */}
                         </div>
-                        <MdAccountBalance className="bg-teal-600 text-white rounded-full text-5xl p-3 shadow-lg" />
                       </div>
-                    </div>
+                    </Tooltip>
+                      
+                    <Tooltip content="Balance Range: $58,001 - $60,600">
+                      <div className="flex flex-col p-3 dark:bg-slate-800 gap-4 md:w-40 w-full rounded-md shadow-md" title="Balance Range: 58,001 - 60,600">
+                        <div className="flex justify-between">
+                          <div title="Balance Range: 58,001 - 60,600">
+                            <h3 className="text-gray-500 text-md uppercase">
+                              PA4
+                            </h3>
+                            <p className="text-2xl">
+                              {paStats.PA4}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </Tooltip>
                     
-                    <div className="flex flex-col p-3 dark:bg-slate-800 gap-4 md:w-40 w-full rounded-md shadow-md">
-                      <div className="flex justify-between">
-                        <div>
-                          <h3 className="text-gray-500 text-md uppercase">
-                            PA4
-                          </h3>
-                          <p className="text-2xl">
-                            {paStats.PA4}
-                          </p>
-                        </div>
-                        <MdAccountBalance className="bg-teal-600 text-white rounded-full text-5xl p-3 shadow-lg" />
-                      </div>
-                    </div>
 
-                    <div className="flex flex-col p-3 dark:bg-slate-800 gap-4 md:w-60 w-full rounded-md shadow-md">
+
+                    {/* <div className="flex flex-col p-3 dark:bg-slate-800 gap-4 md:w-60 w-full rounded-md shadow-md">
                       <div className="flex justify-between">
                         <div>
                           <h3 className="text-gray-500 text-md uppercase">
@@ -309,18 +318,20 @@ export default function DashboardComp() {
                         </div>
                         <CiMemoPad className="bg-teal-600 text-white rounded-full text-5xl p-3 shadow-lg" />
                       </div>
-                    </div>
+                    </div> */}
                   </div>
 
                   <div className="flex flex-col md:flex-row justify-center items-center md:space-x-4">
                     {/* Table Section */}
                     <div className="w-full md:w-1/2 p-3 mt-5">
-                      <p className="mt-3 mb-3 text-left text-m flex justify-center items-center">
-                        <span>
-                          Last Updated:{" "}
-                          {formattedDateTime && `(${formattedDateTime})`}
+                    <div className="w-full flex justify-between items-center mb-3">
+                      <p className="text-left text-sm md:text-base text-gray-700 dark:text-white">
+                        Last Updated: 
+                        <span className="font-medium text-gray-600 dark:text-white">
+                          {formattedDateTime ? `(${formattedDateTime})` : 'N/A'}
                         </span>
                       </p>
+                    </div>
                       <Table hoverable className="shadow-md w-full">
                         <TableHead>
                           <TableHeadCell>#</TableHeadCell>

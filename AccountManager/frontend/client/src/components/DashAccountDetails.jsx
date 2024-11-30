@@ -442,13 +442,12 @@ export default function DashAccountDetails() {
     };
   }, [runningTrades]);
 
+  const [selectedAccount, setSelectedAccount] = useState(null);
+
   const handleAccountSelection = (account) => {
-    if (selectedAccounts.includes(account)) {
-      setSelectedAccounts(selectedAccounts.filter((acc) => acc !== account));
-    } else {
-      setSelectedAccounts([...selectedAccounts, account]);
-    }
+    setSelectedAccount(account);
   };
+  
 
   const handleCompare = () => {
     // Check if exactly two accounts are selected
@@ -563,7 +562,7 @@ export default function DashAccountDetails() {
           All Account Details | Updated At:{" "}
           {formattedDateTime && `(${formattedDateTime})`}
         </span>
-        <p className="text-lg font-semibold text-gray-600">
+        <p className="text-lg font-semibold text-gray-600 dark:text-white">
           {formattedTodayDate}
         </p>
       </h1>
@@ -584,7 +583,7 @@ export default function DashAccountDetails() {
                   <h3 className="text-gray-500 text-md uppercase">Total Rows</h3>
                   <p className="text-2xl">{totalRows}</p>
                 </div>
-                <MdTableRows className="bg-teal-600 text-white rounded-full text-5xl p-3 shadow-lg" />
+                {/* <MdTableRows className="bg-teal-600 text-white rounded-full text-5xl p-3 shadow-lg" /> */}
               </div>
             </div>
             {/* Total Users Displayed */}
@@ -594,7 +593,7 @@ export default function DashAccountDetails() {
                   <h3 className="text-gray-500 text-md uppercase">Users</h3>
                   <p className="text-2xl">{totalUniqueAccountsDisplayed}</p>
                 </div>
-                <MdPerson className="bg-teal-600 text-white rounded-full text-5xl p-3 shadow-lg" />
+                {/* <MdPerson className="bg-teal-600 text-white rounded-full text-5xl p-3 shadow-lg" /> */}
               </div>
             </div>
             {/* Total PA Account Rows */}
@@ -604,7 +603,7 @@ export default function DashAccountDetails() {
                   <h3 className="text-gray-500 text-md uppercase">PA Accounts</h3>
                   <p className="text-2xl">{paAccountsCount}</p>
                 </div>
-                <MdAccountBalance className="bg-teal-600 text-white rounded-full text-5xl p-3 shadow-lg" />
+                {/* <MdAccountBalance className="bg-teal-600 text-white rounded-full text-5xl p-3 shadow-lg" /> */}
               </div>
             </div>
             {/* Total Eval Account Rows */}
@@ -616,36 +615,34 @@ export default function DashAccountDetails() {
                     {nonPaAccountsCount}
                   </p>
                 </div>
-                <MdTableRows className="bg-teal-600 text-white rounded-full text-5xl p-3 shadow-lg" />
+                {/* <MdTableRows className="bg-teal-600 text-white rounded-full text-5xl p-3 shadow-lg" /> */}
               </div>
             </div>
           </div>
 
           <div className="flex flex-col md:flex-row justify-center items-center md:space-x-4 mt-4">
-              <Dropdown
-                label={
-                  selectedAccounts.length > 0
-                    ? selectedAccounts
-                        .map((account) => account.replace(/APEX-/, "")) // Remove "APEX-"
-                        .join(", ")
-                    : "Select User"
-                }
-                className="w-full text-left dark:bg-gray-800 dark:text-gray-200"
-                inline
-              >
-                <Dropdown.Item onClick={() => setSelectedAccounts([])}>
-                  Clear Selection
+            <Dropdown
+              label={
+                selectedAccount
+                  ? selectedAccount.replace(/APEX-/, "") // Remove "APEX-"
+                  : "Select User"
+              }
+              className="w-full text-left dark:bg-gray-800 dark:text-gray-200"
+              inline
+            >
+              <Dropdown.Item onClick={() => setSelectedAccount(null)}>
+                Clear Selection
+              </Dropdown.Item>
+              {uniqueAccountNumbers.map((account) => (
+                <Dropdown.Item
+                  key={account}
+                  onClick={() => handleAccountSelection(account)}
+                >
+                  {selectedAccount === account ? "✓ " : ""}{" "}
+                  {account.replace(/APEX-/, "")} {/* Display without "APEX-" */}
                 </Dropdown.Item>
-                {uniqueAccountNumbers.map((account) => (
-                  <Dropdown.Item
-                    key={account}
-                    onClick={() => handleAccountSelection(account)}
-                  >
-                    {selectedAccounts.includes(account) ? "✓ " : ""}{" "}
-                    {account.replace(/APEX-/, "")} {/* Display without "APEX-" */}
-                  </Dropdown.Item>
-                ))}
-              </Dropdown>
+              ))}
+            </Dropdown>
 
               <Dropdown
                 label={selectedProcessRange || "Select Range"}
