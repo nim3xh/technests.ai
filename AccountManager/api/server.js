@@ -10,25 +10,7 @@ const multer = require("multer");
 const upload = multer({ dest: "uploads/" });
 const deleteDashboards = require("./delete-dashboards");
 
-// Helper function to get the current formatted time
-const getFormattedTime = () => {
-  const now = new Date();
-  const formattedDate = new Intl.DateTimeFormat("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  }).format(now);
 
-  const formattedTime = new Intl.DateTimeFormat("en-US", {
-    hour: "numeric",
-    minute: "numeric",
-    second: "numeric",
-    hour12: true,
-  }).format(now);
-
-  // Return formatted date and time separately
-  return `${formattedDate} ${formattedTime}`; // This should return a string like "November 30, 2024 12:48 PM"
-};
 
 // Function to recursively get all CSV files in the directory and its subdirectories
 const getCsvFiles = (directory) => {
@@ -165,64 +147,6 @@ const uploadFile = (file, apexid) => {
     });
   });
 };
-
-app.get('/file-creation-time', async (req, res) => {
-  try {
-    const dashboardsPath = path.join(__dirname, 'dashboards'); // Root folder
-
-    if (!fs.existsSync(dashboardsPath)) {
-      return res.status(404).send("Dashboards folder not found.");
-    }
-
-    // Get all subdirectories (i.e., apexid folders) inside the 'dashboards' folder
-    const apexidFolders = fs.readdirSync(dashboardsPath).filter((item) =>
-      fs.statSync(path.join(dashboardsPath, item)).isDirectory()
-    );
-
-    if (apexidFolders.length === 0) {
-      return res.status(404).send("No apexid folders found.");
-    }
-
-    const allFileDetails = [];
-
-    // Loop through each apexid folder to gather file creation times
-    for (const apexid of apexidFolders) {
-      const folderPath = path.join(dashboardsPath, apexid);
-
-      // Get all files in the folder
-      const files = fs.readdirSync(folderPath);
-
-      for (const file of files) {
-        const filePath = path.join(folderPath, file);
-        const stats = fs.statSync(filePath);
-
-        // Add file details with creation time
-        allFileDetails.push({
-          apexid: apexid,
-          fileName: file,
-          createdAt: stats.birthtime.toISOString(), // Format creation time to ISO string
-        });
-      }
-    }
-
-    if (allFileDetails.length === 0) {
-      return res.status(404).send("No files found in any apexid folder.");
-    }
-
-    res.status(200).json(allFileDetails); // Send all file details in the response
-
-  } catch (error) {
-    console.error('Error fetching file creation times:', error);
-    res.status(500).send('Failed to retrieve file creation times.');
-  }
-});
-
-
-// Endpoint to return the current time
-app.get('/current-time', (req, res) => {
-  const time = getFormattedTime();
-  res.json({ time });
-});
 
 
 app.post("/upload-trade", upload.single("csvFile"), async (req, res) => {
