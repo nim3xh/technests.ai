@@ -628,7 +628,7 @@ export default function DashAccountDetails() {
                     ? selectedAccounts
                         .map((account) => account.replace(/APEX-/, "")) // Remove "APEX-"
                         .join(", ")
-                    : "Select Apex ID"
+                    : "Select User"
                 }
                 className="w-full text-left dark:bg-gray-800 dark:text-gray-200"
                 inline

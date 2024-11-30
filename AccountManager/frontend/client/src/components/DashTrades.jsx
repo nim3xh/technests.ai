@@ -300,7 +300,7 @@ export default function DashTrades() {
           <div className="flex items-center justify-start mb-4">
             
             <Dropdown
-              label={selectedApexId || "Select Apex ID"}
+              label={selectedApexId || "Select User"}
               className="ml-2"
               inline
             >
@@ -570,7 +570,7 @@ export default function DashTrades() {
             <div>
               <Label htmlFor="apexAccountNumber" value="Apex Account Number" />
               <Dropdown
-                label={newTrade.ApexId || "Select Apex ID"}
+                label={newTrade.ApexId || "Select User"}
                 className="w-full text-left dark:bg-gray-800 dark:text-gray-200"
                 inline
               >

@@ -314,7 +314,7 @@ export default function DashUsers() {
             <div>
               <Label htmlFor="apexAccountNumber" value="Apex Account Number" />
               <Dropdown
-                label={newUser.apexAccountNumber || "Select Apex ID"}
+                label={newUser.apexAccountNumber || "Select User"}
                 className="w-full text-left dark:bg-gray-800 dark:text-gray-200"
                 inline
               >
@@ -414,7 +414,7 @@ export default function DashUsers() {
                 label={
                   editUserDetails.ApexAccountNumber
                     ? editUserDetails.ApexAccountNumber.replace(/APEX-/, "") // Display without "APEX-"
-                    : "Select Apex ID"
+                    : "Select User"
                 }
                 className="w-full text-left dark:bg-gray-800 dark:text-gray-200"
                 inline

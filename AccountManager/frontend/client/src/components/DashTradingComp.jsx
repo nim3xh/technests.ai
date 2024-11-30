@@ -456,6 +456,14 @@ export default function DashTradingComp() {
       return prevFilters;
     });
   };
+
+  const handleAccountSelection = (account) => {
+    if (selectedAccounts.includes(account)) {
+      setSelectedAccounts(selectedAccounts.filter((acc) => acc !== account));
+    } else {
+      setSelectedAccounts([...selectedAccounts, account]);
+    }
+  };
   
 
   return (
@@ -606,6 +614,32 @@ export default function DashTradingComp() {
                       <label htmlFor="pa" className="ml-2 text-sm font-medium">
                         PA Only
                       </label>
+                    </div>
+                    <div>
+                    <Dropdown
+                        label={
+                          selectedAccounts.length > 0
+                            ? selectedAccounts
+                                .map((account) => account.replace(/APEX-/, "")) // Remove "APEX-"
+                                .join(", ")
+                            : "Select User"
+                        }
+                        className="w-full text-left dark:bg-gray-800 dark:text-gray-200"
+                        inline
+                      >
+                        <Dropdown.Item onClick={() => setSelectedAccounts([])}>
+                          Clear Selection
+                        </Dropdown.Item>
+                        {uniqueAccountNumbers.map((account) => (
+                          <Dropdown.Item
+                            key={account}
+                            onClick={() => handleAccountSelection(account)}
+                          >
+                            {selectedAccounts.includes(account) ? "✓ " : ""}{" "}
+                            {account.replace(/APEX-/, "")} {/* Display without "APEX-" */}
+                          </Dropdown.Item>
+                        ))}
+                      </Dropdown>
                     </div>
                   </div>
 
