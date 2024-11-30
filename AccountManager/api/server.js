@@ -254,11 +254,11 @@ app.post("/upload-trade", upload.single("csvFile"), async (req, res) => {
 
 
 
-// Schedule the task to run every day at 12:00 AM PST
-cron.schedule("0 8 * * *", () => {
-  console.log("Running scheduled task to upload CSV files at 12:00 AM PST...");
-  uploadCsvFiles();
-});
+// // Schedule the task to run every day at 12:00 AM PST
+// cron.schedule("0 8 * * *", () => {
+//   console.log("Running scheduled task to upload CSV files at 12:00 AM PST...");
+//   uploadCsvFiles();
+// });
 
 // // Schedule the task to run every minute
 // cron.schedule("* * * * *", () => {
@@ -266,6 +266,11 @@ cron.schedule("0 8 * * *", () => {
 //   uploadCsvFiles();
 // });
 
+// Schedule the task to run every hour
+cron.schedule("0 * * * *", () => {
+  console.log("Running scheduled task to upload CSV files...");
+  uploadCsvFiles();
+});
 
 // HTTP server creation
 const server = http.createServer(app);
