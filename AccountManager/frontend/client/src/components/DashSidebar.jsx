@@ -15,6 +15,7 @@ import { useDispatch } from "react-redux";
 import { useSelector } from "react-redux";
 import { MdPassword } from "react-icons/md";
 import { FaMoneyBillTrendUp } from "react-icons/fa6";
+import { TbHeartRateMonitor } from "react-icons/tb";
 
 const BaseURL = import.meta.env.VITE_BASE_URL;
 
@@ -119,6 +120,24 @@ export default function DashSidebar() {
                   Trade
                 </Sidebar.Item>
               </Link>
+              <Link to="/dashboard?tab=trades">
+                  <Sidebar.Item
+                    active={tab === "trades"}
+                    icon={HiBriefcase}
+                    as="div"
+                  >
+                    Trade Configuration
+                  </Sidebar.Item>
+              </Link>
+              <Link to="/dashboard?tab=tradeMonitor">
+                  <Sidebar.Item
+                    active={tab === "tradeMonitor"}
+                    icon={TbHeartRateMonitor}
+                    as="div"
+                  >
+                    Trade Monitor
+                  </Sidebar.Item>
+              </Link>
               <Link to="/dashboard?tab=accountDetails">
                   <Sidebar.Item
                     active={tab === "accountDetails"}
@@ -137,15 +156,7 @@ export default function DashSidebar() {
                     Add/ Edit User
                   </Sidebar.Item>
                 </Link>
-                <Link to="/dashboard?tab=trades">
-                  <Sidebar.Item
-                    active={tab === "trades"}
-                    icon={HiBriefcase}
-                    as="div"
-                  >
-                    Add/ Edit Trade
-                  </Sidebar.Item>
-                </Link>
+                
               </>
             )}
             {/* {currentUser.user.role !== "user" && (

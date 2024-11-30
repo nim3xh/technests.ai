@@ -93,13 +93,16 @@ app.get('/file-creation-time', async (req, res) => {
   }
 });
 
-// Helper function to get the current formatted time
+const timeZone = 'America/Los_Angeles'; // Pacific Standard Time (PST)
+
 const getFormattedTime = () => {
   const now = new Date();
+  
   const formattedDate = new Intl.DateTimeFormat("en-US", {
     year: "numeric",
     month: "long",
     day: "numeric",
+    timeZone, // Set to America/Los_Angeles
   }).format(now);
 
   const formattedTime = new Intl.DateTimeFormat("en-US", {
@@ -107,10 +110,11 @@ const getFormattedTime = () => {
     minute: "numeric",
     second: "numeric",
     hour12: true,
+    timeZone, // Set to America/Los_Angeles
   }).format(now);
 
   // Return formatted date and time separately
-  return `${formattedDate} ${formattedTime}`; // This should return a string like "November 30, 2024 12:48 PM"
+  return `${formattedDate} ${formattedTime}`; 
 };
 
 // Endpoint to return the current time

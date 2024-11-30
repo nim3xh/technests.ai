@@ -67,7 +67,7 @@ export default function DashTrades() {
 
   const filteredTrades = selectedApexId
   ? tradesData.filter(
-      (trade) => Number(trade.ApexId) === Number(selectedApexId)
+      (trade) => Number(trade.ApexId) === Number(selectedApexId.split(" ")[0])
     )
   : tradesData;
 
@@ -312,7 +312,7 @@ export default function DashTrades() {
                   key={account}
                   onClick={() => {
                     const extractedAccountNumber = account.replace(/APEX-/, "");
-                    setSelectedApexId(extractedAccountNumber.split(" ")[0]);
+                    setSelectedApexId(extractedAccountNumber);
                   }}
                 >
                   {account.replace(/APEX-/, "")} {/* Display without "APEX-" */}
@@ -332,7 +332,7 @@ export default function DashTrades() {
                     <span className="pl-3">Loading...</span>
                   </>
                 ) : (
-                  <>Upload CSV</>
+                  <>Upload New Configuration</>
                 )}
               </Button>
             )}

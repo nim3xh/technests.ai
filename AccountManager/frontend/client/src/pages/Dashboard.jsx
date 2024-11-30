@@ -12,6 +12,7 @@ import DashTrades from "../components/DashTrades";
 import DashUserPasswordChange from "../components/DashUserPasswordChange";
 import DashAccountDatailHistoryComp from "../components/DashAccountDatailHistoryComp";
 import DashTradingComp from "../components/DashTradingComp";
+import DashTradeMonitor from "../components/DashTradeMonitor";
 
 export default function Dashboard() {
   const location = useLocation();
@@ -53,7 +54,9 @@ export default function Dashboard() {
       {/* Trades */}
       {tab === "trades" && <DashTrades />}
       {/* Trading */}
-      {tab === "trading" && <DashTradingComp />}
+      {tab === "trading" && <DashTradingComp />}'
+      {/* Trade Monitor */}
+      {tab === "tradeMonitor" && <DashTradeMonitor />}'
     </div>
   );
 }
