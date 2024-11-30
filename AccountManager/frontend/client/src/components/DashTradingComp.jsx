@@ -364,14 +364,14 @@ export default function DashTradingComp() {
               accountTrades.map((item) => item.direction)
           );
 
-          let accountFileName = `${accountString.replace(/APEX-/, "").split(" ")[0]}_trades.csv`;
+          let accountFileName = `${accountString.replace(/APEX-/, "").split(" ")[0]}_Trades.csv`;
 
           if(selectedFilters.PA){
-              accountFileName = `${accountString.replace(/APEX-/, "").split(" ")[0]}_PA_trades.csv`;
+              accountFileName = `${accountString.replace(/APEX-/, "").split(" ")[0]}_PA.csv`;
           }
           
           if(selectedFilters.EVAL){
-              accountFileName = `${accountString.replace(/APEX-/, "").split(" ")[0]}_EVAL_trades.csv`;
+              accountFileName = `${accountString.replace(/APEX-/, "").split(" ")[0]}_EVAL.csv`;
           }
 
           const downloadCSV = (content, filename) => {
