@@ -559,14 +559,14 @@ export default function DashAccountDetails() {
       </Breadcrumb>
 
       <h1 className="mt-3 mb-3 text-left font-semibold text-xl flex justify-between items-center">
-  <span>
-    All Account Details | Updated At:{" "}
-    {formattedDateTime && `(${formattedDateTime})`}
-  </span>
-  <p className="text-lg font-semibold text-gray-600">
-    {formattedTodayDate}
-  </p>
-</h1>
+        <span>
+          All Account Details | Updated At:{" "}
+          {formattedDateTime && `(${formattedDateTime})`}
+        </span>
+        <p className="text-lg font-semibold text-gray-600">
+          {formattedTodayDate}
+        </p>
+      </h1>
 
       {loading ? (
         <div className="flex justify-center items-center h-96">
