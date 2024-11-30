@@ -20,6 +20,34 @@ function uploadFile(req, res) {
         // Counter for auto-generating trade names
         let counter = 1;
 
+        // Define the list of required columns
+        const requiredColumns = ["Instrument", "Quantity", "Stop loss", "Profit", "Use Breakeven", 
+            "Breakeven trigger", "Breakeven Offset", "Use Trail", "Trail Trigger", "Trail", 
+            , "Apex ID", "Direction", "Time"];
+        
+        // Define the list of all columns that are allowed
+        const allowedColumns = new Set([
+            "TradeName", "Instrument", "Quantity", "Stop loss", "Profit", "Use Breakeven", 
+            "Breakeven trigger", "Breakeven Offset", "Use Trail", "Trail Trigger", "Trail", 
+            , "Apex ID", "Direction", "Time"
+        ]);
+
+        // Check if all required columns are present
+        const missingColumns = requiredColumns.filter((col) => !sheetData[0].hasOwnProperty(col));
+        if (missingColumns.length > 0) {
+            return res.status(400).json({
+                message: `Missing required columns: ${missingColumns.join(", ")}`,
+            });
+        }
+
+        // Check if there are any extra columns
+        const extraColumns = Object.keys(sheetData[0]).filter((col) => !allowedColumns.has(col));
+        if (extraColumns.length > 0) {
+            return res.status(400).json({
+                message: `Invalid columns found: ${extraColumns.join(", ")}`,
+            });
+        }
+
         const formattedTrades = sheetData.map((trade) => {
             let timeFormatted;
             try {
@@ -59,7 +87,7 @@ function uploadFile(req, res) {
             .catch((error) => {
                 fs.unlinkSync(filePath); // Delete the file even if there's an error
                 res.status(500).json({
-                    message: "Failed to save trades.",
+                    message: "Error processing file."+error.message,
                     error: error,
                 });
             });

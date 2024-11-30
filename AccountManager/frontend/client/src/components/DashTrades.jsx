@@ -98,7 +98,7 @@ export default function DashTrades() {
         }
       } catch (err) {
         console.error("File upload error:", err.response || err);
-        setError("Something went wrong while uploading the file.");
+        alert("Error: "+ err.response.data.message);
       }
     };
     input.click();
