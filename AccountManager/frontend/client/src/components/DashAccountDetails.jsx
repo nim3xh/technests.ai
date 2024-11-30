@@ -23,6 +23,7 @@ import { useSelector } from "react-redux";
 import { debounce, set } from "lodash";
 import axios from "axios";
 import { CSVLink } from "react-csv";
+import { MdAccountBalance, MdPerson, MdTableRows } from "react-icons/md";
 
 const BaseURL = import.meta.env.VITE_BASE_URL;
 
@@ -48,6 +49,7 @@ export default function DashAccountDetails() {
   const [showSetsData, setShowSetsData] = useState(false); // State to control the visibility of setsData table
   const [tradesData, setTradesData] = useState([]);
   const [selectedAccounts, setSelectedAccounts] = useState([]);
+  const [userStats, setUserStats] = useState([]);
 
   const processRanges = [
     { label: "47000", min: 46750, max: 47249 },
@@ -109,16 +111,16 @@ export default function DashAccountDetails() {
 
         setLoading(false);
 
-        // Count PA and non-PA accounts in one pass
-        let paCount = 0;
-        let nonPaCount = 0;
-        mergedData.forEach((item) => {
-          if (item.account.startsWith("PA")) {
-            paCount++;
-          } else {
-            nonPaCount++;
-          }
-        });
+        // Count PA and non-PA accounts
+        const paCount = mergedData.filter((item) =>
+          item.account.startsWith("PA") && !item.status.startsWith("admin")
+        ).length;
+
+        const nonPaCount = mergedData.filter((item) =>
+          item.account.startsWith("APEX") && !item.status.startsWith("admin")
+        ).length;
+
+        
         setPaAccountsCount(paCount);
         setNonPaAccountsCount(nonPaCount);
       } catch (err) {
@@ -302,9 +304,13 @@ export default function DashAccountDetails() {
 
       // Count PA and non-PA accounts
       const paCount = mergedData.filter((item) =>
-        item.account.startsWith("PA")
+        item.account.startsWith("PA") && !item.status.startsWith("admin")
       ).length;
-      const nonPaCount = mergedData.length - paCount;
+
+      const nonPaCount = mergedData.filter((item) =>
+        item.account.startsWith("APEX") && !item.status.startsWith("admin")
+      ).length;
+
 
       setPaAccountsCount(paCount);
       setNonPaAccountsCount(nonPaCount);
@@ -561,131 +567,159 @@ export default function DashAccountDetails() {
         <div className="text-red-600">{error}</div>
       ) : (
         <>
-          <div className="flex gap-2 justify-start">
-            <div className="flex flex-col p-3 dark:bg-slate-800 gap-4 md:w-56 w-full rounded-md shadow-md">
-              <h4>Total Rows Displayed: {totalRows}</h4>
-            </div>
-            <div className="flex flex-col p-3 dark:bg-slate-800 gap-4 md:w-56 w-full rounded-md shadow-md">
-              <h4>
-                Total Users Displayed: {totalUniqueAccountsDisplayed}
-              </h4>
-            </div>
-            <div className="flex flex-col p-3 dark:bg-slate-800 gap-4 md:w-56 w-full rounded-md shadow-md">
-              <h4>Total PA Account Rows: {paAccountsCount}</h4>
-            </div>
+          <div className="flex-wrap flex gap-4 justify-center mt-4">
+            {/* Total Rows Displayed */}
             <div className="flex flex-col p-3 dark:bg-slate-800 gap-4 md:w-64 w-full rounded-md shadow-md">
-              <h4>Total Eval Account Rows: {nonPaAccountsCount}</h4>
+              <div className="flex justify-between">
+                <div>
+                  <h3 className="text-gray-500 text-md uppercase">Total Rows</h3>
+                  <p className="text-2xl">{totalRows}</p>
+                </div>
+                <MdTableRows className="bg-teal-600 text-white rounded-full text-5xl p-3 shadow-lg" />
+              </div>
+            </div>
+            {/* Total Users Displayed */}
+            <div className="flex flex-col p-3 dark:bg-slate-800 gap-4 md:w-64 w-full rounded-md shadow-md">
+              <div className="flex justify-between">
+                <div>
+                  <h3 className="text-gray-500 text-md uppercase">Users</h3>
+                  <p className="text-2xl">{totalUniqueAccountsDisplayed}</p>
+                </div>
+                <MdPerson className="bg-teal-600 text-white rounded-full text-5xl p-3 shadow-lg" />
+              </div>
+            </div>
+            {/* Total PA Account Rows */}
+            <div className="flex flex-col p-3 dark:bg-slate-800 gap-4 md:w-64 w-full rounded-md shadow-md">
+              <div className="flex justify-between">
+                <div>
+                  <h3 className="text-gray-500 text-md uppercase">PA Accounts</h3>
+                  <p className="text-2xl">{paAccountsCount}</p>
+                </div>
+                <MdAccountBalance className="bg-teal-600 text-white rounded-full text-5xl p-3 shadow-lg" />
+              </div>
+            </div>
+            {/* Total Eval Account Rows */}
+            <div className="flex flex-col p-3 dark:bg-slate-800 gap-4 md:w-64 w-full rounded-md shadow-md">
+              <div className="flex justify-between">
+                <div>
+                  <h3 className="text-gray-500 text-md uppercase">Eval Accounts</h3>
+                  <p className="text-2xl">
+                    {nonPaAccountsCount}
+                  </p>
+                </div>
+                <MdTableRows className="bg-teal-600 text-white rounded-full text-5xl p-3 shadow-lg" />
+              </div>
             </div>
           </div>
 
-          <div className="flex gap-3 justify-between mt-4 overflow-x-auto flex-nowrap">
-          <Dropdown
-              label={
-                selectedAccounts.length > 0
-                  ? selectedAccounts
-                      .map((account) => account.replace(/APEX-/, "")) // Remove "APEX-"
-                      .join(", ")
-                  : "Select Apex ID"
-              }
-              className="w-full text-left dark:bg-gray-800 dark:text-gray-200"
-              inline
-            >
-              <Dropdown.Item onClick={() => setSelectedAccounts([])}>
-                Clear Selection
-              </Dropdown.Item>
-              {uniqueAccountNumbers.map((account) => (
-                <Dropdown.Item
-                  key={account}
-                  onClick={() => handleAccountSelection(account)}
-                >
-                  {selectedAccounts.includes(account) ? "✓ " : ""}{" "}
-                  {account.replace(/APEX-/, "")} {/* Display without "APEX-" */}
+          <div className="flex flex-col md:flex-row justify-center items-center md:space-x-4 mt-4">
+              <Dropdown
+                label={
+                  selectedAccounts.length > 0
+                    ? selectedAccounts
+                        .map((account) => account.replace(/APEX-/, "")) // Remove "APEX-"
+                        .join(", ")
+                    : "Select Apex ID"
+                }
+                className="w-full text-left dark:bg-gray-800 dark:text-gray-200"
+                inline
+              >
+                <Dropdown.Item onClick={() => setSelectedAccounts([])}>
+                  Clear Selection
                 </Dropdown.Item>
-              ))}
-            </Dropdown>
+                {uniqueAccountNumbers.map((account) => (
+                  <Dropdown.Item
+                    key={account}
+                    onClick={() => handleAccountSelection(account)}
+                  >
+                    {selectedAccounts.includes(account) ? "✓ " : ""}{" "}
+                    {account.replace(/APEX-/, "")} {/* Display without "APEX-" */}
+                  </Dropdown.Item>
+                ))}
+              </Dropdown>
 
-            <Dropdown
-              label={selectedProcessRange || "Select Range"}
-              disabled={setsMade}
-              className="w-1/4 dark:bg-gray-800 dark:text-gray-200"
-              inline
-            >
-              <Dropdown.Item onClick={() => setSelectedProcessRange("")}>
-                Select Range
-              </Dropdown.Item>
-              {processRanges.map((range) => (
-                <Dropdown.Item
-                  key={range.label}
-                  onClick={() => setSelectedProcessRange(range.label)}
-                >
-                  {range.label}
+              <Dropdown
+                label={selectedProcessRange || "Select Range"}
+                disabled={setsMade}
+                className="w-1/4 dark:bg-gray-800 dark:text-gray-200"
+                inline
+              >
+                <Dropdown.Item onClick={() => setSelectedProcessRange("")}>
+                  Select Range
                 </Dropdown.Item>
-              ))}
-            </Dropdown>
+                {processRanges.map((range) => (
+                  <Dropdown.Item
+                    key={range.label}
+                    onClick={() => setSelectedProcessRange(range.label)}
+                  >
+                    {range.label}
+                  </Dropdown.Item>
+                ))}
+              </Dropdown>
 
-            <div className="flex gap-3 items-center">
-              {[
-                {
-                  label: "Show Admin Only",
-                  checked: isAdminOnly,
-                  onChange: setIsAdminOnly,
-                  disabled: setsMade || isPAaccount || isEvalAccount,
+              <div className="flex gap-3 items-center">
+                {[
+                  {
+                    label: "PA",
+                    checked: isPAaccount,
+                    onChange: setIsPAaccount,
+                    disabled: setsMade || isAdminOnly || isEvalAccount,
                 },
-                {
-                  label: "Show PA Accounts Only",
-                  checked: isPAaccount,
-                  onChange: setIsPAaccount,
-                  disabled: setsMade || isAdminOnly || isEvalAccount,
-                },
-                {
-                  label: "Show Eval Accounts Only",
-                  checked: isEvalAccount,
-                  onChange: setIsEvalAccount,
-                  disabled: setsMade || isAdminOnly || isPAaccount,
-                },
-              ].map(({ label, checked, onChange, disabled }) => (
-                <label className="flex items-center" key={label}>
-                  <Checkbox
-                    checked={checked}
-                    onChange={(e) => onChange(e.target.checked)}
-                    className="mr-2"
-                    disabled={disabled}
-                  />
-                  {label}
-                </label>
-              ))}
-            </div>
+                  {
+                    label: "Eval",
+                    checked: isEvalAccount,
+                    onChange: setIsEvalAccount,
+                    disabled: setsMade || isAdminOnly || isPAaccount,
+                  },
+                  {
+                    label: "Admin Only",
+                    checked: isAdminOnly,
+                    onChange: setIsAdminOnly,
+                    disabled: setsMade || isPAaccount || isEvalAccount,
+                  },  
+                ].map(({ label, checked, onChange, disabled }) => (
+                  <label className="flex items-center" key={label}>
+                    <Checkbox
+                      checked={checked}
+                      onChange={(e) => onChange(e.target.checked)}
+                      className="mr-2"
+                      disabled={disabled}
+                    />
+                    {label}
+                  </label>
+                ))}
+              </div>
 
-            {currentUser.user.role === "admin" && (
+              {currentUser.user.role === "admin" && (
+                <Button
+                  gradientDuoTone="greenToBlue"
+                  onClick={uploadCsvs}
+                  disabled={createLoding || setsMade}
+                >
+                  {createLoding ? (
+                    <>
+                      <Spinner size="sm" />
+                      <span className="pl-3">Loading...</span>
+                    </>
+                  ) : (
+                    <>Upload CSVs</>
+                  )}
+                </Button>
+              )}
+
+              <CSVLink
+                {...exportCsv()}
+                className="bg-gradient-to-r from-teal-400 via-teal-500 to-teal-600 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-teal-300 text-white rounded-md px-4 py-2"
+              >
+                Export CSV
+              </CSVLink>
               <Button
                 gradientDuoTone="greenToBlue"
-                onClick={uploadCsvs}
-                disabled={createLoding || setsMade}
+                disabled={selectedAccounts.length !== 2}
+                onClick={handleCompare} // Replace with your actual compare function
               >
-                {createLoding ? (
-                  <>
-                    <Spinner size="sm" />
-                    <span className="pl-3">Loading...</span>
-                  </>
-                ) : (
-                  <>Upload CSVs</>
-                )}
+                Compare both accounts
               </Button>
-            )}
-
-            <CSVLink
-              {...exportCsv()}
-              className="bg-gradient-to-r from-teal-400 via-teal-500 to-teal-600 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-teal-300 text-white rounded-md px-4 py-2"
-            >
-              Export CSV
-            </CSVLink>
-            <Button
-              gradientDuoTone="greenToBlue"
-              disabled={selectedAccounts.length !== 2}
-              onClick={handleCompare} // Replace with your actual compare function
-            >
-              Compare both accounts
-            </Button>
           </div>
           {createLoding ? (
             <div className="flex justify-center items-center h-96">
@@ -694,76 +728,55 @@ export default function DashAccountDetails() {
           ) : (
             <>
               <div className="tables-container">
-                {/* Show filteredData table if setsData is not displayed */}
-                {!showSetsData && (
-                  <Table hoverable className="shadow-md w-full mt-4">
-                    <TableHead>
-                      <TableHeadCell>Account</TableHeadCell>
-                      <TableHeadCell>Account Balance</TableHeadCell>
-                      <TableHeadCell>Account Name</TableHeadCell>
-                      <TableHeadCell>Status</TableHeadCell>
-                      <TableHeadCell>Trailing Threshold</TableHeadCell>
-                      <TableHeadCell>PnL</TableHeadCell>
-                    </TableHead>
-                    <TableBody>
-                      {filteredData.length > 0 ? (
-                        filteredData.map((account, index) => {
-                          return (
-                            <TableRow
-                              key={index}
-                            >
-                              <TableCell>
-                                <div className="flex items-center gap-3">
-                                  <Avatar
-                                    size="sm"
-                                    src={account.profilePicture}
-                                    alt={account.name}
-                                  />
-                                  <div>
-                                    <p className="font-semibold">
-                                      {account.account}
-                                    </p>
-                                    <p className="text-xs text-gray-500">
-                                      {account.email}
-                                    </p>
+                  {/* Show filteredData table if setsData is not displayed */}
+                  {!showSetsData && (
+                    <div className="flex flex-col md:flex-row justify-center items-center md:space-x-4">
+                      <Table hoverable className="shadow-md w-full mt-4">
+                        <TableHead>
+                          <TableHeadCell>#</TableHeadCell>
+                          <TableHeadCell>Account</TableHeadCell>
+                          <TableHeadCell>Account Balance</TableHeadCell>
+                          <TableHeadCell>Account Name</TableHeadCell>
+                        </TableHead>
+                        <TableBody>
+                          {filteredData.length > 0 ? (
+                            filteredData.map((account, index) => (
+                              <TableRow key={index}>
+                                <TableCell>{index + 1}</TableCell>
+                                <TableCell>
+                                  <div className="flex items-center gap-3">
+                                    <Avatar
+                                      size="sm"
+                                      src={account.profilePicture}
+                                      alt={account.name}
+                                    />
+                                    <div>
+                                      <p className="font-semibold">{account.account}</p>
+                                      <p className="text-xs text-gray-500">{account.email}</p>
+                                    </div>
                                   </div>
-                                </div>
-                              </TableCell>
-                              <TableCell>
-                                <p className="font-semibold">
-                                  ${account.accountBalance}
-                                </p>
-                              </TableCell>
-                              <TableCell>
-                                <p className="font-semibold">{account.name}</p>
-                              </TableCell>
-                              <TableCell>
-                                <p className="font-semibold">
-                                  {account.status}
-                                </p>
-                              </TableCell>
-                              <TableCell>
-                                <p className="font-semibold">
-                                  ${account.trailingThreshold}
-                                </p>
-                              </TableCell>
-                              <TableCell>
-                                <p className="font-semibold">{account.PnL}</p>
+                                </TableCell>
+                                <TableCell>
+                                  <p className="font-semibold">${account.accountBalance}</p>
+                                </TableCell>
+                                <TableCell>
+                                  <p className="font-semibold">{account.name}</p>
+                                </TableCell>
+                              </TableRow>
+                            ))
+                          ) : (
+                            <TableRow>
+                              <TableCell colSpan={4} className="text-center">
+                                No data available for filteredData.
                               </TableCell>
                             </TableRow>
-                          );
-                        })
-                      ) : (
-                        <TableRow>
-                          <TableCell colSpan={6} className="text-center">
-                            No data available for filteredData.
-                          </TableCell>
-                        </TableRow>
-                      )}
-                    </TableBody>
-                  </Table>
-                )}
-              </div>
+                          )}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  )}
+                </div>
+
             </>
           )}
         </>
