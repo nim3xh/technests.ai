@@ -249,61 +249,135 @@ export default function DashTradingComp() {
   const exportCSVForEachAccount = async () => {
       let downloadConfirmed = false;
       let downloadCancelled = false;
-      for (let accountString of uniqueAccountNumbers) { 
+      let newSelectedAccounts = [...selectedAccounts];
+
+      const createTableDataForOneAccount = () => {
+        let filtered = combinedData.filter((account) => account.status !== "admin only");
+
+        if (selectedFilters.PA) {
+            filtered = filtered.filter((item) => item.account.startsWith("PA"));
+        }
+
+        if (selectedFilters.EVAL) {
+            filtered = filtered.filter((item) => item.account.startsWith("APEX"));
+        }
+
+        const accountData = filtered.filter((account) => {
+            // console.log('Selected Account:', newSelectedAccounts[0]);
+            // console.log('Checking Account:', `${account.accountNumber} (${account.name})`);
+            return `${account.accountNumber} (${account.name})` === newSelectedAccounts[0];
+        });
+
+        // Additional filtering by balance
+        const filteredAccountData = accountData.filter(
+            (account) => account.accountBalance <= 53000
+        );
+
+        // Sorting account data
+        const sortedAccountData = filteredAccountData.sort((a, b) => a.accountBalance - b.accountBalance);
+
+        const maxRows = sortedAccountData.length;
+        let directions = [];
+
+        const rows = Array.from({ length: maxRows }, (_, i) => {
+            const account = sortedAccountData[i] || {};
+            let direction = "-";
+
+            if (account.account) {
+                direction = directions[i]?.direction || (Math.random() < 0.5 ? "Long" : "Short");
+            }
+
+            if (!directions[i] && account.account) {
+                directions[i] = { direction };
+            }
+
+            return {
+                direction,
+                account: account.account || "-",
+                balance: account.accountBalance || "-",
+                time: timeSlots[i] || "-",
+                trade: account.account ? getTradeName(account.account) : "-",
+            };
+        });
+
+        return rows;
+      };
+
+      const convertTo12HourFormat = (time) => {
+        const [hours, minutes, seconds] = time.split(":");
+        let hour = parseInt(hours, 10);
+        const modifier = hour >= 12 ? "PM" : "AM";
+        if (hour === 0) hour = 12; 
+        else if (hour > 12) hour -= 12;
+        return `${hour.toString().padStart(2, "0")}:${minutes} ${modifier}`;
+      };
+
+      const createTradeCSV = (tradeData, accountLabel, accountNumbers, accountDirection) => {
+        const tradeHeaders = [
+            `Direction (${accountLabel})`,
+            "Quantity", "Time", "Stop Loss", "Profit", "Use Breakeven", "Breakeven Trigger", "Breakeven Offset", "Use Trail", "Trail Trigger", "Trail", "Instrument", "Account Number",
+        ];
+
+        const tradeCSV = [tradeHeaders.join(",")];
+        tradeData.forEach((trade, index) => {
+            tradeCSV.push(
+                [
+                    accountDirection[index],
+                    trade.Quantity,
+                    convertTo12HourFormat(trade.Time),
+                    trade.StopLoss,
+                    trade.Profit,
+                    trade.UseBreakeven,
+                    trade.BreakevenTrigger,
+                    trade.BreakevenOffset,
+                    trade.UseTrail,
+                    trade.TrailTrigger,
+                    trade.Trail,
+                    trade.Instrument,
+                    accountNumbers[index] || "-",
+                ].join(",")
+            );
+        });
+
+        return tradeCSV.join("\n");
+      };
+
+      const downloadCSV = (content, filename) => {
+        const blob = new Blob([content], { type: "text/csv" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = filename;
+        a.click();
+        URL.revokeObjectURL(url);
+      };
+
+      const promptDownloadConfirmation = () => {
+        if (!downloadConfirmed && !downloadCancelled) {
+            const shouldDownload = window.confirm("Do you want to download all CSV files?");
+            
+            if (shouldDownload) {
+                downloadConfirmed = true;
+            } else {
+                downloadCancelled = true;
+            }
+        }
+    
+        // If the user confirmed, proceed with downloading all files
+        if (downloadConfirmed) {
+            downloadCSV(tradeCSV, `${accountFileName}`);
+        }
+    
+        // If the user cancelled, skip download and exit the loop
+        if (downloadCancelled) {
+            // console.log("Download cancelled by the user.");
+        }
+      };
+
+      if (selectedAccounts.length === 0) {
+        for (let accountString of uniqueAccountNumbers) { 
           // Temporarily update selectedAccounts without immediately using state
-          const newSelectedAccounts = [...selectedAccounts, accountString];
-
-          const createTableDataForOneAccount = () => {
-              let filtered = combinedData.filter((account) => account.status !== "admin only");
-
-              if (selectedFilters.PA) {
-                  filtered = filtered.filter((item) => item.account.startsWith("PA"));
-              }
-
-              if (selectedFilters.EVAL) {
-                  filtered = filtered.filter((item) => item.account.startsWith("APEX"));
-              }
-
-              const accountData = filtered.filter((account) => {
-                  // console.log('Selected Account:', newSelectedAccounts[0]);
-                  // console.log('Checking Account:', `${account.accountNumber} (${account.name})`);
-                  return `${account.accountNumber} (${account.name})` === newSelectedAccounts[0];
-              });
-
-              // Additional filtering by balance
-              const filteredAccountData = accountData.filter(
-                  (account) => account.accountBalance <= 53000
-              );
-
-              // Sorting account data
-              const sortedAccountData = filteredAccountData.sort((a, b) => a.accountBalance - b.accountBalance);
-
-              const maxRows = sortedAccountData.length;
-              let directions = [];
-
-              const rows = Array.from({ length: maxRows }, (_, i) => {
-                  const account = sortedAccountData[i] || {};
-                  let direction = "-";
-
-                  if (account.account) {
-                      direction = directions[i]?.direction || (Math.random() < 0.5 ? "Long" : "Short");
-                  }
-
-                  if (!directions[i] && account.account) {
-                      directions[i] = { direction };
-                  }
-
-                  return {
-                      direction,
-                      account: account.account || "-",
-                      balance: account.accountBalance || "-",
-                      time: timeSlots[i] || "-",
-                      trade: account.account ? getTradeName(account.account) : "-",
-                  };
-              });
-
-              return rows;
-          };
+          newSelectedAccounts = [...selectedAccounts, accountString];
 
           const tableData = createTableDataForOneAccount();
 
@@ -325,45 +399,6 @@ export default function DashTradingComp() {
                   ].join(",")
               );
           });
-
-          const convertTo12HourFormat = (time) => {
-              const [hours, minutes, seconds] = time.split(":");
-              let hour = parseInt(hours, 10);
-              const modifier = hour >= 12 ? "PM" : "AM";
-              if (hour === 0) hour = 12; 
-              else if (hour > 12) hour -= 12;
-              return `${hour.toString().padStart(2, "0")}:${minutes} ${modifier}`;
-          };
-
-          const createTradeCSV = (tradeData, accountLabel, accountNumbers, accountDirection) => {
-              const tradeHeaders = [
-                  `Direction (${accountLabel})`,
-                  "Quantity", "Time", "Stop Loss", "Profit", "Use Breakeven", "Breakeven Trigger", "Breakeven Offset", "Use Trail", "Trail Trigger", "Trail", "Instrument", "Account Number",
-              ];
-
-              const tradeCSV = [tradeHeaders.join(",")];
-              tradeData.forEach((trade, index) => {
-                  tradeCSV.push(
-                      [
-                          accountDirection[index],
-                          trade.Quantity,
-                          convertTo12HourFormat(trade.Time),
-                          trade.StopLoss,
-                          trade.Profit,
-                          trade.UseBreakeven,
-                          trade.BreakevenTrigger,
-                          trade.BreakevenOffset,
-                          trade.UseTrail,
-                          trade.TrailTrigger,
-                          trade.Trail,
-                          trade.Instrument,
-                          accountNumbers[index] || "-",
-                      ].join(",")
-                  );
-              });
-
-              return tradeCSV.join("\n");
-          };
 
           const accountTrades = tableData.map((row) => ({
               trade: tradesData.find((trade) => trade.TradeName === row.trade),
@@ -388,39 +423,57 @@ export default function DashTradingComp() {
               accountFileName = `${accountString.replace(/APEX-/, "").split(" ")[0]}_EVAL.csv`;
           }
 
-          const downloadCSV = (content, filename) => {
-              const blob = new Blob([content], { type: "text/csv" });
-              const url = URL.createObjectURL(blob);
-              const a = document.createElement("a");
-              a.href = url;
-              a.download = filename;
-              a.click();
-              URL.revokeObjectURL(url);
-          };
-
-          const promptDownloadConfirmation = () => {
-              if (!downloadConfirmed && !downloadCancelled) {
-                  const shouldDownload = window.confirm("Do you want to download all CSV files?");
-                  
-                  if (shouldDownload) {
-                      downloadConfirmed = true;
-                  } else {
-                      downloadCancelled = true;
-                  }
-              }
-          
-              // If the user confirmed, proceed with downloading all files
-              if (downloadConfirmed) {
-                  downloadCSV(tradeCSV, `${accountFileName}`);
-              }
-          
-              // If the user cancelled, skip download and exit the loop
-              if (downloadCancelled) {
-                  // console.log("Download cancelled by the user.");
-              }
-          };
           promptDownloadConfirmation();  // Check for confirmation to download
           await saveCSVToBackend(tradeCSV, `${accountFileName}`, accountString.replace(/APEX-/, "").split(" ")[0]);
+        }
+        return;
+      } else {
+        const tableData = createTableDataForOneAccount();
+
+        const tableHeaders = [
+            `Trade (${selectedAccounts[0].replace(/APEX-/, "").split(" ")[0]})`,
+            `Direction (${selectedAccounts[0].replace(/APEX-/, "").split(" ")[0]})`,
+            `Account (${selectedAccounts[0].replace(/APEX-/, "").split(" ")[0]})`,
+            `Account Balance (${selectedAccounts[0].replace(/APEX-/, "").split(" ")[0]})`
+        ];
+
+        const tableCSV = [tableHeaders.join(",")];
+        tableData.forEach((row) => {
+            tableCSV.push(
+                [
+                    row.trade,
+                    row.direction,
+                    row.account,
+                    row.balance,
+                ].join(",")
+            );
+        });
+
+        const accountTrades = tableData.map((row) => ({
+            trade: tradesData.find((trade) => trade.TradeName === row.trade),
+            accountNumber: row.account,
+            direction: row.direction,
+        })).filter((item) => item.trade);
+
+        const tradeCSV = createTradeCSV(
+            accountTrades.map((item) => item.trade),
+            selectedAccounts[0].replace(/APEX-/, "").split(" ")[0],
+            accountTrades.map((item) => item.accountNumber),
+            accountTrades.map((item) => item.direction)
+        );
+
+        let accountFileName = `${selectedAccounts[0].replace(/APEX-/, "").split(" ")[0]}_Trades.csv`;
+
+        if(selectedFilters.PA){
+            accountFileName = `${selectedAccounts[0].replace(/APEX-/, "").split(" ")[0]}_PA.csv`;
+        }
+        
+        if(selectedFilters.EVAL){
+            accountFileName = `${selectedAccounts[0].replace(/APEX-/, "").split(" ")[0]}_EVAL.csv`;
+        }
+
+        promptDownloadConfirmation();  // Check for confirmation to download
+        await saveCSVToBackend(tradeCSV, `${accountFileName}`, selectedAccounts[0].replace(/APEX-/, "").split(" ")[0]);
       }
   };
 
@@ -455,6 +508,14 @@ export default function DashTradingComp() {
   
       return prevFilters;
     });
+  };
+
+  const handleAccountSelection = (account) => {
+    if (selectedAccounts.includes(account)) {
+      setSelectedAccounts(selectedAccounts.filter((acc) => acc !== account));
+    } else {
+      setSelectedAccounts([...selectedAccounts, account]);
+    }
   };
   
 
@@ -606,6 +667,32 @@ export default function DashTradingComp() {
                       <label htmlFor="pa" className="ml-2 text-sm font-medium">
                         PA Only
                       </label>
+                    </div>
+                    <div>
+                    <Dropdown
+                        label={
+                          selectedAccounts.length > 0
+                            ? selectedAccounts
+                                .map((account) => account.replace(/APEX-/, "")) // Remove "APEX-"
+                                .join(", ")
+                            : "Select User"
+                        }
+                        className="w-full text-left dark:bg-gray-800 dark:text-gray-200"
+                        inline
+                      >
+                        <Dropdown.Item onClick={() => setSelectedAccounts([])}>
+                          Clear Selection
+                        </Dropdown.Item>
+                        {uniqueAccountNumbers.map((account) => (
+                          <Dropdown.Item
+                            key={account}
+                            onClick={() => handleAccountSelection(account)}
+                          >
+                            {selectedAccounts.includes(account) ? "✓ " : ""}{" "}
+                            {account.replace(/APEX-/, "")} {/* Display without "APEX-" */}
+                          </Dropdown.Item>
+                        ))}
+                      </Dropdown>
                     </div>
                   </div>
 
