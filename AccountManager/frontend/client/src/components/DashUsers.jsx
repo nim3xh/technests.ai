@@ -21,6 +21,7 @@ import { HiPlusCircle } from "react-icons/hi";
 import axios from "axios";
 import { FaUserEdit } from "react-icons/fa";
 import { MdDeleteForever } from "react-icons/md";
+import useRealTimeDate from '../hooks/useRealTimeDate';
 
 const BaseURL = import.meta.env.VITE_BASE_URL;
 
@@ -43,6 +44,8 @@ export default function DashUsers() {
   const [uniqueAccountNumbers, setUniqueAccountNumbers] = useState([]);
   const [selectedUser, setSelectedUser] = useState(null); // Track the selected user
   const [showUserDetailsModal, setShowUserDetailsModal] = useState(false); // Modal visibility for user details
+
+  const formattedTodayDate = useRealTimeDate();
 
   const fetchData = async () => {
     try {
@@ -203,6 +206,7 @@ export default function DashUsers() {
         </Breadcrumb.Item>
         <Breadcrumb.Item>Users</Breadcrumb.Item>
       </Breadcrumb>
+      <p className="text-lg font-semibold text-gray-600">{formattedTodayDate}</p> {/* Display the formatted date */}
       <div className="flex items-center justify-between mb-3">
         <h1 className="mt-3 mb-3 text-left font-semibold text-xl">All Users</h1>
         {currentUser.user.role === "admin" && (

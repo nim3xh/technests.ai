@@ -15,6 +15,7 @@ import { MdAccountBalance, MdPerson, MdTableRows } from "react-icons/md";
 import { CiMemoPad } from "react-icons/ci";
 import axios from "axios";
 import { Datepicker } from "flowbite-react";
+import useRealTimeDate from '../hooks/useRealTimeDate';
 
 const BaseURL = import.meta.env.VITE_BASE_URL;
 
@@ -33,11 +34,7 @@ export default function DashboardComp() {
     PA4: 0,
   });
 
-  const formattedTodayDate = new Intl.DateTimeFormat("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  }).format(todayDate);
+  const formattedTodayDate = useRealTimeDate();
   
   // Function to merge users and account details data
   const mergeData = (users, accountDetails) => {
@@ -185,7 +182,7 @@ export default function DashboardComp() {
       <div className="text-2xl">
           Welcome, {currentUser.user.FirstName} {currentUser.user.LastName}!
         </div>
-      <p className="text-lg font-semibold text-gray-600">Today's Date: {formattedTodayDate}</p> 
+      <p className="text-lg font-semibold text-gray-600">{formattedTodayDate}</p> 
       </div>
       
       {currentUser.user.role !== "user" && (

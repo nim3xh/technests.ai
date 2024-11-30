@@ -22,6 +22,7 @@ import { HiHome, HiPlusCircle } from "react-icons/hi";
 import axios from "axios";
 import { MdAccountBalance, MdPerson, MdTableRows } from "react-icons/md";
 import { CiMemoPad } from "react-icons/ci";
+import useRealTimeDate from '../hooks/useRealTimeDate';
 
 const BaseURL = import.meta.env.VITE_BASE_URL;
 
@@ -48,12 +49,7 @@ export default function DashTradingComp() {
     PA: false,
   });
 
-  const formattedTodayDate = new Intl.DateTimeFormat("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  }).format(todayDate);
-
+  const formattedTodayDate = useRealTimeDate();
   
   // Function to merge users and account details data
   const mergeData = (users, accountDetails) => {
@@ -431,7 +427,7 @@ export default function DashTradingComp() {
         <Breadcrumb.Item>Trade</Breadcrumb.Item>
       </Breadcrumb>
     
-      <p className="text-lg font-semibold text-gray-600">Date: {formattedTodayDate}</p> 
+      <p className="text-lg font-semibold text-gray-600">{formattedTodayDate}</p> 
       <div className="flex items-center justify-between mb-3">
       </div>
 
