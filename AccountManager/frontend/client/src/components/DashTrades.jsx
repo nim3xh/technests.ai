@@ -21,6 +21,7 @@ import { useSelector } from "react-redux";
 import axios from "axios";
 import { FaUserEdit } from "react-icons/fa";
 import { MdDeleteForever } from "react-icons/md";
+import useRealTimeDate from '../hooks/useRealTimeDate';
 
 const BaseURL = import.meta.env.VITE_BASE_URL;
 
@@ -49,6 +50,9 @@ export default function DashTrades() {
   });
   const [combinedData, setCombinedData] = useState([]);
   const [selectedApexId, setSelectedApexId] = useState("");
+
+  // Call the custom hook to get the real-time date
+  const formattedTodayDate = useRealTimeDate();
   
    // Function to merge users and account details data
    const mergeData = (users, accountDetails) => {
@@ -287,6 +291,7 @@ export default function DashTrades() {
         </Breadcrumb.Item>
         <Breadcrumb.Item>Trades</Breadcrumb.Item>
       </Breadcrumb>
+      <p className="text-lg font-semibold text-gray-600">{formattedTodayDate}</p> 
       <div className="flex items-center justify-between mb-3">
           <h1 className="mt-3 mb-3 text-left font-semibold text-xl">
             All Trades

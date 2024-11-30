@@ -24,6 +24,7 @@ import { debounce, set } from "lodash";
 import axios from "axios";
 import { CSVLink } from "react-csv";
 import { MdAccountBalance, MdPerson, MdTableRows } from "react-icons/md";
+import useRealTimeDate from '../hooks/useRealTimeDate';
 
 const BaseURL = import.meta.env.VITE_BASE_URL;
 
@@ -50,6 +51,8 @@ export default function DashAccountDetails() {
   const [tradesData, setTradesData] = useState([]);
   const [selectedAccounts, setSelectedAccounts] = useState([]);
   const [userStats, setUserStats] = useState([]);
+
+  const formattedTodayDate = useRealTimeDate();
 
   const processRanges = [
     { label: "47000", min: 46750, max: 47249 },
@@ -555,10 +558,16 @@ export default function DashAccountDetails() {
         <Breadcrumb.Item>Account Details</Breadcrumb.Item>
       </Breadcrumb>
 
-      <h1 className="mt-3 mb-3 text-left font-semibold text-xl">
-        All Account Details | Updated At:{" "}
-        {formattedDateTime && `(${formattedDateTime})`}
-      </h1>
+      <h1 className="mt-3 mb-3 text-left font-semibold text-xl flex justify-between items-center">
+  <span>
+    All Account Details | Updated At:{" "}
+    {formattedDateTime && `(${formattedDateTime})`}
+  </span>
+  <p className="text-lg font-semibold text-gray-600">
+    {formattedTodayDate}
+  </p>
+</h1>
+
       {loading ? (
         <div className="flex justify-center items-center h-96">
           <Spinner size="xl" />

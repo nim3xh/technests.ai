@@ -10,6 +10,26 @@ const multer = require("multer");
 const upload = multer({ dest: "uploads/" });
 const deleteDashboards = require("./delete-dashboards");
 
+// Helper function to get the current formatted time
+const getFormattedTime = () => {
+  const now = new Date();
+  const formattedDate = new Intl.DateTimeFormat("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  }).format(now);
+
+  const formattedTime = new Intl.DateTimeFormat("en-US", {
+    hour: "numeric",
+    minute: "numeric",
+    second: "numeric",
+    hour12: true,
+  }).format(now);
+
+  // Return formatted date and time separately
+  return `${formattedDate} ${formattedTime}`; // This should return a string like "November 30, 2024 12:48 PM"
+};
+
 // Function to recursively get all CSV files in the directory and its subdirectories
 const getCsvFiles = (directory) => {
   let csvFiles = [];
@@ -145,6 +165,12 @@ const uploadFile = (file, apexid) => {
     });
   });
 };
+
+// Endpoint to return the current time
+app.get('/current-time', (req, res) => {
+  const time = getFormattedTime();
+  res.json({ time });
+});
 
 
 app.post("/upload-trade", upload.single("csvFile"), async (req, res) => {
