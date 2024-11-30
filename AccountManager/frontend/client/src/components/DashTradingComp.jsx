@@ -30,6 +30,7 @@ export default function DashTradingComp() {
   const [combinedData, setCombinedData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [fileCreationData, setFileCreationData] = useState([]);
   const { currentUser } = useSelector((state) => state.user);
   const [userStats, setUserStats] = useState([]);
   const [todayDate, setTodayDate] = useState(new Date());
@@ -128,7 +129,7 @@ export default function DashTradingComp() {
     
           // Categorize and count PA accounts based on account balance
           mergedData.forEach((account) => {
-            if (account.account.startsWith("PA")) {
+            if (account.account.startsWith("PA") && account.status === "active") {
               const balance = parseFloat(account.accountBalance);
               if (balance >= 47500 && balance <= 53200) paStats.PA1++;
               else if (balance >= 53201 && balance <= 55800) paStats.PA2++;
@@ -201,8 +202,8 @@ export default function DashTradingComp() {
     
       fetchData();
       fetchTrades();
+      fetchFileCreationTime();
     }, [BaseURL, currentUser]);
-    
 
   // Calculate unique accounts from filteredData
   const uniqueAccountsInFilteredData = new Set(
@@ -211,7 +212,20 @@ export default function DashTradingComp() {
 
   const totalUniqueAccountsDisplayed = uniqueAccountsInFilteredData.size;
 
-
+  const fetchFileCreationTime = async () => {
+    try {
+      // Send a GET request without the apexid query parameter
+      const response = await axios.get(`${BaseURL}file-creation-time`);
+  
+      // Set the response data to the state
+      setFileCreationData(response.data);
+      setLoading(false);
+    } catch (err) {
+      setError("Something went wrong while fetching file creation times.");
+      setLoading(false);
+    }
+  };
+  
   const getTradeName = (accountNumber) => {
     if (!accountNumber) return "-"; // Handle case when accountNumber is null/undefined
     const apexIdMatch = accountNumber.match(/APEX-(\d+)/);
@@ -364,7 +378,15 @@ export default function DashTradingComp() {
               accountTrades.map((item) => item.direction)
           );
 
-          const accountFileName = `${accountString.replace(/APEX-/, "").split(" ")[0]}_trades.csv`;
+          let accountFileName = `${accountString.replace(/APEX-/, "").split(" ")[0]}_Trades.csv`;
+
+          if(selectedFilters.PA){
+              accountFileName = `${accountString.replace(/APEX-/, "").split(" ")[0]}_PA.csv`;
+          }
+          
+          if(selectedFilters.EVAL){
+              accountFileName = `${accountString.replace(/APEX-/, "").split(" ")[0]}_EVAL.csv`;
+          }
 
           const downloadCSV = (content, filename) => {
               const blob = new Blob([content], { type: "text/csv" });
@@ -394,7 +416,7 @@ export default function DashTradingComp() {
           
               // If the user cancelled, skip download and exit the loop
               if (downloadCancelled) {
-                  console.log("Download cancelled by the user.");
+                  // console.log("Download cancelled by the user.");
               }
           };
           promptDownloadConfirmation();  // Check for confirmation to download
@@ -416,7 +438,25 @@ export default function DashTradingComp() {
       } catch (error) {
           alert("Error uploading file:", error);
       }
+      fetchFileCreationTime();
   };
+
+  const handleFilterChange = (filter) => {
+    setSelectedFilters((prevFilters) => {
+      // If the 'EVAL' checkbox is clicked, uncheck 'PA'
+      if (filter === "EVAL") {
+        return { EVAL: !prevFilters.EVAL, PA: false };
+      }
+  
+      // If the 'PA' checkbox is clicked, uncheck 'EVAL'
+      if (filter === "PA") {
+        return { EVAL: false, PA: !prevFilters.PA };
+      }
+  
+      return prevFilters;
+    });
+  };
+  
 
   return (
     <div className="p-3 w-full">
@@ -545,25 +585,8 @@ export default function DashTradingComp() {
                     </div>
                   </div>
                   <br />
-                  
-                  <div className="flex items-center space-x-4 mt-4">
-                    {!isFindingMatch && (
-                      <>
-                        {/* Find Match Button */}
-                        <Button
-                          gradientDuoTone="greenToBlue"
-                          onClick={exportCSVForEachAccount}
-                          className="px-6 py-3 rounded-lg text-white font-semibold transition duration-300 transform hover:scale-105 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
-                        >
-                          Make Trades CSV
-                        </Button>
-                      </>
-                    )}
-                  </div>
-
-
-                  {/* Filters */}
-                  {/* <div className="flex space-x-4 mb-4">
+                 {/* Filters */}
+                  <div className="flex space-x-4 mb-4">
                     <div className="flex items-center">
                       <Checkbox
                         id="eval"
@@ -584,7 +607,48 @@ export default function DashTradingComp() {
                         PA Only
                       </label>
                     </div>
-                  </div> */}
+                  </div>
+
+                  
+                  <div className="flex items-center space-x-4 mt-4">
+                    {!isFindingMatch && (
+                      <>
+                        {/* Find Match Button */}
+                        <Button
+                          gradientDuoTone="greenToBlue"
+                          onClick={exportCSVForEachAccount}
+                          className="flex items-center justify-center px-6 py-3 rounded-lg text-white font-semibold transition duration-300 transform hover:scale-105 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+                        >
+                          <HiPlusCircle className="mr-3 text-2xl" /> {/* Adjust icon size here */}
+                          Create New Trade Data Signals
+                        </Button>
+                      </>
+                    )}
+                  </div>
+                  <div className="flex flex-col md:flex-row justify-center items-center md:space-x-4">
+                  <Table hoverable className="shadow-md w-full">
+                    <TableHead>
+                      <TableHeadCell>#</TableHeadCell>
+                      <TableHeadCell>File Name</TableHeadCell>
+                      <TableHeadCell>Creation Time</TableHeadCell>
+                    </TableHead>
+                    <TableBody>
+                      {Array.isArray(fileCreationData) ? (
+                        fileCreationData.map((file, index) => (
+                          <TableRow key={index}>
+                            <TableCell>{index + 1}</TableCell>
+                            <TableCell>{file.fileName}</TableCell>
+                            <TableCell>{new Date(file.createdAt).toLocaleString()}</TableCell> {/* Format the creation time */}
+                          </TableRow>
+                        ))
+                      ) : (
+                        <TableRow>
+                          <TableCell colSpan="3">No data available</TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>          
+                  </div>    
               </>
           )}
         </>
