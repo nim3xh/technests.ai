@@ -30,6 +30,7 @@ export default function DashTradingComp() {
   const [combinedData, setCombinedData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [fileCreationData, setFileCreationData] = useState([]);
   const { currentUser } = useSelector((state) => state.user);
   const [userStats, setUserStats] = useState([]);
   const [todayDate, setTodayDate] = useState(new Date());
@@ -201,8 +202,8 @@ export default function DashTradingComp() {
     
       fetchData();
       fetchTrades();
+      fetchFileCreationTime();
     }, [BaseURL, currentUser]);
-    
 
   // Calculate unique accounts from filteredData
   const uniqueAccountsInFilteredData = new Set(
@@ -211,7 +212,20 @@ export default function DashTradingComp() {
 
   const totalUniqueAccountsDisplayed = uniqueAccountsInFilteredData.size;
 
-
+  const fetchFileCreationTime = async () => {
+    try {
+      // Send a GET request without the apexid query parameter
+      const response = await axios.get(`${BaseURL}file-creation-time`);
+  
+      // Set the response data to the state
+      setFileCreationData(response.data);
+      setLoading(false);
+    } catch (err) {
+      setError("Something went wrong while fetching file creation times.");
+      setLoading(false);
+    }
+  };
+  
   const getTradeName = (accountNumber) => {
     if (!accountNumber) return "-"; // Handle case when accountNumber is null/undefined
     const apexIdMatch = accountNumber.match(/APEX-(\d+)/);
@@ -424,6 +438,7 @@ export default function DashTradingComp() {
       } catch (error) {
           alert("Error uploading file:", error);
       }
+      fetchFileCreationTime();
   };
 
   const handleFilterChange = (filter) => {
@@ -610,9 +625,24 @@ export default function DashTradingComp() {
                       </>
                     )}
                   </div>
-
-
-                  
+                  <div className="flex flex-col md:flex-row justify-center items-center md:space-x-4">
+                  <Table hoverable className="shadow-md w-full">
+                    <TableHead>
+                      <TableHeadCell>#</TableHeadCell>
+                      <TableHeadCell>File Name</TableHeadCell>
+                      <TableHeadCell>Creation Time</TableHeadCell>
+                    </TableHead>
+                    <TableBody>
+                      {fileCreationData.map((file, index) => (
+                        <TableRow key={index}>
+                          <TableCell>{index + 1}</TableCell>
+                          <TableCell>{file.fileName}</TableCell>
+                          <TableCell>{new Date(file.createdAt).toLocaleString()}</TableCell> {/* Format the creation time */}
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>          
+                  </div>    
               </>
           )}
         </>

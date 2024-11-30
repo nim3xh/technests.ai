@@ -166,6 +166,58 @@ const uploadFile = (file, apexid) => {
   });
 };
 
+app.get('/file-creation-time', async (req, res) => {
+  try {
+    const dashboardsPath = path.join(__dirname, 'dashboards'); // Root folder
+
+    if (!fs.existsSync(dashboardsPath)) {
+      return res.status(404).send("Dashboards folder not found.");
+    }
+
+    // Get all subdirectories (i.e., apexid folders) inside the 'dashboards' folder
+    const apexidFolders = fs.readdirSync(dashboardsPath).filter((item) =>
+      fs.statSync(path.join(dashboardsPath, item)).isDirectory()
+    );
+
+    if (apexidFolders.length === 0) {
+      return res.status(404).send("No apexid folders found.");
+    }
+
+    const allFileDetails = [];
+
+    // Loop through each apexid folder to gather file creation times
+    for (const apexid of apexidFolders) {
+      const folderPath = path.join(dashboardsPath, apexid);
+
+      // Get all files in the folder
+      const files = fs.readdirSync(folderPath);
+
+      for (const file of files) {
+        const filePath = path.join(folderPath, file);
+        const stats = fs.statSync(filePath);
+
+        // Add file details with creation time
+        allFileDetails.push({
+          apexid: apexid,
+          fileName: file,
+          createdAt: stats.birthtime.toISOString(), // Format creation time to ISO string
+        });
+      }
+    }
+
+    if (allFileDetails.length === 0) {
+      return res.status(404).send("No files found in any apexid folder.");
+    }
+
+    res.status(200).json(allFileDetails); // Send all file details in the response
+
+  } catch (error) {
+    console.error('Error fetching file creation times:', error);
+    res.status(500).send('Failed to retrieve file creation times.');
+  }
+});
+
+
 // Endpoint to return the current time
 app.get('/current-time', (req, res) => {
   const time = getFormattedTime();
