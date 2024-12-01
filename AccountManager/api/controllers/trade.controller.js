@@ -2,6 +2,8 @@ const models = require("../models");
 const fs = require("fs");
 const path = require("path");
 const xlsx = require("xlsx");
+const { Op } = require('sequelize');
+
 
 function uploadFile(req, res) {
     if (!req.file) {
@@ -23,13 +25,13 @@ function uploadFile(req, res) {
         // Define the list of required columns
         const requiredColumns = ["Instrument", "Quantity", "Stop loss", "Profit", "Use Breakeven", 
             "Breakeven trigger", "Breakeven Offset", "Use Trail", "Trail Trigger", "Trail", 
-            , "Apex ID", "Direction", "Time"];
+            "Apex ID", "Direction", "Time"];
         
         // Define the list of all columns that are allowed
         const allowedColumns = new Set([
             "TradeName", "Instrument", "Quantity", "Stop loss", "Profit", "Use Breakeven", 
             "Breakeven trigger", "Breakeven Offset", "Use Trail", "Trail Trigger", "Trail", 
-            , "Apex ID", "Direction", "Time"
+            "Apex ID", "Direction", "Time"
         ]);
 
         // Check if all required columns are present
@@ -48,49 +50,62 @@ function uploadFile(req, res) {
             });
         }
 
-        const formattedTrades = sheetData.map((trade) => {
-            let timeFormatted;
-            try {
-                timeFormatted = convertTo24HourFormat(trade["Time"]);
-            } catch (error) {
-                console.error(`Error converting time for trade: ${JSON.stringify(trade)}, Error: ${error.message}`);
-                timeFormatted = null; // Or provide a default value
-            }
-        
-            return {
-                TradeName: trade.TradeName || `T${counter++}-${trade["Apex ID"]}`,
-                Instrument: trade.Instrument,
-                Quantity: trade.Quantity,
-                StopLoss: trade["Stop loss"],
-                Profit: trade.Profit,
-                UseBreakeven: trade["Use Breakeven"],
-                BreakevenTrigger: trade["Breakeven trigger"],
-                BreakevenOffset: trade["Breakeven Offset"],
-                UseTrail: trade["Use Trail"],
-                TrailTrigger: trade["Trail Trigger"],
-                Trail: trade.Trail,
-                TradeTypeId: trade.TradeTypeId || null,
-                ApexId: trade["Apex ID"],
-                Direction: trade.Direction,
-                Time: timeFormatted,
-            };
-        });
-        
-        
-        models.Trade.bulkCreate(formattedTrades)
-            .then(() => {
-                fs.unlinkSync(filePath); // Delete the file after processing
-                res.status(201).json({
-                    message: "Trades added successfully.",
-                });
-            })
-            .catch((error) => {
-                fs.unlinkSync(filePath); // Delete the file even if there's an error
-                res.status(500).json({
-                    message: "Error processing file."+error.message,
-                    error: error,
-                });
+        // Extract the unique Apex IDs from the uploaded data
+        const apexIds = [...new Set(sheetData.map(trade => trade["Apex ID"]))];
+
+        // Delete existing trades with matching Apex IDs
+        models.Trade.destroy({
+            where: {
+                ApexId: { [Op.in]: apexIds },
+            },
+        })
+        .then(() => {
+            // Now, format the trades for insertion
+            const formattedTrades = sheetData.map((trade) => {
+                let timeFormatted;
+                try {
+                    timeFormatted = convertTo24HourFormat(trade["Time"]);
+                } catch (error) {
+                    console.error(`Error converting time for trade: ${JSON.stringify(trade)}, Error: ${error.message}`);
+                    timeFormatted = null; // Or provide a default value
+                }
+
+                return {
+                    TradeName: trade.TradeName || `T${counter++}-${trade["Apex ID"]}`,
+                    Instrument: trade.Instrument,
+                    Quantity: trade.Quantity,
+                    StopLoss: trade["Stop loss"],
+                    Profit: trade.Profit,
+                    UseBreakeven: trade["Use Breakeven"],
+                    BreakevenTrigger: trade["Breakeven trigger"],
+                    BreakevenOffset: trade["Breakeven Offset"],
+                    UseTrail: trade["Use Trail"],
+                    TrailTrigger: trade["Trail Trigger"],
+                    Trail: trade.Trail,
+                    TradeTypeId: trade.TradeTypeId || null,
+                    ApexId: trade["Apex ID"],
+                    Direction: trade.Direction,
+                    Time: timeFormatted,
+                };
             });
+
+            // Insert the new data
+            return models.Trade.bulkCreate(formattedTrades);
+        })
+        .then(() => {
+            fs.unlinkSync(filePath); // Delete the file after processing
+            res.status(201).json({
+                message: "Trades added successfully.",
+            });
+        })
+        .catch((error) => {
+            fs.unlinkSync(filePath); // Delete the file even if there's an error
+            res.status(500).json({
+                message: "Error processing file. " + error.message,
+                error: error,
+            });
+        });
+
     } catch (error) {
         fs.unlinkSync(filePath); // Delete the file in case of error
         res.status(500).json({
@@ -99,7 +114,6 @@ function uploadFile(req, res) {
         });
     }
 }
-
 
 function save(req, res) {
     const trade = {
