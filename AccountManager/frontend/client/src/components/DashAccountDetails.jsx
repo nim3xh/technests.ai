@@ -644,10 +644,10 @@ export default function DashAccountDetails() {
               ))}
             </Dropdown>
 
-              <Dropdown
+            <Dropdown
                 label={selectedProcessRange || "Select Range"}
                 disabled={setsMade}
-                className="w-1/4 dark:bg-gray-800 dark:text-gray-200"
+                className="w-1/4 dark:bg-gray-800 dark:text-gray-200 relative z-20" // Ensure z-index is applied
                 inline
               >
                 <Dropdown.Item onClick={() => setSelectedProcessRange("")}>
@@ -662,7 +662,6 @@ export default function DashAccountDetails() {
                   </Dropdown.Item>
                 ))}
               </Dropdown>
-
               <div className="flex gap-3 items-center">
                 {[
                   {
@@ -733,16 +732,17 @@ export default function DashAccountDetails() {
             </div>
           ) : (
             <>
-              <div className="tables-container">
-                  {/* Show filteredData table if setsData is not displayed */}
-                  {!showSetsData && (
-                    <div className="flex flex-col md:flex-row justify-center items-center md:space-x-4">
+             <div className="tables-container">
+                {/* Show filteredData table if setsData is not displayed */}
+                {!showSetsData && (
+                  <div className="flex flex-col md:flex-row justify-center items-center md:space-x-4">
+                    <div className="table-wrapper overflow-x-auto max-h-[400px]">
                       <Table hoverable className="shadow-md w-full mt-4">
                         <TableHead>
-                          <TableHeadCell>#</TableHeadCell>
-                          <TableHeadCell>Account</TableHeadCell>
-                          <TableHeadCell>Account Balance</TableHeadCell>
-                          <TableHeadCell>Account Name</TableHeadCell>
+                          <TableHeadCell className="sticky top-0 bg-white z-10">#</TableHeadCell>
+                          <TableHeadCell className="sticky top-0 bg-white z-10">Account</TableHeadCell>
+                          <TableHeadCell className="sticky top-0 bg-white z-10">Account Balance</TableHeadCell>
+                          <TableHeadCell className="sticky top-0 bg-white z-10">Account Name</TableHeadCell>
                         </TableHead>
                         <TableBody>
                           {filteredData.length > 0 ? (
@@ -780,9 +780,9 @@ export default function DashAccountDetails() {
                         </TableBody>
                       </Table>
                     </div>
-                  )}
-                </div>
-
+                  </div>
+                )}
+              </div>
             </>
           )}
         </>
