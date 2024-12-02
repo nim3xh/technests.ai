@@ -480,8 +480,8 @@ export default function DashAccountDetails() {
       AccountBalance: account.accountBalance,
       AccountName: `${account.accountNumber} (${account.name})`,
       Status: account.status,
-      TrailingThreshold: account.trailingThreshold,
-      PnL: account.PnL,
+      // TrailingThreshold: account.trailingThreshold,
+      // PnL: account.PnL,
     }));
 
     const headers = [
@@ -489,8 +489,8 @@ export default function DashAccountDetails() {
       { label: "Account Balance", key: "AccountBalance" },
       { label: "Account Name", key: "AccountName" },
       { label: "Status", key: "Status" },
-      { label: "Trailing Threshold", key: "TrailingThreshold" },
-      { label: "PnL", key: "PnL" },
+      // { label: "Trailing Threshold", key: "TrailingThreshold" },
+      // { label: "PnL", key: "PnL" },
     ];
 
     return { data: csvData, headers, filename: generateCsvFilename() };
