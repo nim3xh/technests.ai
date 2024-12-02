@@ -323,7 +323,7 @@ export default function DashboardComp() {
 
                   <div className="flex flex-col md:flex-row justify-center items-center md:space-x-4">
                     {/* Table Section */}
-                    <div className="w-full md:w-1/2 p-3 mt-5">
+                    <div>
                     <div className="w-full flex justify-between items-center mb-3">
                       <p className="text-left text-sm md:text-base text-gray-700 dark:text-white">
                         Last Updated: 
