@@ -18,6 +18,7 @@ import {
   Checkbox,
   Spinner,
   Dropdown,
+  Tooltip,
 } from "flowbite-react";
 import { useSelector } from "react-redux";
 import { debounce, set } from "lodash";
@@ -36,21 +37,28 @@ export default function DashAccountDetails() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [csvFiles, setCsvFiles] = useState([]);
-  const [accountColors, setAccountColors] = useState({});
   const [isAdminOnly, setIsAdminOnly] = useState(false);
   const [isPAaccount, setIsPAaccount] = useState(false);
   const [isEvalAccount, setIsEvalAccount] = useState(false);
   const [selectedProcessRange, setSelectedProcessRange] = useState("");
   const [paAccountsCount, setPaAccountsCount] = useState(0);
   const [nonPaAccountsCount, setNonPaAccountsCount] = useState(0);
+  const [selectedAccount, setSelectedAccount] = useState(null);
   const [setsData, setSetsData] = useState([]);
   const [createdDateTime, setCreatedDateTime] = useState("");
-  const [showModal, setShowModal] = useState(false);
   const [setsMade, setSetsMade] = useState(false); // State to toggle between buttons
   const [showSetsData, setShowSetsData] = useState(false); // State to control the visibility of setsData table
   const [tradesData, setTradesData] = useState([]);
   const [selectedAccounts, setSelectedAccounts] = useState([]);
   const [userStats, setUserStats] = useState([]);
+  const [runningTrades, setRunningTrades] = useState({}); // Stores running states for each account
+  const [elapsedTimes, setElapsedTimes] = useState({}); // Stores time elapsed for each account
+  let [paStats, setPaStats] = useState({
+    PA1: 0,
+    PA2: 0,
+    PA3: 0,
+    PA4: 0,
+  });
 
   const formattedTodayDate = useRealTimeDate();
 
@@ -85,54 +93,6 @@ export default function DashAccountDetails() {
   };
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const token = currentUser.token; // Get the token from the currentUser object
-        const headers = {
-          Authorization: `Bearer ${token}`, // Add token to request headers
-        };
-
-        const [usersResponse, accountDetailsResponse] = await Promise.all([
-          axios.get(`${BaseURL}users`, { headers }), // Pass headers with the token
-          axios.get(`${BaseURL}accountDetails`, { headers }), // Pass headers with the token
-        ]);
-
-        const mergedData = mergeData(
-          usersResponse.data,
-          accountDetailsResponse.data
-        );
-
-        setCombinedData(mergedData);
-        // Check if mergedData is not empty and set createdDateTime from the first item's createdAt
-        if (mergedData.length > 0) {
-          setCreatedDateTime(mergedData[0].createdAt);
-        } else {
-          // Handle the case when mergedData is empty, if needed
-          setCreatedDateTime(null); // or set it to a default value
-        }
-        setFilteredData(mergedData);
-
-        setLoading(false);
-
-        // Count PA and non-PA accounts
-        const paCount = mergedData.filter((item) =>
-          item.account.startsWith("PA") && !item.status.startsWith("admin")
-        ).length;
-
-        const nonPaCount = mergedData.filter((item) =>
-          item.account.startsWith("APEX") && !item.status.startsWith("admin")
-        ).length;
-
-        
-        setPaAccountsCount(paCount);
-        setNonPaAccountsCount(nonPaCount);
-      } catch (err) {
-        console.error("Error fetching data:", err);
-        setError("Something went wrong while fetching data." || err.message);
-        setLoading(false);
-      }
-    };
-
     fetchData();
     fetchTradeData();
   }, []);
@@ -141,7 +101,8 @@ export default function DashAccountDetails() {
     debounce(() => {
       const filteredCombinedData = applyFilters(
         combinedData,
-        selectedAccounts, // Pass selectedAccounts
+        selectedAccounts,
+        selectedAccount, // Pass selectedAccounts
         isAdminOnly,
         isPAaccount,
         isEvalAccount,
@@ -149,20 +110,10 @@ export default function DashAccountDetails() {
         processRanges
       );
       setFilteredData(filteredCombinedData);
-
-      const filteredSetsData = applyFilters(
-        setsData,
-        selectedAccounts, // Pass selectedAccounts
-        isAdminOnly,
-        isPAaccount,
-        isEvalAccount,
-        selectedProcessRange,
-        processRanges
-      );
-      setSetsData(filteredSetsData);
     }, 300), // 300ms delay
     [
       selectedAccounts, // Update dependency
+      selectedAccount,
       selectedProcessRange,
       combinedData,
       isAdminOnly,
@@ -175,7 +126,8 @@ export default function DashAccountDetails() {
   // Helper function to apply filters
   const applyFilters = (
     data,
-    selectedAccounts, // Change this to selectedAccounts
+    selectedAccounts,
+    selectedAccount,
     isAdminOnly,
     isPAaccount,
     isEvalAccount,
@@ -187,7 +139,13 @@ export default function DashAccountDetails() {
     // Apply account filter for multiple accounts
     if (selectedAccounts.length > 0) {
       filtered = filtered.filter((item) =>
-        selectedAccounts.includes(`${item.accountNumber} (${item.name})`)
+        selectedAccounts.includes(`${item.accountNumber} (${item.name})`),
+      );
+    }
+    
+    if(selectedAccount != null){
+      filtered = filtered.filter((item) =>
+        selectedAccount.includes(`${item.accountNumber} (${item.name})`)
       );
     }
 
@@ -302,7 +260,28 @@ export default function DashAccountDetails() {
         setCreatedDateTime(null); // or set it to a default value
       }
       setFilteredData(mergedData);
-      
+
+       // Initialize PA account statistics
+       const paStats = {
+        PA1: 0,
+        PA2: 0,
+        PA3: 0,
+        PA4: 0,
+      };
+
+      // Categorize and count PA accounts based on account balance
+      mergedData.forEach((account) => {
+        if (account.account.startsWith("PA") && account.status !== "admin only") {
+          const balance = parseFloat(account.accountBalance);
+          if (balance >= 47500 && balance <= 53200) paStats.PA1++;
+          else if (balance >= 53201 && balance <= 55800) paStats.PA2++;
+          else if (balance > 55800 && balance <= 58000) paStats.PA3++;
+          else if (balance > 58000 && balance <= 60600) paStats.PA4++;
+        }
+      });
+
+      setPaStats(paStats); 
+
       setLoading(false);
 
       // Count PA and non-PA accounts
@@ -317,9 +296,60 @@ export default function DashAccountDetails() {
 
       setPaAccountsCount(paCount);
       setNonPaAccountsCount(nonPaCount);
-      
+
+      // Calculate statistics for each user
+      const stats = {};
+      let totalEvalActive = 0;
+      let totalPAActive = 0;
+      let totalEvalAdminOnly = 0;
+      let totalPAAdminOnly = 0;
+
+      mergedData.forEach((item) => {
+        const userName = item.name + " (" + item.accountNumber.replace('APEX-', '') + ")";
+        const isPA = item.account.startsWith("PA");
+        const isActive = item.status === "active";
+        const isEval = item.account.startsWith("APEX");
+        const isAdmin = item.status === "admin only";
+
+        // Initialize user stats if not already done
+        if (!stats[userName]) {
+          stats[userName] = {
+            evalActive: 0,
+            paActive: 0,
+            evalAdminOnly: 0,
+            paAdminOnly: 0,
+          };
+        }
+
+        // Increment counts based on conditions
+        if (isEval && isActive) {
+          stats[userName].evalActive++;
+          totalEvalActive++;
+        }
+        if (isPA && isActive) {
+          stats[userName].paActive++;
+          totalPAActive++;
+        }
+        if (isAdmin && isEval) {
+          stats[userName].evalAdminOnly++;
+          totalEvalAdminOnly++;
+        }
+        if (isAdmin && isPA) {
+          stats[userName].paAdminOnly++;
+          totalPAAdminOnly++;
+        }
+      });
+
+      // Transform stats into an array for rendering
+      const userStatsArray = Object.keys(stats).map((userName) => ({
+        userName,
+        ...stats[userName],
+        totalAccounts: stats[userName].evalActive + stats[userName].paActive,
+      }));
+
+      setUserStats(userStatsArray); // Update userStats state
     } catch (err) {
-      setError("Something went wrong while fetching data.");
+      setError("Something went wrong while fetching data.",err);
       setLoading(false);
     }
   };
@@ -344,6 +374,74 @@ export default function DashAccountDetails() {
   // Calculate total number of accounts and rows
   const totalAccounts = uniqueAccountNumbers.length;
   const totalRows = filteredData.length;
+
+  useEffect(() => {
+    const newPaStats = { PA1: 0, PA2: 0, PA3: 0, PA4: 0 };
+  
+    filteredData.forEach((account) => {
+      if (account.account.startsWith("PA") && account.status !== "admin only") {
+        const balance = parseFloat(account.accountBalance);
+        if (balance >= 47500 && balance <= 53200) newPaStats.PA1++;
+        else if (balance >= 53201 && balance <= 55800) newPaStats.PA2++;
+        else if (balance > 55800 && balance <= 58000) newPaStats.PA3++;
+        else if (balance > 58000 && balance <= 60600) newPaStats.PA4++;
+      }
+    });
+  
+    setPaStats(newPaStats);
+
+    // Calculate statistics for each user
+    const stats = {};
+    let totalEvalActive = 0;
+    let totalPAActive = 0;
+    let totalEvalAdminOnly = 0;
+    let totalPAAdminOnly = 0;
+
+    filteredData.forEach((item) => {
+      const userName = item.name + " (" + item.accountNumber.replace('APEX-', '') + ")";
+      const isPA = item.account.startsWith("PA");
+      const isActive = item.status === "active";
+      const isEval = item.account.startsWith("APEX");
+      const isAdmin = item.status === "admin only";
+
+      // Initialize user stats if not already done
+      if (!stats[userName]) {
+        stats[userName] = {
+          evalActive: 0,
+          paActive: 0,
+          evalAdminOnly: 0,
+          paAdminOnly: 0,
+        };
+      }
+
+      // Increment counts based on conditions
+      if (isEval && isActive) {
+        stats[userName].evalActive++;
+        totalEvalActive++;
+      }
+      if (isPA && isActive) {
+        stats[userName].paActive++;
+        totalPAActive++;
+      }
+      if (isAdmin && isEval) {
+        stats[userName].evalAdminOnly++;
+        totalEvalAdminOnly++;
+      }
+      if (isAdmin && isPA) {
+        stats[userName].paAdminOnly++;
+        totalPAAdminOnly++;
+      }
+    });
+
+    // Transform stats into an array for rendering
+    const userStatsArray = Object.keys(stats).map((userName) => ({
+      userName,
+      ...stats[userName],
+      totalAccounts: stats[userName].evalActive + stats[userName].paActive,
+    }));
+
+    setUserStats(userStatsArray); // Update userStats state
+  }, [filteredData]);
 
   // Calculate unique accounts from filteredData
   const uniqueAccountsInFilteredData = new Set(
@@ -420,9 +518,6 @@ export default function DashAccountDetails() {
     }
   };
 
-  const [runningTrades, setRunningTrades] = useState({}); // Stores running states for each account
-  const [elapsedTimes, setElapsedTimes] = useState({}); // Stores time elapsed for each account
-
   useEffect(() => {
     const intervals = {};
 
@@ -441,8 +536,6 @@ export default function DashAccountDetails() {
       Object.values(intervals).forEach(clearInterval);
     };
   }, [runningTrades]);
-
-  const [selectedAccount, setSelectedAccount] = useState(null);
 
   const handleAccountSelection = (account) => {
     setSelectedAccount(account);
@@ -578,47 +671,105 @@ export default function DashAccountDetails() {
           <div className="flex-wrap flex gap-4 justify-center mt-4">
             {/* Total Rows Displayed */}
             <div className="flex flex-col p-3 dark:bg-slate-800 gap-4 md:w-64 w-full rounded-md shadow-md">
-              <div className="flex justify-between">
-                <div>
-                  <h3 className="text-gray-500 text-md uppercase">Total Rows</h3>
-                  <p className="text-2xl">{totalRows}</p>
-                </div>
-                {/* <MdTableRows className="bg-teal-600 text-white rounded-full text-5xl p-3 shadow-lg" /> */}
-              </div>
-            </div>
-            {/* Total Users Displayed */}
-            <div className="flex flex-col p-3 dark:bg-slate-800 gap-4 md:w-64 w-full rounded-md shadow-md">
-              <div className="flex justify-between">
-                <div>
-                  <h3 className="text-gray-500 text-md uppercase">Users</h3>
-                  <p className="text-2xl">{totalUniqueAccountsDisplayed}</p>
-                </div>
-                {/* <MdPerson className="bg-teal-600 text-white rounded-full text-5xl p-3 shadow-lg" /> */}
-              </div>
-            </div>
-            {/* Total PA Account Rows */}
-            <div className="flex flex-col p-3 dark:bg-slate-800 gap-4 md:w-64 w-full rounded-md shadow-md">
-              <div className="flex justify-between">
-                <div>
-                  <h3 className="text-gray-500 text-md uppercase">PA Accounts</h3>
-                  <p className="text-2xl">{paAccountsCount}</p>
-                </div>
-                {/* <MdAccountBalance className="bg-teal-600 text-white rounded-full text-5xl p-3 shadow-lg" /> */}
-              </div>
-            </div>
-            {/* Total Eval Account Rows */}
-            <div className="flex flex-col p-3 dark:bg-slate-800 gap-4 md:w-64 w-full rounded-md shadow-md">
-              <div className="flex justify-between">
-                <div>
-                  <h3 className="text-gray-500 text-md uppercase">Eval Accounts</h3>
-                  <p className="text-2xl">
-                    {nonPaAccountsCount}
-                  </p>
-                </div>
-                {/* <MdTableRows className="bg-teal-600 text-white rounded-full text-5xl p-3 shadow-lg" /> */}
-              </div>
-            </div>
-          </div>
+                    <div className="flex justify-between">
+                      <div>
+                        <h3 className="text-gray-500 text-md uppercase">Total Rows</h3>
+                        <p className="text-2xl">{totalRows}</p>
+                      </div>
+                      {/* <MdTableRows className="bg-teal-600 text-white rounded-full text-5xl p-3 shadow-lg" /> */}
+                    </div>
+                  </div>
+                    <div className="flex flex-col p-3 dark:bg-slate-800 gap-4 md:w-40 w-full rounded-md shadow-md">
+                      <div className="flex justify-between">
+                        <div className="">
+                          <h3 className="text-gray-500 text-md uppercase">
+                            Users{" "}
+                          </h3>
+                          <p className="text-2xl">{totalUniqueAccountsDisplayed}</p>
+                        </div>
+                        {/* <MdPerson className="bg-teal-600  text-white rounded-full text-5xl p-3 shadow-lg" /> */}
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col p-3 dark:bg-slate-800 gap-4 md:w-40 w-full rounded-md shadow-md">
+                      <div className="flex justify-between">
+                        <div>
+                          <h3 className="text-gray-500 text-md uppercase">
+                            EVAL
+                          </h3>
+                          <p className="text-2xl">
+                            {userStats.reduce(
+                              (acc, user) => acc + user.evalActive,
+                              0
+                            )}
+                          </p>
+                        </div>
+                        {/* <MdTableRows className="bg-teal-600 text-white rounded-full text-5xl p-3 shadow-lg" /> */}
+                      </div>
+                    </div>
+
+                    <Tooltip content="Balance Range: $47,500 - $53,200">
+                      <div className="flex flex-col p-3 dark:bg-slate-800 gap-4 md:w-40 w-full rounded-md shadow-md">
+                        <div className="flex justify-between">
+                          <div>
+                            <h3 className="text-gray-500 text-md uppercase">
+                              PA1
+                            </h3>
+                            <p className="text-2xl">
+                              {paStats.PA1}
+                            </p>
+                          </div>
+                          {/* <MdAccountBalance className="bg-teal-600 text-white rounded-full text-5xl p-3 shadow-lg" /> */}
+                        </div>
+                      </div>
+                    </Tooltip>
+                    <Tooltip content="Balance Range: $53,201 - $55,800">
+                      <div className="flex flex-col p-3 dark:bg-slate-800 gap-4 md:w-40 w-full rounded-md shadow-md">
+                        <div className="flex justify-between">
+                          <div>
+                            <h3 className="text-gray-500 text-md uppercase">
+                              PA2
+                            </h3>
+                            <p className="text-2xl">
+                              {paStats.PA2}
+                            </p>
+                          </div>
+                          {/* <MdAccountBalance className="bg-teal-600 text-white rounded-full text-5xl p-3 shadow-lg" /> */}
+                        </div>
+                      </div>
+                    </Tooltip>
+                    
+                    <Tooltip content="Balance Range: $55,801 - $58,000">
+                      <div className="flex flex-col p-3 dark:bg-slate-800 gap-4 md:w-40 w-full rounded-md shadow-md" title="Balance Range: 58,001 - 60,600">
+                        <div className="flex justify-between">
+                          <div>
+                            <h3 className="text-gray-500 text-md uppercase">
+                              PA3
+                            </h3>
+                            <p className="text-2xl">
+                              {paStats.PA3}
+                            </p>
+                          </div>
+                          {/* <MdAccountBalance className="bg-teal-600 text-white rounded-full text-5xl p-3 shadow-lg" /> */}
+                        </div>
+                      </div>
+                    </Tooltip>
+                      
+                    <Tooltip content="Balance Range: $58,001 - $60,600">
+                      <div className="flex flex-col p-3 dark:bg-slate-800 gap-4 md:w-40 w-full rounded-md shadow-md" title="Balance Range: 58,001 - 60,600">
+                        <div className="flex justify-between">
+                          <div title="Balance Range: 58,001 - 60,600">
+                            <h3 className="text-gray-500 text-md uppercase">
+                              PA4
+                            </h3>
+                            <p className="text-2xl">
+                              {paStats.PA4}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </Tooltip>
+                  </div>
 
           <div className="flex flex-col md:flex-row justify-center items-center md:space-x-4 mt-4">
             <Dropdown
