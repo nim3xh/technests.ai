@@ -208,7 +208,7 @@ export default function DashTrades() {
         BreakevenOffset: newTrade.BreakevenOffset.toString(),
         TrailTrigger: newTrade.TrailTrigger.toString(),
         Trail: newTrade.Trail.toString(),
-        ApexId: newTrade.ApexId.toString(),
+        // ApexId: newTrade.ApexId.toString(),
       };
   
       if (isEditMode) {
@@ -225,7 +225,7 @@ export default function DashTrades() {
       setShowModal(false);
       resetForm();
     } catch (err) {
-      setError("Something went wrong while saving trade.");
+      alert("Something went wrong while saving trade.");
     }
   };
   
@@ -254,6 +254,15 @@ export default function DashTrades() {
     });
   };
 
+  const handleChangeTradeName = (event) => {
+    const { name, value } = event.target;
+    setNewTrade((prevTrade) => ({
+      ...prevTrade,
+      [name]: value,
+    }));
+  };
+  
+
   // Delete a trade with confirmation
   const handleDeleteTrade = async (id) => {
     const confirmDelete = window.confirm(
@@ -281,7 +290,14 @@ export default function DashTrades() {
   };
 
 
-
+  const convertTo12HourFormat = (time) => {
+    const [hours, minutes, seconds] = time.split(":");
+    let hour = parseInt(hours, 10);
+    const modifier = hour >= 12 ? "PM" : "AM";
+    if (hour === 0) hour = 12; 
+    else if (hour > 12) hour -= 12;
+    return `${hour.toString().padStart(2, "0")}:${minutes} ${modifier}`;
+  };
 
   return (
     <div className="p-3 w-full">
@@ -297,29 +313,7 @@ export default function DashTrades() {
             All Trades
           </h1>
           <div className="ml-auto flex space-x-3">
-          <div className="flex items-center justify-start mb-4">
-            
-            <Dropdown
-              label={selectedApexId || "Select User"}
-              className="ml-2"
-              inline
-            >
-              <Dropdown.Item onClick={() => setSelectedApexId("")}>
-                All
-              </Dropdown.Item>
-              {uniqueAccountNumbers.map((account) => (
-                <Dropdown.Item
-                  key={account}
-                  onClick={() => {
-                    const extractedAccountNumber = account.replace(/APEX-/, "");
-                    setSelectedApexId(extractedAccountNumber);
-                  }}
-                >
-                  {account.replace(/APEX-/, "")} {/* Display without "APEX-" */}
-                </Dropdown.Item>
-              ))}
-            </Dropdown>
-          </div>
+          
             {currentUser.user.role !== "user" && (
               <Button
                 gradientDuoTone="greenToBlue"
@@ -360,8 +354,6 @@ export default function DashTrades() {
           <TableHead>
             <TableHeadCell>#</TableHeadCell>
             <TableHeadCell>Trade Name</TableHeadCell>
-            <TableHeadCell>Instrument</TableHeadCell>
-            <TableHeadCell>Quantity</TableHeadCell>
             <TableHeadCell>Time</TableHeadCell>
             <TableHeadCell>Stop Loss</TableHeadCell>
             <TableHeadCell>Profit</TableHeadCell>
@@ -371,7 +363,9 @@ export default function DashTrades() {
             <TableHeadCell>Use Trail</TableHeadCell>
             <TableHeadCell>Trail Trigger</TableHeadCell>
             <TableHeadCell>Trail</TableHeadCell>
-            <TableHeadCell>Apex ID</TableHeadCell>
+            <TableHeadCell>Instrument</TableHeadCell>
+            <TableHeadCell>Quantity</TableHeadCell>
+            {/* <TableHeadCell>Apex ID</TableHeadCell> */}
             <TableHeadCell></TableHeadCell>
           </TableHead>
           <TableBody>
@@ -379,9 +373,7 @@ export default function DashTrades() {
               <TableRow key={index}>
                 <TableCell>{index + 1}</TableCell>
                 <TableCell>{trade.TradeName}</TableCell>
-                <TableCell>{trade.Instrument}</TableCell>
-                <TableCell>{trade.Quantity}</TableCell>
-                <TableCell>{trade.Time}</TableCell>
+                <TableCell>{trade.Time ? convertTo12HourFormat(trade.Time) : "-"}</TableCell>
                 <TableCell>{trade.StopLoss}</TableCell>
                 <TableCell>{trade.Profit}</TableCell>
                 <TableCell>{trade.UseBreakeven === true ? "Yes" : "No"}</TableCell>
@@ -390,7 +382,9 @@ export default function DashTrades() {
                 <TableCell>{trade.UseTrail === true ? "Yes" : "No"}</TableCell>
                 <TableCell>{trade.TrailTrigger}</TableCell>
                 <TableCell>{trade.Trail}</TableCell>
-                <TableCell>{trade.ApexId}</TableCell>
+                <TableCell>{trade.Instrument}</TableCell>
+                <TableCell>{trade.Quantity}</TableCell>
+                {/* <TableCell>{trade.ApexId}</TableCell> */}
                 <TableCell>
                   <Button.Group>
                     <Button
@@ -421,39 +415,56 @@ export default function DashTrades() {
         <Modal.Header>{isEditMode ? "Edit Trade" : "Add Trade"}</Modal.Header>
         <Modal.Body>
           <form className="space-y-6">
-            <div>
+          <div>
               <Label htmlFor="TradeName" value="Trade Name" />
-              <TextInput
-                id="TradeName"
-                name="TradeName"
-                placeholder="Enter Trade Name"
-                value={newTrade.TradeName}
-                onChange={handleChange}
-                required
-              />
-            </div>
-            <div>
-              <Label htmlFor="Instrument" value="Instrument" />
-              <TextInput
-                id="Instrument"
-                name="Instrument"
-                placeholder="Enter Instrument"
-                value={newTrade.Instrument}
-                onChange={handleChange}
-                required
-              />
-            </div>
-            <div>
-              <Label htmlFor="Quantity" value="Quantity" />
-              <TextInput
-                type="number"
-                id="Quantity"
-                name="Quantity"
-                placeholder="Enter Quantity"
-                value={newTrade.Quantity}
-                onChange={handleChange}
-                required
-              />
+              <Dropdown
+                label={newTrade.TradeName || "Select Trade Name"}
+                className="ml-2"
+                inline
+                disabled ={isEditMode}
+              >
+                <Dropdown.Item 
+                  onClick={() => setNewTrade((prevTrade) => ({ ...prevTrade, TradeName: "EVAL STD" }))}
+                  title="Account balance between 49,500 and 52,799"
+                >
+                  EVAL STD
+                </Dropdown.Item>
+                
+                <Dropdown.Item 
+                  onClick={() => setNewTrade((prevTrade) => ({ ...prevTrade, TradeName: "EVAL Mini" }))}
+                  title="Account balance greater than 52,800"
+                >
+                  EVAL Mini
+                </Dropdown.Item>
+                
+                <Dropdown.Item 
+                  onClick={() => setNewTrade((prevTrade) => ({ ...prevTrade, TradeName: "EVAL MAX" }))}
+                  title="Account balance less than 49,500"
+                >
+                  EVAL MAX
+                </Dropdown.Item>
+                
+                <Dropdown.Item 
+                  onClick={() => setNewTrade((prevTrade) => ({ ...prevTrade, TradeName: "PA STD" }))}
+                  title="Account balance between 49,000 and 52,799"
+                >
+                  PA STD
+                </Dropdown.Item>
+                
+                <Dropdown.Item 
+                  onClick={() => setNewTrade((prevTrade) => ({ ...prevTrade, TradeName: "PA Mini" }))}
+                  title="Account balance greater than 52,800"
+                >
+                  PA Mini
+                </Dropdown.Item>
+                
+                <Dropdown.Item 
+                  onClick={() => setNewTrade((prevTrade) => ({ ...prevTrade, TradeName: "PA Max" }))}
+                  title="Account balance less than 49,000"
+                >
+                  PA Max
+                </Dropdown.Item>
+              </Dropdown>
             </div>
             <div>
               <Label htmlFor="Time" value="Time" />
@@ -568,28 +579,27 @@ export default function DashTrades() {
               />
             </div>
             <div>
-              <Label htmlFor="apexAccountNumber" value="Apex Account Number" />
-              <Dropdown
-                label={newTrade.ApexId || "Select User"}
-                className="w-full text-left dark:bg-gray-800 dark:text-gray-200"
-                inline
-              >
-                {uniqueAccountNumbers.map((account) => (
-                  <Dropdown.Item
-                    key={account}
-                    onClick={() => {
-                      // Extract the account number before the first space
-                      const extractedAccountNumber = account.replace(/APEX-/, ""); 
-                      setNewTrade((prevState) => ({
-                        ...prevState,
-                        ApexId: extractedAccountNumber.split(" ")[0],
-                      }));
-                    }}
-                  >
-                    {account.replace(/APEX-/, "")} {/* Display without "APEX-" */}
-                  </Dropdown.Item>
-                ))}
-              </Dropdown>
+              <Label htmlFor="Instrument" value="Instrument" />
+              <TextInput
+                id="Instrument"
+                name="Instrument"
+                placeholder="Enter Instrument"
+                value={newTrade.Instrument}
+                onChange={handleChange}
+                required
+              />
+            </div>
+            <div>
+              <Label htmlFor="Quantity" value="Quantity" />
+              <TextInput
+                type="number"
+                id="Quantity"
+                name="Quantity"
+                placeholder="Enter Quantity"
+                value={newTrade.Quantity}
+                onChange={handleChange}
+                required
+              />
             </div>
           </form>
         </Modal.Body>

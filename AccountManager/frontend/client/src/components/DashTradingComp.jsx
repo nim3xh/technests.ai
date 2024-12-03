@@ -33,9 +33,7 @@ export default function DashTradingComp() {
   const [fileCreationData, setFileCreationData] = useState([]);
   const { currentUser } = useSelector((state) => state.user);
   const [userStats, setUserStats] = useState([]);
-  const [todayDate, setTodayDate] = useState(new Date());
   const [selectedAccounts, setSelectedAccounts] = useState([]);
-  const [showTable, setShowTable] = useState(false);
   const [paStats, setPaStats] = useState({
     PA1: 0,
     PA2: 0,
@@ -225,23 +223,51 @@ export default function DashTradingComp() {
       setLoading(false);
     }
   };
+
+  // Function to determine the trade name based on account balance and account type (PA or EVAL)
+  const getTradeNameBasedOnBalance = (accountType, balance) => {
+    // Check if the account type is "EVAL"
+    if (accountType.startsWith("APEX")) {
+        if (balance >= 49500 && balance <= 52799) {
+            return "EVAL STD"; // For EVAL accounts with balance between 49500 and 52799
+        } else if (balance > 52800) {
+            return "EVAL Mini"; // For EVAL accounts with balance above 52800
+        } else if (balance < 49500) {
+            return "EVAL MAX"; // For EVAL accounts with balance below 49500
+        }
+    }
+    
+    // Check if the account type is "PA"
+    if (accountType.startsWith("PA")) {
+        if (balance >= 49000 && balance <= 52799) {
+            return "PA STD"; // For PA accounts with balance between 49000 and 52799
+        } else if (balance > 52800) {
+            return "PA Mini"; // For PA accounts with balance above 52800
+        } else if (balance < 49000) {
+            return "PA Max"; // For PA accounts with balance below 49000
+        }
+    }
+
+    return "-"; // Default fallback if no condition matches
+  };
+
   
   const getTradeName = (accountNumber) => {
     if (!accountNumber) return "-"; // Handle case when accountNumber is null/undefined
     const apexIdMatch = accountNumber.match(/APEX-(\d+)/);
     if (apexIdMatch) {
-      const apexId = Number(apexIdMatch[1]); // Convert extracted apexId to a number
-  
-      // Filter all trades that match the apexId
-      const matchingTrades = tradesData?.filter(
-        (trade) => Number(trade?.ApexId) === apexId // Convert trade.ApexId to a number and compare
-      );
-  
-      // If matches exist, return a random trade name
-      if (matchingTrades && matchingTrades.length > 0) {
-        const randomIndex = Math.floor(Math.random() * matchingTrades.length);
-        return matchingTrades[randomIndex]?.TradeName || "-";
-      }
+        const apexId = Number(apexIdMatch[1]); // Convert extracted apexId to a number
+
+        // Filter all trades that match the apexId
+        const matchingTrades = tradesData?.filter(
+            (trade) => Number(trade?.ApexId) === apexId // Convert trade.ApexId to a number and compare
+        );
+
+        // If matches exist, return a random trade name
+        if (matchingTrades && matchingTrades.length > 0) {
+            const randomIndex = Math.floor(Math.random() * matchingTrades.length);
+            return matchingTrades[randomIndex]?.TradeName || "-";
+        }
     }
     return "-"; // Return fallback value if no match
   };
@@ -253,56 +279,60 @@ export default function DashTradingComp() {
 
       const createTableDataForOneAccount = () => {
         let filtered = combinedData.filter((account) => account.status !== "admin only");
-
+    
         if (selectedFilters.PA) {
             filtered = filtered.filter((item) => item.account.startsWith("PA"));
         }
-
+    
         if (selectedFilters.EVAL) {
             filtered = filtered.filter((item) => item.account.startsWith("APEX"));
         }
-
+    
         const accountData = filtered.filter((account) => {
-            // console.log('Selected Account:', newSelectedAccounts[0]);
-            // console.log('Checking Account:', `${account.accountNumber} (${account.name})`);
             return `${account.accountNumber} (${account.name})` === newSelectedAccounts[0];
         });
-
+    
         // Additional filtering by balance
         const filteredAccountData = accountData.filter(
             (account) => account.accountBalance <= 53000
         );
-
+    
         // Sorting account data
         const sortedAccountData = filteredAccountData.sort((a, b) => a.accountBalance - b.accountBalance);
-
+    
         const maxRows = sortedAccountData.length;
         let directions = [];
-
+    
         const rows = Array.from({ length: maxRows }, (_, i) => {
             const account = sortedAccountData[i] || {};
             let direction = "-";
-
+            let tradeName = "-"; // Default trade name
+    
             if (account.account) {
+                // Select direction randomly for now (can be replaced with a more specific logic)
                 direction = directions[i]?.direction || (Math.random() < 0.5 ? "Long" : "Short");
+    
+                // Get the trade name based on the account balance
+                tradeName = getTradeNameBasedOnBalance(account.account,account.accountBalance);
             }
-
+    
             if (!directions[i] && account.account) {
                 directions[i] = { direction };
             }
-
+    
             return {
                 direction,
                 account: account.account || "-",
                 balance: account.accountBalance || "-",
                 time: timeSlots[i] || "-",
-                trade: account.account ? getTradeName(account.account) : "-",
+                trade: tradeName, // Trade name selected based on balance
             };
         });
-
+    
+        // console.log('rows: ', rows); // Output the rows for debugging
         return rows;
       };
-
+      
       const convertTo12HourFormat = (time) => {
         const [hours, minutes, seconds] = time.split(":");
         let hour = parseInt(hours, 10);

@@ -18,6 +18,7 @@ import {
   Checkbox,
   Spinner,
   Dropdown,
+  Tooltip,
 } from "flowbite-react";
 import { useSelector } from "react-redux";
 import { debounce, set } from "lodash";
@@ -36,21 +37,31 @@ export default function DashAccountDetails() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [csvFiles, setCsvFiles] = useState([]);
-  const [accountColors, setAccountColors] = useState({});
   const [isAdminOnly, setIsAdminOnly] = useState(false);
   const [isPAaccount, setIsPAaccount] = useState(false);
   const [isEvalAccount, setIsEvalAccount] = useState(false);
   const [selectedProcessRange, setSelectedProcessRange] = useState("");
   const [paAccountsCount, setPaAccountsCount] = useState(0);
   const [nonPaAccountsCount, setNonPaAccountsCount] = useState(0);
+  const [selectedAccount, setSelectedAccount] = useState(null);
+
   const [setsData, setSetsData] = useState([]);
   const [createdDateTime, setCreatedDateTime] = useState("");
-  const [showModal, setShowModal] = useState(false);
   const [setsMade, setSetsMade] = useState(false); // State to toggle between buttons
   const [showSetsData, setShowSetsData] = useState(false); // State to control the visibility of setsData table
   const [tradesData, setTradesData] = useState([]);
   const [selectedAccounts, setSelectedAccounts] = useState([]);
+  const [comparisonData, setComparisonData] = useState([]);
   const [userStats, setUserStats] = useState([]);
+  const [runningTrades, setRunningTrades] = useState({}); // Stores running states for each account
+  const [elapsedTimes, setElapsedTimes] = useState({}); // Stores time elapsed for each account
+  const [isCompared, setIsCompared] = useState(false); 
+  let [paStats, setPaStats] = useState({
+    PA1: 0,
+    PA2: 0,
+    PA3: 0,
+    PA4: 0,
+  });
 
   const formattedTodayDate = useRealTimeDate();
 
@@ -85,54 +96,6 @@ export default function DashAccountDetails() {
   };
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const token = currentUser.token; // Get the token from the currentUser object
-        const headers = {
-          Authorization: `Bearer ${token}`, // Add token to request headers
-        };
-
-        const [usersResponse, accountDetailsResponse] = await Promise.all([
-          axios.get(`${BaseURL}users`, { headers }), // Pass headers with the token
-          axios.get(`${BaseURL}accountDetails`, { headers }), // Pass headers with the token
-        ]);
-
-        const mergedData = mergeData(
-          usersResponse.data,
-          accountDetailsResponse.data
-        );
-
-        setCombinedData(mergedData);
-        // Check if mergedData is not empty and set createdDateTime from the first item's createdAt
-        if (mergedData.length > 0) {
-          setCreatedDateTime(mergedData[0].createdAt);
-        } else {
-          // Handle the case when mergedData is empty, if needed
-          setCreatedDateTime(null); // or set it to a default value
-        }
-        setFilteredData(mergedData);
-
-        setLoading(false);
-
-        // Count PA and non-PA accounts
-        const paCount = mergedData.filter((item) =>
-          item.account.startsWith("PA") && !item.status.startsWith("admin")
-        ).length;
-
-        const nonPaCount = mergedData.filter((item) =>
-          item.account.startsWith("APEX") && !item.status.startsWith("admin")
-        ).length;
-
-        
-        setPaAccountsCount(paCount);
-        setNonPaAccountsCount(nonPaCount);
-      } catch (err) {
-        console.error("Error fetching data:", err);
-        setError("Something went wrong while fetching data." || err.message);
-        setLoading(false);
-      }
-    };
-
     fetchData();
     fetchTradeData();
   }, []);
@@ -141,7 +104,8 @@ export default function DashAccountDetails() {
     debounce(() => {
       const filteredCombinedData = applyFilters(
         combinedData,
-        selectedAccounts, // Pass selectedAccounts
+        selectedAccounts,
+        selectedAccount, // Pass selectedAccounts
         isAdminOnly,
         isPAaccount,
         isEvalAccount,
@@ -149,20 +113,10 @@ export default function DashAccountDetails() {
         processRanges
       );
       setFilteredData(filteredCombinedData);
-
-      const filteredSetsData = applyFilters(
-        setsData,
-        selectedAccounts, // Pass selectedAccounts
-        isAdminOnly,
-        isPAaccount,
-        isEvalAccount,
-        selectedProcessRange,
-        processRanges
-      );
-      setSetsData(filteredSetsData);
     }, 300), // 300ms delay
     [
       selectedAccounts, // Update dependency
+      selectedAccount,
       selectedProcessRange,
       combinedData,
       isAdminOnly,
@@ -175,7 +129,8 @@ export default function DashAccountDetails() {
   // Helper function to apply filters
   const applyFilters = (
     data,
-    selectedAccounts, // Change this to selectedAccounts
+    selectedAccounts,
+    selectedAccount,
     isAdminOnly,
     isPAaccount,
     isEvalAccount,
@@ -187,7 +142,13 @@ export default function DashAccountDetails() {
     // Apply account filter for multiple accounts
     if (selectedAccounts.length > 0) {
       filtered = filtered.filter((item) =>
-        selectedAccounts.includes(`${item.accountNumber} (${item.name})`)
+        selectedAccounts.includes(`${item.accountNumber} (${item.name})`),
+      );
+    }
+    
+    if(selectedAccount != null){
+      filtered = filtered.filter((item) =>
+        selectedAccount.includes(`${item.accountNumber} (${item.name})`)
       );
     }
 
@@ -302,7 +263,28 @@ export default function DashAccountDetails() {
         setCreatedDateTime(null); // or set it to a default value
       }
       setFilteredData(mergedData);
-      
+
+       // Initialize PA account statistics
+       const paStats = {
+        PA1: 0,
+        PA2: 0,
+        PA3: 0,
+        PA4: 0,
+      };
+
+      // Categorize and count PA accounts based on account balance
+      mergedData.forEach((account) => {
+        if (account.account.startsWith("PA") && account.status !== "admin only") {
+          const balance = parseFloat(account.accountBalance);
+          if (balance >= 47500 && balance <= 53200) paStats.PA1++;
+          else if (balance >= 53201 && balance <= 55800) paStats.PA2++;
+          else if (balance > 55800 && balance <= 58000) paStats.PA3++;
+          else if (balance > 58000 && balance <= 60600) paStats.PA4++;
+        }
+      });
+
+      setPaStats(paStats); 
+
       setLoading(false);
 
       // Count PA and non-PA accounts
@@ -317,9 +299,60 @@ export default function DashAccountDetails() {
 
       setPaAccountsCount(paCount);
       setNonPaAccountsCount(nonPaCount);
-      
+
+      // Calculate statistics for each user
+      const stats = {};
+      let totalEvalActive = 0;
+      let totalPAActive = 0;
+      let totalEvalAdminOnly = 0;
+      let totalPAAdminOnly = 0;
+
+      mergedData.forEach((item) => {
+        const userName = item.name + " (" + item.accountNumber.replace('APEX-', '') + ")";
+        const isPA = item.account.startsWith("PA");
+        const isActive = item.status === "active";
+        const isEval = item.account.startsWith("APEX");
+        const isAdmin = item.status === "admin only";
+
+        // Initialize user stats if not already done
+        if (!stats[userName]) {
+          stats[userName] = {
+            evalActive: 0,
+            paActive: 0,
+            evalAdminOnly: 0,
+            paAdminOnly: 0,
+          };
+        }
+
+        // Increment counts based on conditions
+        if (isEval && isActive) {
+          stats[userName].evalActive++;
+          totalEvalActive++;
+        }
+        if (isPA && isActive) {
+          stats[userName].paActive++;
+          totalPAActive++;
+        }
+        if (isAdmin && isEval) {
+          stats[userName].evalAdminOnly++;
+          totalEvalAdminOnly++;
+        }
+        if (isAdmin && isPA) {
+          stats[userName].paAdminOnly++;
+          totalPAAdminOnly++;
+        }
+      });
+
+      // Transform stats into an array for rendering
+      const userStatsArray = Object.keys(stats).map((userName) => ({
+        userName,
+        ...stats[userName],
+        totalAccounts: stats[userName].evalActive + stats[userName].paActive,
+      }));
+
+      setUserStats(userStatsArray); // Update userStats state
     } catch (err) {
-      setError("Something went wrong while fetching data.");
+      setError("Something went wrong while fetching data.",err);
       setLoading(false);
     }
   };
@@ -344,6 +377,74 @@ export default function DashAccountDetails() {
   // Calculate total number of accounts and rows
   const totalAccounts = uniqueAccountNumbers.length;
   const totalRows = filteredData.length;
+
+  useEffect(() => {
+    const newPaStats = { PA1: 0, PA2: 0, PA3: 0, PA4: 0 };
+  
+    filteredData.forEach((account) => {
+      if (account.account.startsWith("PA") && account.status !== "admin only") {
+        const balance = parseFloat(account.accountBalance);
+        if (balance >= 47500 && balance <= 53200) newPaStats.PA1++;
+        else if (balance >= 53201 && balance <= 55800) newPaStats.PA2++;
+        else if (balance > 55800 && balance <= 58000) newPaStats.PA3++;
+        else if (balance > 58000 && balance <= 60600) newPaStats.PA4++;
+      }
+    });
+  
+    setPaStats(newPaStats);
+
+    // Calculate statistics for each user
+    const stats = {};
+    let totalEvalActive = 0;
+    let totalPAActive = 0;
+    let totalEvalAdminOnly = 0;
+    let totalPAAdminOnly = 0;
+
+    filteredData.forEach((item) => {
+      const userName = item.name + " (" + item.accountNumber.replace('APEX-', '') + ")";
+      const isPA = item.account.startsWith("PA");
+      const isActive = item.status === "active";
+      const isEval = item.account.startsWith("APEX");
+      const isAdmin = item.status === "admin only";
+
+      // Initialize user stats if not already done
+      if (!stats[userName]) {
+        stats[userName] = {
+          evalActive: 0,
+          paActive: 0,
+          evalAdminOnly: 0,
+          paAdminOnly: 0,
+        };
+      }
+
+      // Increment counts based on conditions
+      if (isEval && isActive) {
+        stats[userName].evalActive++;
+        totalEvalActive++;
+      }
+      if (isPA && isActive) {
+        stats[userName].paActive++;
+        totalPAActive++;
+      }
+      if (isAdmin && isEval) {
+        stats[userName].evalAdminOnly++;
+        totalEvalAdminOnly++;
+      }
+      if (isAdmin && isPA) {
+        stats[userName].paAdminOnly++;
+        totalPAAdminOnly++;
+      }
+    });
+
+    // Transform stats into an array for rendering
+    const userStatsArray = Object.keys(stats).map((userName) => ({
+      userName,
+      ...stats[userName],
+      totalAccounts: stats[userName].evalActive + stats[userName].paActive,
+    }));
+
+    setUserStats(userStatsArray); // Update userStats state
+  }, [filteredData]);
 
   // Calculate unique accounts from filteredData
   const uniqueAccountsInFilteredData = new Set(
@@ -382,8 +483,8 @@ export default function DashAccountDetails() {
       AccountBalance: account.accountBalance,
       AccountName: `${account.accountNumber} (${account.name})`,
       Status: account.status,
-      TrailingThreshold: account.trailingThreshold,
-      PnL: account.PnL,
+      // TrailingThreshold: account.trailingThreshold,
+      // PnL: account.PnL,
     }));
 
     const headers = [
@@ -391,8 +492,8 @@ export default function DashAccountDetails() {
       { label: "Account Balance", key: "AccountBalance" },
       { label: "Account Name", key: "AccountName" },
       { label: "Status", key: "Status" },
-      { label: "Trailing Threshold", key: "TrailingThreshold" },
-      { label: "PnL", key: "PnL" },
+      // { label: "Trailing Threshold", key: "TrailingThreshold" },
+      // { label: "PnL", key: "PnL" },
     ];
 
     return { data: csvData, headers, filename: generateCsvFilename() };
@@ -420,9 +521,6 @@ export default function DashAccountDetails() {
     }
   };
 
-  const [runningTrades, setRunningTrades] = useState({}); // Stores running states for each account
-  const [elapsedTimes, setElapsedTimes] = useState({}); // Stores time elapsed for each account
-
   useEffect(() => {
     const intervals = {};
 
@@ -442,19 +540,33 @@ export default function DashAccountDetails() {
     };
   }, [runningTrades]);
 
-  const [selectedAccount, setSelectedAccount] = useState(null);
-
   const handleAccountSelection = (account) => {
     setSelectedAccount(account);
   };
+
+  const handleAccountSelectionCmp = (account) => {
+    if (selectedAccounts.length < 2) {
+      setSelectedAccounts((prevState) => [...prevState, account]);
+    }
+  };
   
+
+  // Handle clearing comparison
+  const handleClearComparison = () => {
+    setComparisonData([]); // Clear the comparison data
+    setShowSetsData(false); // Hide the comparison table
+    setIsCompared(false); // Reset comparison status
+    setSelectedAccounts([]); // Clear selected accounts
+  };
 
   const handleCompare = () => {
     // Check if exactly two accounts are selected
     if (selectedAccounts.length !== 2) {
-      console.warn("Please select exactly two accounts for comparison.");
-      return; // Exit if the condition is not met
+      alert('Please select two accounts for comparison.');
+      return;
     }
+
+    setIsCompared(true); // Set comparison status to true
 
     const [account1, account2] = selectedAccounts;
 
@@ -463,89 +575,35 @@ export default function DashAccountDetails() {
       .filter((acc) => acc.accountNumber === account1.split(" (")[0])
       .sort(
         (a, b) => parseFloat(a.accountBalance) - parseFloat(b.accountBalance)
-      ); // Sort in ascending order
+      );
 
     const dataForAccount2 = filteredData
       .filter((acc) => acc.accountNumber === account2.split(" (")[0])
       .sort(
         (a, b) => parseFloat(a.accountBalance) - parseFloat(b.accountBalance)
-      ); // Sort in ascending order
+      );
 
-    // Prepare CSV data
-    const csvData = [];
-
-    // Determine max rows to handle interleaving
+    // Prepare the comparison data
+    const comparisonRows = [];
     const maxRows = Math.max(dataForAccount1.length, dataForAccount2.length);
 
-    // Interleave rows: first from account1, then from account2
     for (let i = 0; i < maxRows; i++) {
-      const acc1 = dataForAccount1[i] || {
-        name: account1.split(" (")[0],
-        account: account1.split(" (")[0],
-        accountBalance: "", // Keep empty if no data
-      };
+      const acc1 = dataForAccount1[i] || { name: account1, accountBalance: "" };
+      const acc2 = dataForAccount2[i] || { name: account2, accountBalance: "" };
 
-      const acc2 = dataForAccount2[i] || {
-        name: account2.split(" (")[0],
-        account: account2.split(" (")[0],
-        accountBalance: "", // Keep empty if no data
-      };
-
-      // Ensure balances are numbers or empty strings
-      const balance1 =
-        acc1.accountBalance !== "" ? parseFloat(acc1.accountBalance) : "";
-      const balance2 =
-        acc2.accountBalance !== "" ? parseFloat(acc2.accountBalance) : "";
-
-      // Push data to CSV structure
-      csvData.push({
+      comparisonRows.push({
         AccountName1: acc1.name,
         AccountNumber1: acc1.account,
-        AccountBalance1: balance1,
+        AccountBalance1: acc1.accountBalance,
         AccountName2: acc2.name,
         AccountNumber2: acc2.account,
-        AccountBalance2: balance2,
+        AccountBalance2: acc2.accountBalance,
       });
     }
-
-    // Define headers for the CSV
-    const headers = [
-      { label: "Account Name (1)", key: "AccountName1" },
-      { label: "Account Number (1)", key: "AccountNumber1" },
-      { label: "Account Balance (1)", key: "AccountBalance1" },
-      { label: "Account Balance (2)", key: "AccountBalance2" },
-      { label: "Account Number (2)", key: "AccountNumber2" },
-      { label: "Account Name (2)", key: "AccountName2" },
-    ];
-
-    // Generate CSV filename
-    const filename = `compare-${account1.split(" (")[0]}-${
-      account2.split(" (")[0]
-    }.csv`;
-
-    // Prepare CSV content
-    const csvContent = [
-      headers.map((header) => header.label).join(","), // CSV headers
-      ...csvData.map((row) =>
-        headers
-          .map((header) => JSON.stringify(row[header.key] || "")) // CSV rows
-          .join(",")
-      ),
-    ].join("\n");
-
-    // Create and download CSV
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    const link = document.createElement("a");
-    const url = URL.createObjectURL(blob);
-
-    link.setAttribute("href", url);
-    link.setAttribute("download", filename);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link); // Clean up
-
-    // Reset selected accounts after comparison
-    setSelectedAccounts([]);
+    console.log(comparisonRows);
+    setComparisonData(comparisonRows);
+    
+    setShowSetsData(true); // Show the comparison data
   };
 
   return (
@@ -578,49 +636,110 @@ export default function DashAccountDetails() {
           <div className="flex-wrap flex gap-4 justify-center mt-4">
             {/* Total Rows Displayed */}
             <div className="flex flex-col p-3 dark:bg-slate-800 gap-4 md:w-64 w-full rounded-md shadow-md">
-              <div className="flex justify-between">
-                <div>
-                  <h3 className="text-gray-500 text-md uppercase">Total Rows</h3>
-                  <p className="text-2xl">{totalRows}</p>
-                </div>
-                {/* <MdTableRows className="bg-teal-600 text-white rounded-full text-5xl p-3 shadow-lg" /> */}
-              </div>
-            </div>
-            {/* Total Users Displayed */}
-            <div className="flex flex-col p-3 dark:bg-slate-800 gap-4 md:w-64 w-full rounded-md shadow-md">
-              <div className="flex justify-between">
-                <div>
-                  <h3 className="text-gray-500 text-md uppercase">Users</h3>
-                  <p className="text-2xl">{totalUniqueAccountsDisplayed}</p>
-                </div>
-                {/* <MdPerson className="bg-teal-600 text-white rounded-full text-5xl p-3 shadow-lg" /> */}
-              </div>
-            </div>
-            {/* Total PA Account Rows */}
-            <div className="flex flex-col p-3 dark:bg-slate-800 gap-4 md:w-64 w-full rounded-md shadow-md">
-              <div className="flex justify-between">
-                <div>
-                  <h3 className="text-gray-500 text-md uppercase">PA Accounts</h3>
-                  <p className="text-2xl">{paAccountsCount}</p>
-                </div>
-                {/* <MdAccountBalance className="bg-teal-600 text-white rounded-full text-5xl p-3 shadow-lg" /> */}
-              </div>
-            </div>
-            {/* Total Eval Account Rows */}
-            <div className="flex flex-col p-3 dark:bg-slate-800 gap-4 md:w-64 w-full rounded-md shadow-md">
-              <div className="flex justify-between">
-                <div>
-                  <h3 className="text-gray-500 text-md uppercase">Eval Accounts</h3>
-                  <p className="text-2xl">
-                    {nonPaAccountsCount}
-                  </p>
-                </div>
-                {/* <MdTableRows className="bg-teal-600 text-white rounded-full text-5xl p-3 shadow-lg" /> */}
-              </div>
-            </div>
-          </div>
+                    <div className="flex justify-between">
+                      <div>
+                        <h3 className="text-gray-500 text-md uppercase">Total Rows</h3>
+                        <p className="text-2xl">{totalRows}</p>
+                      </div>
+                      {/* <MdTableRows className="bg-teal-600 text-white rounded-full text-5xl p-3 shadow-lg" /> */}
+                    </div>
+                  </div>
+                    <div className="flex flex-col p-3 dark:bg-slate-800 gap-4 md:w-40 w-full rounded-md shadow-md">
+                      <div className="flex justify-between">
+                        <div className="">
+                          <h3 className="text-gray-500 text-md uppercase">
+                            Users{" "}
+                          </h3>
+                          <p className="text-2xl">{totalUniqueAccountsDisplayed}</p>
+                        </div>
+                        {/* <MdPerson className="bg-teal-600  text-white rounded-full text-5xl p-3 shadow-lg" /> */}
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col p-3 dark:bg-slate-800 gap-4 md:w-40 w-full rounded-md shadow-md">
+                      <div className="flex justify-between">
+                        <div>
+                          <h3 className="text-gray-500 text-md uppercase">
+                            EVAL
+                          </h3>
+                          <p className="text-2xl">
+                            {userStats.reduce(
+                              (acc, user) => acc + user.evalActive,
+                              0
+                            )}
+                          </p>
+                        </div>
+                        {/* <MdTableRows className="bg-teal-600 text-white rounded-full text-5xl p-3 shadow-lg" /> */}
+                      </div>
+                    </div>
+
+                    <Tooltip content="Balance Range: $47,500 - $53,200">
+                      <div className="flex flex-col p-3 dark:bg-slate-800 gap-4 md:w-40 w-full rounded-md shadow-md">
+                        <div className="flex justify-between">
+                          <div>
+                            <h3 className="text-gray-500 text-md uppercase">
+                              PA1
+                            </h3>
+                            <p className="text-2xl">
+                              {paStats.PA1}
+                            </p>
+                          </div>
+                          {/* <MdAccountBalance className="bg-teal-600 text-white rounded-full text-5xl p-3 shadow-lg" /> */}
+                        </div>
+                      </div>
+                    </Tooltip>
+                    <Tooltip content="Balance Range: $53,201 - $55,800">
+                      <div className="flex flex-col p-3 dark:bg-slate-800 gap-4 md:w-40 w-full rounded-md shadow-md">
+                        <div className="flex justify-between">
+                          <div>
+                            <h3 className="text-gray-500 text-md uppercase">
+                              PA2
+                            </h3>
+                            <p className="text-2xl">
+                              {paStats.PA2}
+                            </p>
+                          </div>
+                          {/* <MdAccountBalance className="bg-teal-600 text-white rounded-full text-5xl p-3 shadow-lg" /> */}
+                        </div>
+                      </div>
+                    </Tooltip>
+                    
+                    <Tooltip content="Balance Range: $55,801 - $58,000">
+                      <div className="flex flex-col p-3 dark:bg-slate-800 gap-4 md:w-40 w-full rounded-md shadow-md" title="Balance Range: 58,001 - 60,600">
+                        <div className="flex justify-between">
+                          <div>
+                            <h3 className="text-gray-500 text-md uppercase">
+                              PA3
+                            </h3>
+                            <p className="text-2xl">
+                              {paStats.PA3}
+                            </p>
+                          </div>
+                          {/* <MdAccountBalance className="bg-teal-600 text-white rounded-full text-5xl p-3 shadow-lg" /> */}
+                        </div>
+                      </div>
+                    </Tooltip>
+                      
+                    <Tooltip content="Balance Range: $58,001 - $60,600">
+                      <div className="flex flex-col p-3 dark:bg-slate-800 gap-4 md:w-40 w-full rounded-md shadow-md" title="Balance Range: 58,001 - 60,600">
+                        <div className="flex justify-between">
+                          <div title="Balance Range: 58,001 - 60,600">
+                            <h3 className="text-gray-500 text-md uppercase">
+                              PA4
+                            </h3>
+                            <p className="text-2xl">
+                              {paStats.PA4}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </Tooltip>
+                  </div>
 
           <div className="flex flex-col md:flex-row justify-center items-center md:space-x-4 mt-4">
+          {currentUser.user.role === "admin" && !(createLoding || setsMade || showSetsData) && (
+            <>
+       
             <Dropdown
               label={
                 selectedAccount
@@ -629,6 +748,7 @@ export default function DashAccountDetails() {
               }
               className="w-full text-left dark:bg-gray-800 dark:text-gray-200"
               inline
+              disabled={setsMade || showSetsData}
             >
               <Dropdown.Item onClick={() => setSelectedAccount(null)}>
                 Clear Selection
@@ -646,7 +766,7 @@ export default function DashAccountDetails() {
 
             <Dropdown
                 label={selectedProcessRange || "Select Range"}
-                disabled={setsMade}
+                disabled={setsMade || showSetsData}
                 className="w-1/4 dark:bg-gray-800 dark:text-gray-200 relative z-20" // Ensure z-index is applied
                 inline
               >
@@ -662,25 +782,26 @@ export default function DashAccountDetails() {
                   </Dropdown.Item>
                 ))}
               </Dropdown>
+
               <div className="flex gap-3 items-center">
                 {[
                   {
                     label: "PA",
                     checked: isPAaccount,
                     onChange: setIsPAaccount,
-                    disabled: setsMade || isAdminOnly || isEvalAccount,
+                    disabled: setsMade || isAdminOnly || isEvalAccount || showSetsData,
                 },
                   {
                     label: "Eval",
                     checked: isEvalAccount,
                     onChange: setIsEvalAccount,
-                    disabled: setsMade || isAdminOnly || isPAaccount,
+                    disabled: setsMade || isAdminOnly || isPAaccount || showSetsData,
                   },
                   {
                     label: "Admin Only",
                     checked: isAdminOnly,
                     onChange: setIsAdminOnly,
-                    disabled: setsMade || isPAaccount || isEvalAccount,
+                    disabled: setsMade || isPAaccount || isEvalAccount  || showSetsData,
                   },  
                 ].map(({ label, checked, onChange, disabled }) => (
                   <label className="flex items-center" key={label}>
@@ -695,35 +816,74 @@ export default function DashAccountDetails() {
                 ))}
               </div>
 
-              {currentUser.user.role === "admin" && (
-                <Button
-                  gradientDuoTone="greenToBlue"
-                  onClick={uploadCsvs}
-                  disabled={createLoding || setsMade}
-                >
-                  {createLoding ? (
-                    <>
-                      <Spinner size="sm" />
-                      <span className="pl-3">Loading...</span>
-                    </>
-                  ) : (
-                    <>Upload CSVs</>
-                  )}
-                </Button>
-              )}
+             
+                  <Button
+                    gradientDuoTone="greenToBlue"
+                    onClick={uploadCsvs}
+                  >
+                    {createLoding ? (
+                      <>
+                        <Spinner size="sm" />
+                        <span className="pl-3">Loading...</span>
+                      </>
+                    ) : (
+                      <>Upload CSVs</>
+                    )}
+                  </Button>
+                  </>
+                )}
+
 
               <CSVLink
-                {...exportCsv()}
+                {...exportCsv()} // assuming exportCsv() returns the data you want to export
                 className="bg-gradient-to-r from-teal-400 via-teal-500 to-teal-600 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-teal-300 text-white rounded-md px-4 py-2"
+                hidden={createLoding || setsMade || showSetsData}  // Will disable if any of these values are true
               >
                 Export CSV
               </CSVLink>
+
+
+              <Dropdown
+                  label={selectedAccounts[0] ? selectedAccounts[0] : "Select Account 1"}
+                  className="w-full text-left dark:bg-gray-800 dark:text-gray-200"
+                  inline
+                >
+                  <Dropdown.Item onClick={() => handleClearComparison()}>
+                    Clear Selection
+                  </Dropdown.Item>
+                  {uniqueAccountNumbers.map((account) => (
+                    <Dropdown.Item
+                      key={account}
+                      onClick={() => handleAccountSelectionCmp(account)}
+                    >
+                      {account}
+                    </Dropdown.Item>
+                  ))}
+                </Dropdown>
+                
+                <Dropdown
+                  label={selectedAccounts[1] ? selectedAccounts[1] : "Select Account 2"}
+                  className="w-full text-left dark:bg-gray-800 dark:text-gray-200"
+                  inline
+                >
+                  <Dropdown.Item onClick={() => handleClearComparison()}>
+                    Clear Selection
+                  </Dropdown.Item>
+                  {uniqueAccountNumbers.map((account) => (
+                    <Dropdown.Item
+                      key={account}
+                      onClick={() => handleAccountSelectionCmp(account)}
+                    >
+                      {account}
+                    </Dropdown.Item>
+                  ))}
+                </Dropdown>
+              {/* Compare or Clear Comparison Button */}
               <Button
-                gradientDuoTone="greenToBlue"
-                disabled={selectedAccounts.length !== 2}
-                onClick={handleCompare} // Replace with your actual compare function
+                gradientDuoTone={isCompared ? "redToYellow" : "greenToBlue"} // Change the color based on comparison status
+                onClick={isCompared ? handleClearComparison : handleCompare}
               >
-                Compare both accounts
+                {isCompared ? "Clear Comparison" : "Compare both accounts"} {/* Change button text */}
               </Button>
           </div>
           {createLoding ? (
@@ -782,6 +942,34 @@ export default function DashAccountDetails() {
                     </div>
                   </div>
                 )}
+
+                 {/* Display comparison data in a table when showSetsData is true */}
+                 <div className="flex flex-col md:flex-row justify-center items-center md:space-x-4">
+                {showSetsData && comparisonData.length > 0 && (
+                  <div className="mt-4 overflow-x-auto max-h-[400px]">
+                    <Table hoverable className="shadow-md w-full mt-4">
+                      <TableHead>
+                        <TableHeadCell className="sticky top-0 bg-white z-10">Account Number</TableHeadCell>
+                        <TableHeadCell className="sticky top-0 bg-white z-10">Account Balance</TableHeadCell>
+                        <TableHeadCell className="sticky top-0 bg-white z-10">Account Number</TableHeadCell>
+                        <TableHeadCell className="sticky top-0 bg-white z-10">Account Balance</TableHeadCell>
+                      </TableHead>
+                      <TableBody>
+                        {comparisonData.map((row, index) => (
+                          <TableRow key={index}>
+                            
+                            <TableCell>{row.AccountNumber1}</TableCell>
+                            <TableCell>{row.AccountBalance1}</TableCell>
+                            <TableCell>{row.AccountBalance2}</TableCell>
+                            <TableCell>{row.AccountNumber2}</TableCell>
+                           
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+                </div>
               </div>
             </>
           )}

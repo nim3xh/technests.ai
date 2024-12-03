@@ -22,17 +22,31 @@ const BaseURL = import.meta.env.VITE_BASE_URL;
 
 export default function DashboardComp() {
   const [combinedData, setCombinedData] = useState([]);
+  const [combinedDeletedData, setCombinedDeletedData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const { currentUser } = useSelector((state) => state.user);
   const [userStats, setUserStats] = useState([]);
   const [selectedDate, setSelectedDate] = useState(null);
   const [todayDate, setTodayDate] = useState(new Date());
+  const [deletedpaStats, setDeletedpaStats] = useState({
+    PA1: 0,
+    PA2: 0,
+    PA3: 0,
+    PA4: 0,
+    paCount: 0, // PA Count > 53,000
+    poCount: 0, // PO Count > 53,000
+    adminOnly: 0, // Admin Only
+  });
+
   const [paStats, setPaStats] = useState({
     PA1: 0,
     PA2: 0,
     PA3: 0,
     PA4: 0,
+    paCount: 0, // PA Count > 53,000
+    poCount: 0, // PO Count > 53,000
+    adminOnly: 0, // Admin Only
   });
   const [createdDateTime, setCreatedDateTime] = useState("");
 
@@ -49,114 +63,215 @@ export default function DashboardComp() {
     });
   };
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const token = currentUser.token;
-        const headers = {
-          Authorization: `Bearer ${token}`,
-        };
-
-        const [usersResponse, accountDetailsResponse] = await Promise.all([
-          axios.get(`${BaseURL}users`, { headers }),
-          axios.get(`${BaseURL}accountDetails`, { headers }),
-        ]);
-
-        const mergedData = mergeData(
-          usersResponse.data,
-          accountDetailsResponse.data
-        );
-
-        setCombinedData(mergedData);
-        // Check if mergedData is not empty and set createdDateTime from the first item's createdAt
-        if (mergedData.length > 0) {
-          setCreatedDateTime(mergedData[0].createdAt);
-        } else {
-          // Handle the case when mergedData is empty, if needed
-          setCreatedDateTime(null); // or set it to a default value
-        }
-        setLoading(false);
-
-        // Initialize PA account statistics
-        const paStats = {
-          PA1: 0,
-          PA2: 0,
-          PA3: 0,
-          PA4: 0,
-        };
-  
-        // Categorize and count PA accounts based on account balance
-        mergedData.forEach((account) => {
-          if (account.account.startsWith("PA") && account.status !== "admin only") {
-            const balance = parseFloat(account.accountBalance);
-            if (balance >= 47500 && balance <= 53200) paStats.PA1++;
-            else if (balance >= 53201 && balance <= 55800) paStats.PA2++;
-            else if (balance > 55800 && balance <= 58000) paStats.PA3++;
-            else if (balance > 58000 && balance <= 60600) paStats.PA4++;
-          }
-        });
-  
-        setPaStats(paStats); 
-
-        // Calculate statistics for each user
-        const stats = {};
-        let totalEvalActive = 0;
-        let totalPAActive = 0;
-        let totalEvalAdminOnly = 0;
-        let totalPAAdminOnly = 0;
-
-        mergedData.forEach((item) => {
-          const userName = item.name + " (" + item.accountNumber.replace('APEX-', '') + ")";
-          const isPA = item.account.startsWith("PA");
-          const isActive = item.status === "active";
-          const isEval = item.account.startsWith("APEX");
-          const isAdmin = item.status === "admin only";
-
-          // Initialize user stats if not already done
-          if (!stats[userName]) {
-            stats[userName] = {
-              evalActive: 0,
-              paActive: 0,
-              evalAdminOnly: 0,
-              paAdminOnly: 0,
-            };
-          }
-
-          // Increment counts based on conditions
-          if (isEval && isActive) {
-            stats[userName].evalActive++;
-            totalEvalActive++;
-          }
-          if (isPA && isActive) {
-            stats[userName].paActive++;
-            totalPAActive++;
-          }
-          if (isAdmin && isEval) {
-            stats[userName].evalAdminOnly++;
-            totalEvalAdminOnly++;
-          }
-          if (isAdmin && isPA) {
-            stats[userName].paAdminOnly++;
-            totalPAAdminOnly++;
-          }
-        });
-
-        // Transform stats into an array for rendering
-        const userStatsArray = Object.keys(stats).map((userName) => ({
-          userName,
-          ...stats[userName],
-          totalAccounts: stats[userName].evalActive + stats[userName].paActive,
-        }));
-
-        setUserStats(userStatsArray); 
-      } catch (err) {
-        console.error("Error fetching data:", err);
-        setError("Something went wrong while fetching data.");
-        setLoading(false);
-      }
+  const fetchData = async () => {
+  try {
+    const token = currentUser.token;
+    const headers = {
+      Authorization: `Bearer ${token}`,
     };
 
+    const [usersResponse, accountDetailsResponse] = await Promise.all([
+      axios.get(`${BaseURL}users`, { headers }),
+      axios.get(`${BaseURL}accountDetails`, { headers }),
+    ]);
+
+    const mergedData = mergeData(
+      usersResponse.data,
+      accountDetailsResponse.data
+    );
+
+    setCombinedData(mergedData);
+
+    // Set createdDateTime for the first item if available
+    if (mergedData.length > 0) {
+      setCreatedDateTime(mergedData[0].createdAt);
+    } else {
+      setCreatedDateTime(null);
+    }
+
+    
+
+    // Initialize statistics
+    const paStats = {
+      PA1: 0,
+      PA2: 0,
+      PA3: 0,
+      PA4: 0,
+      paCount: 0, // PA Count > 53,000
+      poCount: 0, // PO Count > 53,000
+      adminOnly: 0, // Admin Only
+    };
+
+    // Categorize and count accounts
+    mergedData.forEach((account) => {
+      const balance = parseFloat(account.accountBalance);
+      const isPA = account.account.startsWith("PA");
+      const isEval = account.account.startsWith("APEX");
+      const isAdmin = account.status === "admin only";
+      const isActive = account.status === "active";
+
+      // PA Account count > 53,000
+      if (isEval && balance > 53000) {
+        paStats.paCount++;
+      }
+
+      // PO Account count > 53,000
+      if (isPA && balance > 53000) {
+        paStats.poCount++;
+      }
+
+      // Admin Only Count
+      if (isAdmin) {
+        paStats.adminOnly++;
+      }
+
+      // Categorize PA account balance ranges
+      if (isPA && isActive) {
+        if (balance >= 47500 && balance <= 53200) paStats.PA1++;
+        else if (balance >= 53201 && balance <= 55800) paStats.PA2++;
+        else if (balance > 55800 && balance <= 58000) paStats.PA3++;
+        else if (balance > 58000 && balance <= 60600) paStats.PA4++;
+      }
+    });
+
+    setPaStats(paStats);
+    setLoading(false);
+
+    // Calculate statistics for each user
+    const stats = {};
+    let totalEvalActive = 0;
+    let totalPAActive = 0;
+    let totalEvalAdminOnly = 0;
+    let totalPAAdminOnly = 0;
+
+    mergedData.forEach((item) => {
+      const userName = item.name + " (" + item.accountNumber.replace('APEX-', '') + ")";
+      const isPA = item.account.startsWith("PA");
+      const isActive = item.status === "active";
+      const isEval = item.account.startsWith("APEX");
+      const isAdmin = item.status === "admin only";
+
+      // Initialize user stats if not already done
+      if (!stats[userName]) {
+        stats[userName] = {
+          evalActive: 0,
+          paActive: 0,
+          evalAdminOnly: 0,
+          paAdminOnly: 0,
+        };
+      }
+
+      // Increment counts based on conditions
+      if (isEval && isActive) {
+        stats[userName].evalActive++;
+        totalEvalActive++;
+      }
+      if (isPA && isActive) {
+        stats[userName].paActive++;
+        totalPAActive++;
+      }
+      if (isAdmin && isEval) {
+        stats[userName].evalAdminOnly++;
+        totalEvalAdminOnly++;
+      }
+      if (isAdmin && isPA) {
+        stats[userName].paAdminOnly++;
+        totalPAAdminOnly++;
+      }
+    });
+
+    // Transform stats into an array for rendering
+    const userStatsArray = Object.keys(stats).map((userName) => ({
+      userName,
+      ...stats[userName],
+      totalAccounts: stats[userName].evalActive + stats[userName].paActive,
+    }));
+
+    setUserStats(userStatsArray);
+  } catch (err) {
+    console.error("Error fetching data:", err);
+    setError("Something went wrong while fetching data.");
+    setLoading(false);
+  }
+};
+
+  const fetchDeletedData = async () => {
+    setLoading(true);
+    try {
+      const token = currentUser.token;
+      const headers = {
+        Authorization: `Bearer ${token}`,
+      };
+
+      const [usersResponse, accountDetailsResponse] = await Promise.all([
+        axios.get(`${BaseURL}users`, { headers }),
+        axios.get(`${BaseURL}accountDetails/viewDeleted`, { headers }),
+      ]);
+
+      const mergedData = mergeData(
+        usersResponse.data,
+        accountDetailsResponse.data
+      );
+      
+      setCombinedDeletedData(mergedData);
+
+      // Initialize statistics
+      const deletedpaStats = {
+        PA1: 0,
+        PA2: 0,
+        PA3: 0,
+        PA4: 0,
+        paCount: 0, // PA Count > 53,000
+        poCount: 0, // PO Count > 53,000
+        adminOnly: 0, // Admin Only
+      };
+
+      // Categorize and count accounts
+      mergedData.forEach((account) => {
+        const balance = parseFloat(account.accountBalance);
+        const isPA = account.account.startsWith("PA");
+        const isEval = account.account.startsWith("APEX");
+        const isAdmin = account.status === "admin only";
+        const isActive = account.status === "active";
+
+        // PA Account count > 53,000
+        if (isEval && balance > 53000) {
+          deletedpaStats.paCount++;
+        }
+
+        // PO Account count > 53,000
+        if (isPA && balance > 53000) {
+          deletedpaStats.poCount++;
+        }
+
+        // Admin Only Count
+        if (isAdmin) {
+          deletedpaStats.adminOnly++;
+        }
+
+        // Categorize PA account balance ranges
+        if (isPA && isActive) {
+          if (balance >= 47500 && balance <= 53200) deletedpaStats.PA1++;
+          else if (balance >= 53201 && balance <= 55800) deletedpaStats.PA2++;
+          else if (balance > 55800 && balance <= 58000) deletedpaStats.PA3++;
+          else if (balance > 58000 && balance <= 60600) deletedpaStats.PA4++;
+        }
+
+      });
+
+      setDeletedpaStats(deletedpaStats);
+      setLoading(false);
+
+    } catch (err) {
+      console.error("Error fetching data:", err);
+      setError("Something went wrong while fetching data.");
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchData();
+    fetchDeletedData();
   }, [BaseURL, currentUser]);
 
   const formattedDateTime = createdDateTime
@@ -322,9 +437,53 @@ export default function DashboardComp() {
                   </div>
 
                   <div className="flex flex-col md:flex-row justify-center items-center md:space-x-4">
+                      {/* Table Section */}
+                      <div>
+                        <Table hoverable className="shadow-md w-full mt-5">
+                          <TableHead>
+                            <TableHeadCell></TableHeadCell>
+                            <TableHeadCell>PA Count</TableHeadCell>
+                            <TableHeadCell>PO Count</TableHeadCell>
+                            <TableHeadCell>Admin Only</TableHeadCell>
+                          </TableHead>
+                          <TableBody>
+                            <TableRow>
+                              <TableCell>
+                                <div>
+                                  <p><b>Today's:</b></p>
+                                  <p><b>Till Date:</b></p>
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                <div>
+                                  <p>{paStats.paCount}</p>
+                                  <p>{deletedpaStats.paCount}</p>
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                <div>
+                                  <p>{paStats.poCount}</p>
+                                  <p>{deletedpaStats.poCount}</p> 
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                <div>
+                                  <p>{paStats.adminOnly}</p>
+                                  <p>{deletedpaStats.adminOnly}</p>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          </TableBody>
+                        </Table>
+                      </div>
+                    </div>
+
+
+
+                  <div className="flex flex-col md:flex-row justify-center items-center md:space-x-4">
                     {/* Table Section */}
-                    <div className="w-full md:w-1/2 p-3 mt-5">
-                    <div className="w-full flex justify-between items-center mb-3">
+                    <div>
+                    <div className="w-full flex justify-between items-center mb-3 mt-5">
                       <p className="text-left text-sm md:text-base text-gray-700 dark:text-white">
                         Last Updated: 
                         <span className="font-medium text-gray-600 dark:text-white">
@@ -332,16 +491,17 @@ export default function DashboardComp() {
                         </span>
                       </p>
                     </div>
-                      <Table hoverable className="shadow-md w-full">
+                    <div className="table-wrapper overflow-x-auto max-h-[400px]">
+                    <Table hoverable className="shadow-md w-full">
                         <TableHead>
-                          <TableHeadCell>#</TableHeadCell>
-                          <TableHeadCell>User Name</TableHeadCell>
-                          <TableHeadCell>EVAL</TableHeadCell>
-                          <TableHeadCell>PA</TableHeadCell>
-                          <TableHeadCell>Admin Only</TableHeadCell>
-                          <TableHeadCell><b>Total</b></TableHeadCell>
-                          <TableHeadCell>EVAL to PA</TableHeadCell>
-                          <TableHeadCell>PO</TableHeadCell>
+                          <TableHeadCell className="sticky top-0 bg-white z-10">#</TableHeadCell>
+                          <TableHeadCell className="sticky top-0 bg-white z-10">User Name</TableHeadCell>
+                          <TableHeadCell className="sticky top-0 bg-white z-10">EVAL</TableHeadCell>
+                          <TableHeadCell className="sticky top-0 bg-white z-10">PA</TableHeadCell>
+                          <TableHeadCell className="sticky top-0 bg-white z-10">Admin Only</TableHeadCell>
+                          <TableHeadCell className="sticky top-0 bg-white z-10"><b>Total</b></TableHeadCell>
+                          <TableHeadCell className="sticky top-0 bg-white z-10">EVAL to PA</TableHeadCell>
+                          <TableHeadCell className="sticky top-0 bg-white z-10">PO</TableHeadCell>
                         </TableHead>
                         <TableBody>
                           {userStats.map((user, index) => (
@@ -358,6 +518,8 @@ export default function DashboardComp() {
                           ))}
                         </TableBody>
                       </Table>
+                    </div>
+                      
                     </div>
                   </div>
             </>
