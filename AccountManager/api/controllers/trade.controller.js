@@ -23,15 +23,15 @@ function uploadFile(req, res) {
         let counter = 1;
 
         // Define the list of required columns
-        const requiredColumns = ["Instrument", "Quantity", "Stop loss", "Profit", "Use Breakeven", 
+        const requiredColumns = ["TradeName","Instrument", "Quantity", "Stop loss", "Profit", "Use Breakeven", 
             "Breakeven trigger", "Breakeven Offset", "Use Trail", "Trail Trigger", "Trail", 
-            "Apex ID", "Direction", "Time"];
+            "Time"];
         
         // Define the list of all columns that are allowed
         const allowedColumns = new Set([
             "TradeName", "Instrument", "Quantity", "Stop loss", "Profit", "Use Breakeven", 
             "Breakeven trigger", "Breakeven Offset", "Use Trail", "Trail Trigger", "Trail", 
-            "Apex ID", "Direction", "Time"
+            "Direction", "Time"
         ]);
 
         // Check if all required columns are present
@@ -50,13 +50,15 @@ function uploadFile(req, res) {
             });
         }
 
-        // Extract the unique Apex IDs from the uploaded data
-        const apexIds = [...new Set(sheetData.map(trade => trade["Apex ID"]))];
+        // Get the trade names from the uploaded data
+        const tradeNames = sheetData.map((trade) => trade.TradeName);
 
-        // Delete existing trades with matching Apex IDs
+        // Delete existing trades with the same TradeName
         models.Trade.destroy({
             where: {
-                ApexId: { [Op.in]: apexIds },
+                TradeName: {
+                    [Op.in]: tradeNames, // Delete all trades matching the uploaded TradeNames
+                },
             },
         })
         .then(() => {
@@ -71,7 +73,7 @@ function uploadFile(req, res) {
                 }
 
                 return {
-                    TradeName: trade.TradeName || `T${counter++}-${trade["Apex ID"]}`,
+                    TradeName: trade.TradeName,
                     Instrument: trade.Instrument,
                     Quantity: trade.Quantity,
                     StopLoss: trade["Stop loss"],
@@ -83,7 +85,7 @@ function uploadFile(req, res) {
                     TrailTrigger: trade["Trail Trigger"],
                     Trail: trade.Trail,
                     TradeTypeId: trade.TradeTypeId || null,
-                    ApexId: trade["Apex ID"],
+                    ApexId: null,
                     Direction: trade.Direction,
                     Time: timeFormatted,
                 };
@@ -114,38 +116,58 @@ function uploadFile(req, res) {
         });
     }
 }
-
 function save(req, res) {
-    const trade = {
-        TradeName: req.body.TradeName,
-        Instrument: req.body.Instrument,
-        Quantity: req.body.Quantity,
-        StopLoss: req.body.StopLoss,
-        Profit: req.body.Profit,
-        UseBreakeven: req.body.UseBreakeven,
-        BreakevenTrigger: req.body.BreakevenTrigger,
-        BreakevenOffset: req.body.BreakevenOffset,
-        UseTrail: req.body.UseTrail,
-        TrailTrigger: req.body.TrailTrigger,
-        Trail: req.body.Trail,
-        TradeTypeId: req.body.TradeTypeId,
-        ApexId: req.body.ApexId,
-    };
+    const tradeName = req.body.TradeName;
 
-    models.Trade.create(trade)
-        .then((result) => {
-            res.status(201).json({
-                message: "Trade created successfully",
-                trade: result,
+    // Check if the trade name already exists in the database
+    models.Trade.findOne({
+        where: { TradeName: tradeName }
+    })
+    .then((existingTrade) => {
+        if (existingTrade) {
+            // If the trade already exists, delete it
+            return models.Trade.destroy({
+                where: { TradeName: tradeName }
             });
-        })
-        .catch((error) => {
-            res.status(500).json({
-                message: "Something went wrong",
-                error: error,
-            });
+        }
+        return null;
+    })
+    .then(() => {
+        // Now, proceed to create the new trade
+        const trade = {
+            TradeName: req.body.TradeName,
+            Instrument: req.body.Instrument,
+            Quantity: req.body.Quantity,
+            StopLoss: req.body.StopLoss,
+            Profit: req.body.Profit,
+            UseBreakeven: req.body.UseBreakeven,
+            BreakevenTrigger: req.body.BreakevenTrigger,
+            BreakevenOffset: req.body.BreakevenOffset,
+            UseTrail: req.body.UseTrail,
+            TrailTrigger: req.body.TrailTrigger,
+            Trail: req.body.Trail,
+            TradeTypeId: req.body.TradeTypeId,
+            ApexId: null,
+            Time: req.body.Time,
+        };
+
+        // Create the new trade
+        return models.Trade.create(trade);
+    })
+    .then((result) => {
+        res.status(201).json({
+            message: "Trade created successfully",
+            trade: result,
         });
+    })
+    .catch((error) => {
+        res.status(500).json({
+            message: "Something went wrong",
+            error: error,
+        });
+    });
 }
+
 
 const convertTo24HourFormat = (time) => {
     if (typeof time === "number") {
@@ -201,7 +223,7 @@ function saveBulk(req, res) {
         TrailTrigger: trade.TrailTrigger,
         Trail: trade.Trail,
         TradeTypeId: trade.TradeTypeId || null,
-        ApexId: trade.ApexId,
+        ApexId: null,
         Direction: trade.Direction,
         Time: convertTo24HourFormat(trade.Time), // Convert time here
     }));
@@ -269,7 +291,8 @@ function update(req, res) {
         TrailTrigger: req.body.TrailTrigger,
         Trail: req.body.Trail,
         TradeTypeId: req.body.TradeTypeId,
-        ApexId: req.body.ApexId,
+        ApexId: null,
+        Time: req.body.Time,
     };
 
     models.Trade.update(updatedTrade, { where: { id: id } })

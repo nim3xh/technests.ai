@@ -44,15 +44,18 @@ export default function DashAccountDetails() {
   const [paAccountsCount, setPaAccountsCount] = useState(0);
   const [nonPaAccountsCount, setNonPaAccountsCount] = useState(0);
   const [selectedAccount, setSelectedAccount] = useState(null);
+
   const [setsData, setSetsData] = useState([]);
   const [createdDateTime, setCreatedDateTime] = useState("");
   const [setsMade, setSetsMade] = useState(false); // State to toggle between buttons
   const [showSetsData, setShowSetsData] = useState(false); // State to control the visibility of setsData table
   const [tradesData, setTradesData] = useState([]);
   const [selectedAccounts, setSelectedAccounts] = useState([]);
+  const [comparisonData, setComparisonData] = useState([]);
   const [userStats, setUserStats] = useState([]);
   const [runningTrades, setRunningTrades] = useState({}); // Stores running states for each account
   const [elapsedTimes, setElapsedTimes] = useState({}); // Stores time elapsed for each account
+  const [isCompared, setIsCompared] = useState(false); 
   let [paStats, setPaStats] = useState({
     PA1: 0,
     PA2: 0,
@@ -540,14 +543,30 @@ export default function DashAccountDetails() {
   const handleAccountSelection = (account) => {
     setSelectedAccount(account);
   };
+
+  const handleAccountSelectionCmp = (account) => {
+    if (selectedAccounts.length < 2) {
+      setSelectedAccounts((prevState) => [...prevState, account]);
+    }
+  };
   
+
+  // Handle clearing comparison
+  const handleClearComparison = () => {
+    setComparisonData([]); // Clear the comparison data
+    setShowSetsData(false); // Hide the comparison table
+    setIsCompared(false); // Reset comparison status
+    setSelectedAccounts([]); // Clear selected accounts
+  };
 
   const handleCompare = () => {
     // Check if exactly two accounts are selected
     if (selectedAccounts.length !== 2) {
-      console.warn("Please select exactly two accounts for comparison.");
-      return; // Exit if the condition is not met
+      alert('Please select two accounts for comparison.');
+      return;
     }
+
+    setIsCompared(true); // Set comparison status to true
 
     const [account1, account2] = selectedAccounts;
 
@@ -556,89 +575,35 @@ export default function DashAccountDetails() {
       .filter((acc) => acc.accountNumber === account1.split(" (")[0])
       .sort(
         (a, b) => parseFloat(a.accountBalance) - parseFloat(b.accountBalance)
-      ); // Sort in ascending order
+      );
 
     const dataForAccount2 = filteredData
       .filter((acc) => acc.accountNumber === account2.split(" (")[0])
       .sort(
         (a, b) => parseFloat(a.accountBalance) - parseFloat(b.accountBalance)
-      ); // Sort in ascending order
+      );
 
-    // Prepare CSV data
-    const csvData = [];
-
-    // Determine max rows to handle interleaving
+    // Prepare the comparison data
+    const comparisonRows = [];
     const maxRows = Math.max(dataForAccount1.length, dataForAccount2.length);
 
-    // Interleave rows: first from account1, then from account2
     for (let i = 0; i < maxRows; i++) {
-      const acc1 = dataForAccount1[i] || {
-        name: account1.split(" (")[0],
-        account: account1.split(" (")[0],
-        accountBalance: "", // Keep empty if no data
-      };
+      const acc1 = dataForAccount1[i] || { name: account1, accountBalance: "" };
+      const acc2 = dataForAccount2[i] || { name: account2, accountBalance: "" };
 
-      const acc2 = dataForAccount2[i] || {
-        name: account2.split(" (")[0],
-        account: account2.split(" (")[0],
-        accountBalance: "", // Keep empty if no data
-      };
-
-      // Ensure balances are numbers or empty strings
-      const balance1 =
-        acc1.accountBalance !== "" ? parseFloat(acc1.accountBalance) : "";
-      const balance2 =
-        acc2.accountBalance !== "" ? parseFloat(acc2.accountBalance) : "";
-
-      // Push data to CSV structure
-      csvData.push({
+      comparisonRows.push({
         AccountName1: acc1.name,
         AccountNumber1: acc1.account,
-        AccountBalance1: balance1,
+        AccountBalance1: acc1.accountBalance,
         AccountName2: acc2.name,
         AccountNumber2: acc2.account,
-        AccountBalance2: balance2,
+        AccountBalance2: acc2.accountBalance,
       });
     }
-
-    // Define headers for the CSV
-    const headers = [
-      { label: "Account Name (1)", key: "AccountName1" },
-      { label: "Account Number (1)", key: "AccountNumber1" },
-      { label: "Account Balance (1)", key: "AccountBalance1" },
-      { label: "Account Balance (2)", key: "AccountBalance2" },
-      { label: "Account Number (2)", key: "AccountNumber2" },
-      { label: "Account Name (2)", key: "AccountName2" },
-    ];
-
-    // Generate CSV filename
-    const filename = `compare-${account1.split(" (")[0]}-${
-      account2.split(" (")[0]
-    }.csv`;
-
-    // Prepare CSV content
-    const csvContent = [
-      headers.map((header) => header.label).join(","), // CSV headers
-      ...csvData.map((row) =>
-        headers
-          .map((header) => JSON.stringify(row[header.key] || "")) // CSV rows
-          .join(",")
-      ),
-    ].join("\n");
-
-    // Create and download CSV
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    const link = document.createElement("a");
-    const url = URL.createObjectURL(blob);
-
-    link.setAttribute("href", url);
-    link.setAttribute("download", filename);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link); // Clean up
-
-    // Reset selected accounts after comparison
-    setSelectedAccounts([]);
+    console.log(comparisonRows);
+    setComparisonData(comparisonRows);
+    
+    setShowSetsData(true); // Show the comparison data
   };
 
   return (
@@ -772,6 +737,9 @@ export default function DashAccountDetails() {
                   </div>
 
           <div className="flex flex-col md:flex-row justify-center items-center md:space-x-4 mt-4">
+          {currentUser.user.role === "admin" && !(createLoding || setsMade || showSetsData) && (
+            <>
+       
             <Dropdown
               label={
                 selectedAccount
@@ -780,6 +748,7 @@ export default function DashAccountDetails() {
               }
               className="w-full text-left dark:bg-gray-800 dark:text-gray-200"
               inline
+              disabled={setsMade || showSetsData}
             >
               <Dropdown.Item onClick={() => setSelectedAccount(null)}>
                 Clear Selection
@@ -797,7 +766,7 @@ export default function DashAccountDetails() {
 
             <Dropdown
                 label={selectedProcessRange || "Select Range"}
-                disabled={setsMade}
+                disabled={setsMade || showSetsData}
                 className="w-1/4 dark:bg-gray-800 dark:text-gray-200 relative z-20" // Ensure z-index is applied
                 inline
               >
@@ -813,25 +782,26 @@ export default function DashAccountDetails() {
                   </Dropdown.Item>
                 ))}
               </Dropdown>
+
               <div className="flex gap-3 items-center">
                 {[
                   {
                     label: "PA",
                     checked: isPAaccount,
                     onChange: setIsPAaccount,
-                    disabled: setsMade || isAdminOnly || isEvalAccount,
+                    disabled: setsMade || isAdminOnly || isEvalAccount || showSetsData,
                 },
                   {
                     label: "Eval",
                     checked: isEvalAccount,
                     onChange: setIsEvalAccount,
-                    disabled: setsMade || isAdminOnly || isPAaccount,
+                    disabled: setsMade || isAdminOnly || isPAaccount || showSetsData,
                   },
                   {
                     label: "Admin Only",
                     checked: isAdminOnly,
                     onChange: setIsAdminOnly,
-                    disabled: setsMade || isPAaccount || isEvalAccount,
+                    disabled: setsMade || isPAaccount || isEvalAccount  || showSetsData,
                   },  
                 ].map(({ label, checked, onChange, disabled }) => (
                   <label className="flex items-center" key={label}>
@@ -846,35 +816,74 @@ export default function DashAccountDetails() {
                 ))}
               </div>
 
-              {currentUser.user.role === "admin" && (
-                <Button
-                  gradientDuoTone="greenToBlue"
-                  onClick={uploadCsvs}
-                  disabled={createLoding || setsMade}
-                >
-                  {createLoding ? (
-                    <>
-                      <Spinner size="sm" />
-                      <span className="pl-3">Loading...</span>
-                    </>
-                  ) : (
-                    <>Upload CSVs</>
-                  )}
-                </Button>
-              )}
+             
+                  <Button
+                    gradientDuoTone="greenToBlue"
+                    onClick={uploadCsvs}
+                  >
+                    {createLoding ? (
+                      <>
+                        <Spinner size="sm" />
+                        <span className="pl-3">Loading...</span>
+                      </>
+                    ) : (
+                      <>Upload CSVs</>
+                    )}
+                  </Button>
+                  </>
+                )}
+
 
               <CSVLink
-                {...exportCsv()}
+                {...exportCsv()} // assuming exportCsv() returns the data you want to export
                 className="bg-gradient-to-r from-teal-400 via-teal-500 to-teal-600 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-teal-300 text-white rounded-md px-4 py-2"
+                hidden={createLoding || setsMade || showSetsData}  // Will disable if any of these values are true
               >
                 Export CSV
               </CSVLink>
+
+
+              <Dropdown
+                  label={selectedAccounts[0] ? selectedAccounts[0] : "Select Account 1"}
+                  className="w-full text-left dark:bg-gray-800 dark:text-gray-200"
+                  inline
+                >
+                  <Dropdown.Item onClick={() => handleClearComparison()}>
+                    Clear Selection
+                  </Dropdown.Item>
+                  {uniqueAccountNumbers.map((account) => (
+                    <Dropdown.Item
+                      key={account}
+                      onClick={() => handleAccountSelectionCmp(account)}
+                    >
+                      {account}
+                    </Dropdown.Item>
+                  ))}
+                </Dropdown>
+                
+                <Dropdown
+                  label={selectedAccounts[1] ? selectedAccounts[1] : "Select Account 2"}
+                  className="w-full text-left dark:bg-gray-800 dark:text-gray-200"
+                  inline
+                >
+                  <Dropdown.Item onClick={() => handleClearComparison()}>
+                    Clear Selection
+                  </Dropdown.Item>
+                  {uniqueAccountNumbers.map((account) => (
+                    <Dropdown.Item
+                      key={account}
+                      onClick={() => handleAccountSelectionCmp(account)}
+                    >
+                      {account}
+                    </Dropdown.Item>
+                  ))}
+                </Dropdown>
+              {/* Compare or Clear Comparison Button */}
               <Button
-                gradientDuoTone="greenToBlue"
-                disabled={selectedAccounts.length !== 2}
-                onClick={handleCompare} // Replace with your actual compare function
+                gradientDuoTone={isCompared ? "redToYellow" : "greenToBlue"} // Change the color based on comparison status
+                onClick={isCompared ? handleClearComparison : handleCompare}
               >
-                Compare both accounts
+                {isCompared ? "Clear Comparison" : "Compare both accounts"} {/* Change button text */}
               </Button>
           </div>
           {createLoding ? (
@@ -933,6 +942,34 @@ export default function DashAccountDetails() {
                     </div>
                   </div>
                 )}
+
+                 {/* Display comparison data in a table when showSetsData is true */}
+                 <div className="flex flex-col md:flex-row justify-center items-center md:space-x-4">
+                {showSetsData && comparisonData.length > 0 && (
+                  <div className="mt-4 overflow-x-auto max-h-[400px]">
+                    <Table hoverable className="shadow-md w-full mt-4">
+                      <TableHead>
+                        <TableHeadCell className="sticky top-0 bg-white z-10">Account Number</TableHeadCell>
+                        <TableHeadCell className="sticky top-0 bg-white z-10">Account Balance</TableHeadCell>
+                        <TableHeadCell className="sticky top-0 bg-white z-10">Account Number</TableHeadCell>
+                        <TableHeadCell className="sticky top-0 bg-white z-10">Account Balance</TableHeadCell>
+                      </TableHead>
+                      <TableBody>
+                        {comparisonData.map((row, index) => (
+                          <TableRow key={index}>
+                            
+                            <TableCell>{row.AccountNumber1}</TableCell>
+                            <TableCell>{row.AccountBalance1}</TableCell>
+                            <TableCell>{row.AccountBalance2}</TableCell>
+                            <TableCell>{row.AccountNumber2}</TableCell>
+                           
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+                </div>
               </div>
             </>
           )}
