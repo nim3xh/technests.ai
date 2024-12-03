@@ -614,15 +614,12 @@ export default function DashAccountDetails() {
         </Breadcrumb.Item>
         <Breadcrumb.Item>Account Details</Breadcrumb.Item>
       </Breadcrumb>
-
+      <p className="text-lg font-semibold text-gray-600 dark:text-white">{formattedTodayDate}</p> 
       <h1 className="mt-3 mb-3 text-left font-semibold text-xl flex justify-between items-center">
         <span>
-          All Account Details | Updated At:{" "}
-          {formattedDateTime && `(${formattedDateTime})`}
+          All Account Details
         </span>
-        <p className="text-lg font-semibold text-gray-600 dark:text-white">
-          {formattedTodayDate}
-        </p>
+       
       </h1>
 
       {loading ? (
@@ -893,10 +890,18 @@ export default function DashAccountDetails() {
           ) : (
             <>
              <div className="tables-container">
+                <div className="w-full flex justify-center items-center mb-3 mt-5">
+                      <p className="text-left text-sm md:text-base text-gray-700 dark:text-white">
+                        Last Updated: 
+                        <span className="font-medium text-gray-600 dark:text-white">
+                          {formattedDateTime ? `(${formattedDateTime})` : 'N/A'}
+                        </span>
+                      </p>
+                    </div>
                 {/* Show filteredData table if setsData is not displayed */}
                 {!showSetsData && (
                   <div className="flex flex-col md:flex-row justify-center items-center md:space-x-4">
-                    <div className="table-wrapper overflow-x-auto max-h-[400px]">
+                    <div className="table-wrapper overflow-x-auto max-h-[500px]">
                       <Table hoverable className="shadow-md w-full mt-4">
                         <TableHead>
                           <TableHeadCell className="sticky top-0 bg-white z-10">#</TableHeadCell>
