@@ -4,6 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { signInStart, signInSuccess, signInFailure } from "../redux/user/userSlice";
 import LogoNew from "../assets/logonew.jpg";
+import OAuth from "../components/OAuth";
 
 const BaseURL = import.meta.env.VITE_BASE_URL;
 
@@ -105,6 +106,13 @@ export default function SignIn() {
                 "Sign In"
               )}
             </Button>
+            {/* <OAuth /> */}
+            {/* <div className='flex gap-2 text-sm mt-5'>
+            <span>Dont Have an account?</span>
+            <Link to='/sign-up' className='text-blue-500'>
+              Sign Up
+            </Link>
+          </div> */}
           </form>
           {errorMessage && (
             <Alert className="mt-5" color="failure">

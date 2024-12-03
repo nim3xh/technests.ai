@@ -1,6 +1,8 @@
 import { Alert, Button, Label, Spinner, TextInput } from "flowbite-react";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import LogoNew from "../assets/logonew.jpg";
+import OAuth from "../components/OAuth";
 
 export default function SignUp() {
   const [formData, setFormData] = useState({});
@@ -22,16 +24,8 @@ export default function SignUp() {
         {/* left */}
         <div className="flex-1">
           <Link to="/" className="font-bold dark:text-white text-4xl">
-            <span className="px-2 py-1 bg-gradient-to-r from-teal-400 via-teal-500 to-teal-600 rounded-lg text-white">
-              technests's
-            </span>
-            <br />
-            Account Manager
-          </Link>
-          <p className="text-sm mt-5">
-            Welcome to technests's Account Manager. <br /> Sign up to get
-            started.
-          </p>
+            <img src={LogoNew} alt="logo" className="w-100 h-100 rounded-lg" />
+          </Link>  
         </div>
         {/* right */}
 
@@ -75,12 +69,14 @@ export default function SignUp() {
               )}
             </Button>
           </form>
+          {/* <OAuth /> */}
           <div className="flex gap-2 text-sm mt-5">
             <span>Have an account?</span>
             <Link to="/sign-in" className="text-blue-500">
               Sign In
             </Link>
           </div>
+          
           {errorMessage && (
             <Alert className="mt-5" color="failure">
               {errorMessage}
