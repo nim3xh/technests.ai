@@ -23,15 +23,13 @@ function uploadFile(req, res) {
         let counter = 1;
 
         // Define the list of required columns
-        const requiredColumns = ["TradeName","Instrument", "Quantity", "Stop loss", "Profit", "Use Breakeven", 
-            "Breakeven trigger", "Breakeven Offset", "Use Trail", "Trail Trigger", "Trail", 
-            "Time"];
+        const requiredColumns = ["TradeName", "Instrument", "Quantity", "Stop loss", "Profit", "Use Breakeven", 
+            "Breakeven trigger", "Breakeven Offset", "Use Trail", "Trail Trigger", "Trail"];
         
         // Define the list of all columns that are allowed
         const allowedColumns = new Set([
             "TradeName", "Instrument", "Quantity", "Stop loss", "Profit", "Use Breakeven", 
-            "Breakeven trigger", "Breakeven Offset", "Use Trail", "Trail Trigger", "Trail", 
-            "Direction", "Time"
+            "Breakeven trigger", "Breakeven Offset", "Use Trail", "Trail Trigger", "Trail",
         ]);
 
         // Check if all required columns are present
@@ -64,14 +62,6 @@ function uploadFile(req, res) {
         .then(() => {
             // Now, format the trades for insertion
             const formattedTrades = sheetData.map((trade) => {
-                let timeFormatted;
-                try {
-                    timeFormatted = convertTo24HourFormat(trade["Time"]);
-                } catch (error) {
-                    console.error(`Error converting time for trade: ${JSON.stringify(trade)}, Error: ${error.message}`);
-                    timeFormatted = null; // Or provide a default value
-                }
-
                 return {
                     TradeName: trade.TradeName,
                     Instrument: trade.Instrument,
@@ -87,7 +77,6 @@ function uploadFile(req, res) {
                     TradeTypeId: trade.TradeTypeId || null,
                     ApexId: null,
                     Direction: trade.Direction,
-                    Time: timeFormatted,
                 };
             });
 
@@ -116,6 +105,7 @@ function uploadFile(req, res) {
         });
     }
 }
+
 function save(req, res) {
     const tradeName = req.body.TradeName;
 
@@ -148,7 +138,7 @@ function save(req, res) {
             Trail: req.body.Trail,
             TradeTypeId: req.body.TradeTypeId,
             ApexId: null,
-            Time: req.body.Time,
+            Time: null,
         };
 
         // Create the new trade
@@ -225,7 +215,7 @@ function saveBulk(req, res) {
         TradeTypeId: trade.TradeTypeId || null,
         ApexId: null,
         Direction: trade.Direction,
-        Time: convertTo24HourFormat(trade.Time), // Convert time here
+        Time: null,
     }));
 
     models.Trade.bulkCreate(formattedTrades)
@@ -292,7 +282,7 @@ function update(req, res) {
         Trail: req.body.Trail,
         TradeTypeId: req.body.TradeTypeId,
         ApexId: null,
-        Time: req.body.Time,
+        Time: null,
     };
 
     models.Trade.update(updatedTrade, { where: { id: id } })

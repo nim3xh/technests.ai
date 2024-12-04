@@ -16,6 +16,7 @@ import { useSelector } from "react-redux";
 import { MdPassword } from "react-icons/md";
 import { FaMoneyBillTrendUp } from "react-icons/fa6";
 import { TbHeartRateMonitor } from "react-icons/tb";
+import { IoGitCompare } from "react-icons/io5";
 
 const BaseURL = import.meta.env.VITE_BASE_URL;
 
@@ -114,12 +115,21 @@ export default function DashSidebar() {
               <Link to="/dashboard?tab=trading">
                 <Sidebar.Item
                   active={tab === "trading"}
-                  icon={FaMoneyBillTrendUp }
+                  icon={IoGitCompare }
                   as="div"
                 >
-                  Trade
+                  Create New Trades
                 </Sidebar.Item>
               </Link>
+              {/* <Link to="/dashboard?tab=tradeMatching">
+                <Sidebar.Item
+                  active={tab === "tradeMatching"}
+                  icon={IoGitCompare }
+                  as="div"
+                >
+                  Trade Matching
+                </Sidebar.Item>
+              </Link> */}
               <Link to="/dashboard?tab=trades">
                   <Sidebar.Item
                     active={tab === "trades"}
