@@ -102,6 +102,12 @@ const processCSV = (filePath) => {
         const account = data.Account || ""; // Get the Account field
         if (!account) return; // Skip rows with no account
 
+        // console.log("Processing account:", account);
+
+        const Balance = data["Account Balance"] || 0; // Get the Account Balance field
+        if (!Balance) return; // Skip rows with no balance
+
+        // console.log('balance:', Balance);
         // Extract base account number (removing the last segment after the last dash)
         const accountParts = account.split("-");
         let baseAccountNumber = accountParts.slice(0, -1).join("-"); // Base account number (e.g., APEX-182660)
