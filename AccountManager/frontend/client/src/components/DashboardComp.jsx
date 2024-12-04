@@ -492,10 +492,10 @@ export default function DashboardComp() {
                       </p>
                     </div>
                     <div className="table-wrapper overflow-x-auto max-h-[400px]">
-                    <Table hoverable className="shadow-md w-full">
+                      <Table hoverable className="shadow-md w-full">
                         <TableHead>
                           <TableHeadCell className="sticky top-0 bg-white z-10">#</TableHeadCell>
-                          <TableHeadCell className="sticky top-0 bg-white z-10">User Name</TableHeadCell>
+                          <TableHeadCell className="sticky top-0 bg-white z-10">User ID</TableHeadCell>
                           <TableHeadCell className="sticky top-0 bg-white z-10">EVAL</TableHeadCell>
                           <TableHeadCell className="sticky top-0 bg-white z-10">PA</TableHeadCell>
                           <TableHeadCell className="sticky top-0 bg-white z-10">Admin Only</TableHeadCell>
@@ -504,18 +504,28 @@ export default function DashboardComp() {
                           <TableHeadCell className="sticky top-0 bg-white z-10">PO</TableHeadCell>
                         </TableHead>
                         <TableBody>
-                          {userStats.map((user, index) => (
-                            <TableRow key={index}>
-                              <TableCell>{index + 1}</TableCell>
-                              <TableCell>{user.userName}</TableCell>
-                              <TableCell>{user.evalActive}</TableCell>
-                              <TableCell>{user.paActive}</TableCell>
-                              <TableCell>{user.evalAdminOnly + user.paAdminOnly}</TableCell>
-                              <TableCell><b>{user.totalAccounts}</b></TableCell>
-                              <TableCell>Pending</TableCell>
-                              <TableCell>Pending</TableCell>
-                            </TableRow>
-                          ))}
+                          {userStats
+                            .sort((a, b) => {
+                              const numA = parseInt(a.userName.replace(/[^\d()]/g, '').match(/\d+/)?.[0] || 0, 10);
+                              const numB = parseInt(b.userName.replace(/[^\d()]/g, '').match(/\d+/)?.[0] || 0, 10);
+                              return numA - numB; // Sorting numerically
+                            })
+                            .map((user, index) => (
+                              <TableRow key={index}>
+                                <TableCell>{index + 1}</TableCell>
+                                <TableCell>
+                                  <Tooltip content={user.userName.replace(/\s*\(.*?\)/, '')}>
+                                    <span>{user.userName.replace(/[^\d()]/g, '').match(/\d+/)?.[0]}</span>
+                                  </Tooltip>
+                                </TableCell>
+                                <TableCell>{user.evalActive}</TableCell>
+                                <TableCell>{user.paActive}</TableCell>
+                                <TableCell>{user.evalAdminOnly + user.paAdminOnly}</TableCell>
+                                <TableCell><b>{user.totalAccounts}</b></TableCell>
+                                <TableCell>Pending</TableCell>
+                                <TableCell>Pending</TableCell>
+                              </TableRow>
+                            ))}
                         </TableBody>
                       </Table>
                     </div>
