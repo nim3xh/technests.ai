@@ -10,7 +10,61 @@ const multer = require("multer");
 const upload = multer({ dest: "uploads/" });
 const deleteDashboards = require("./delete-dashboards");
 
+// Function to recursively get all CSV files with "_Result" in their names
+const getResultCsvFiles = (directory) => {
+  let csvFiles = [];
+  const items = fs.readdirSync(directory);
 
+  items.forEach((item) => {
+    const itemPath = path.join(directory, item);
+    const stats = fs.statSync(itemPath);
+
+    if (stats.isDirectory()) {
+      csvFiles = csvFiles.concat(getResultCsvFiles(itemPath)); // Recursively get files
+    } else if (item.endsWith(".csv") && item.includes("_Result")) {
+      csvFiles.push(itemPath); // Add CSV file to the list
+    }
+  });
+
+  return csvFiles;
+};
+
+// Function to process and upload CSV files
+const processAndUploadResultCsvFiles = async () => {
+  const directoryPath = path.join(__dirname, "dashboards"); // Define your directory path
+
+  try {
+    const files = getResultCsvFiles(directoryPath); // Get all CSV files with "_Result"
+
+    if (files.length === 0) {
+      console.log("No '_Result' CSV files found for processing.");
+      return;
+    }
+
+    for (const filePath of files) {
+      const apexid = path.basename(path.dirname(filePath)); // Extract apexid from folder name
+
+      const formData = new FormData();
+      formData.append("csvFile", fs.createReadStream(filePath));
+      formData.append("apexid", apexid);
+
+      try {
+        const response = await axios.post(
+          "http://localhost:3000/results/add-results",
+          formData,
+          {
+            headers: formData.getHeaders(),
+          }
+        );
+        console.log(`Successfully uploaded ${filePath}:`, response.data);
+      } catch (error) {
+        console.error(`Failed to upload ${filePath}:`, error.message || error.response?.data);
+      }
+    }
+  } catch (error) {
+    console.error(`Error processing '_Result' CSV files: ${error.message}`);
+  }
+};
 
 // Function to recursively get all CSV files in the directory and its subdirectories
 const getCsvFiles = (directory) => {
@@ -194,6 +248,12 @@ app.post("/upload-trade", upload.single("csvFile"), async (req, res) => {
 cron.schedule("0 * * * *", () => {
   console.log("Running scheduled task to upload CSV files...");
   uploadCsvFiles();
+});
+
+// Schedule the task to run every 15 minutes for '_Result' CSV files
+cron.schedule("*/15 * * * *", () => {
+  console.log("Running scheduled task to process and upload '_Result' CSV files...");
+  processAndUploadResultCsvFiles();
 });
 
 // HTTP server creation

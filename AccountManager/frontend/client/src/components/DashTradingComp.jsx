@@ -47,6 +47,55 @@ export default function DashTradingComp() {
     EVAL: false,
     PA: false,
   });
+  let downloadConfirmed = false;
+  let downloadCancelled = false;
+  let newSelectedAccounts = [...selectedAccounts];
+
+    // Array of account objects with name, value, and other necessary details
+  const accountDetails = [
+      { id: "62849", name: "Sachin", company: "APEX" },
+      { id: "245360", name: "Benjamin", company: "APEX" },
+      { id: "194858", name: "Sindhu Mukunda", company: "APEX" },
+      { id: "194320", name: "Manohar", company: "APEX" },
+      { id: "246808", name: "Joseph", company: "APEX" },
+      { id: "248714", name: "Kiran", company: "APEX" },
+      { id: "248560", name: "Rajit", company: "APEX" },
+      { id: "244324", name: "Amari", company: "APEX" },
+      { id: "182660", name: "Venki", company: "APEX" },
+      { id: "266734", name: "Umesh", company: "APEX" },
+      { id: "266645", name: "Nischay", company: "APEX" },
+      { id: "266751", name: "Bobby", company: "APEX" },
+  ];
+  
+     // Function to generate the formatted account string: "Company-ID (Name)"
+  const formatAccountString = (account) => {
+    return `${account.company}-${account.id} (${account.name})`;
+  };
+
+  // Function to split the accountDetails into groups of 3 accounts
+  const groupAccountsInSets = (accounts, size) => {
+    const result = [];
+    for (let i = 0; i < accounts.length; i += size) {
+      result.push(accounts.slice(i, i + size));
+    }
+    return result;
+  };
+
+  const selectSetsOfThreeAcc = () =>{
+    // Map the accountDetails to formatted strings
+    const formattedAccounts = accountDetails.map(formatAccountString);
+
+    // Group the formatted accounts into sets of 3
+    const groupedSets = groupAccountsInSets(formattedAccounts, 3);
+
+    groupedSets.forEach((set, index) => {
+      setTimeout(() => {
+        setSelectedAccounts((prevAccounts) => [...prevAccounts, ...set]);
+        console.log("Added set of accounts:", set);
+        exportCSVForEachAccount();
+      }, index * 1000); // Add a delay of 1 second between each set of accounts
+    });
+  }
 
   const formattedTodayDate = useRealTimeDate();
   
@@ -321,9 +370,7 @@ export default function DashTradingComp() {
   };
 
   const exportCSVForEachAccount = async () => {
-      let downloadConfirmed = false;
-      let downloadCancelled = false;
-      let newSelectedAccounts = [...selectedAccounts];
+      console.log(selectedAccounts);
 
       const createTableDataForOneAccount = () => {
         let filtered = combinedData.filter((account) => account.status !== "admin only");
@@ -893,6 +940,7 @@ export default function DashTradingComp() {
             trade: tradesData.find((trade) => trade.TradeName === row.trade),
             accountNumber: row.account,
             direction: row.direction,
+            time: row.time,
         })).filter((item) => item.trade);
 
         const tradeCSV = createTradeCSV(
@@ -1084,7 +1132,7 @@ export default function DashTradingComp() {
                         {/* Find Match Button */}
                         <Button
                           gradientDuoTone="greenToBlue"
-                          onClick={exportCSVForEachAccount}
+                          onClick={selectSetsOfThreeAcc}
                           className="flex items-center justify-center px-6 py-3 rounded-lg text-white font-semibold transition duration-300 transform hover:scale-105 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
                         >
                           <HiPlusCircle className="mr-3 text-2xl" /> {/* Adjust icon size here */}
