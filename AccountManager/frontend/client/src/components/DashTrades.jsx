@@ -201,7 +201,7 @@ export default function DashTrades() {
       const formattedTrade = {
         ...newTrade,
         Quantity: newTrade.Quantity.toString(),
-        Time: newTrade.Time.toString(),
+        // Time: newTrade.Time.toString(),
         StopLoss: newTrade.StopLoss.toString(),
         Profit: newTrade.Profit.toString(),
         BreakevenTrigger: newTrade.BreakevenTrigger.toString(),
@@ -354,7 +354,7 @@ export default function DashTrades() {
           <TableHead>
             <TableHeadCell>#</TableHeadCell>
             <TableHeadCell>Trade Name</TableHeadCell>
-            <TableHeadCell>Time</TableHeadCell>
+            {/* <TableHeadCell>Time</TableHeadCell> */}
             <TableHeadCell>Stop Loss</TableHeadCell>
             <TableHeadCell>Profit</TableHeadCell>
             <TableHeadCell>Use Breakeven</TableHeadCell>
@@ -373,7 +373,7 @@ export default function DashTrades() {
               <TableRow key={index}>
                 <TableCell>{index + 1}</TableCell>
                 <TableCell>{trade.TradeName}</TableCell>
-                <TableCell>{trade.Time ? convertTo12HourFormat(trade.Time) : "-"}</TableCell>
+                {/* <TableCell>{trade.Time ? convertTo12HourFormat(trade.Time) : "-"}</TableCell> */}
                 <TableCell>{trade.StopLoss}</TableCell>
                 <TableCell>{trade.Profit}</TableCell>
                 <TableCell>{trade.UseBreakeven === true ? "Yes" : "No"}</TableCell>
@@ -466,7 +466,7 @@ export default function DashTrades() {
                 </Dropdown.Item>
               </Dropdown>
             </div>
-            <div>
+            {/* <div>
               <Label htmlFor="Time" value="Time" />
               <TextInput
                 type="time"
@@ -477,7 +477,7 @@ export default function DashTrades() {
                 onChange={handleChange}
                 required
               />
-            </div>
+            </div> */}
             <div>
               <Label htmlFor="StopLoss" value="Stop Loss" />
               <TextInput

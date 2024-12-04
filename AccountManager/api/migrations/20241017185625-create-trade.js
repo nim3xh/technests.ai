@@ -21,10 +21,6 @@ module.exports = {
         type: Sequelize.INTEGER,
         allowNull: false,
       },
-      Time: {
-        type: Sequelize.TIME,
-        allowNull: false,
-      },
       StopLoss: {
         type: Sequelize.INTEGER,
         allowNull: true,

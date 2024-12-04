@@ -605,6 +605,7 @@ export default function DashAccountDetails() {
     
     setShowSetsData(true); // Show the comparison data
   };
+  
 
   return (
     <div className="p-3 w-full">
