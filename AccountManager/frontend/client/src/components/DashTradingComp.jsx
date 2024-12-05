@@ -57,7 +57,7 @@ export default function DashTradingComp() {
       { accountNumber: "APEX-248560", name: "Rajit Subramanya" },
       { accountNumber: "APEX-244324", name: "Avanya Innovations Llc Anant Kulkarni" },
       { accountNumber: "APEX-182660", name: "Venkatesha Belavadi" },
-      { accountNumber: "APEX-266734", name: "Umesh Paduvagere Chikkkehucha" },
+      { accountNumber: "APEX-266734", name: "Umesh" },
       { accountNumber: "APEX-266645", name: "Nischay Gowda" },
       { accountNumber: "APEX-266751", name: "Bobby Karami" },
   ];
@@ -965,6 +965,8 @@ export default function DashTradingComp() {
                       );
                   });
 
+                  let seenAccounts = new Set(); // Track the processed accounts
+
                   let filteredAccountData = tableData.filter((account) => {
                       // Extract the account number after "APEX-" and before any non-digit characters
                       const accountNumber = account.account.replace(/.*APEX-(\d+)-.*/, "$1");
@@ -972,9 +974,26 @@ export default function DashTradingComp() {
                       // Extract the numeric part from the input string in a similar manner
                       const filteredAccountStringFromInput = accounts[i].replace(/APEX-/, "").split(" ")[0];
 
+                      // Create a unique identifier for the account (based on accountNumber)
+                      const accountIdentifier = account.account; // Or you can use a combination of properties if needed
+
+                      // Time validation: Check if the time is in valid format (HH:mm)
+                      const timeValid = /^(?:[01]\d|2[0-3]):(?:[0-5]\d)$/.test(account.time);
+
+                      // Skip the account if it's already been seen or the time is invalid
+                      if (seenAccounts.has(accountIdentifier) || !timeValid) {
+                          return false; // Skip this account
+                      }
+
+                      // Add the account to the set to mark it as seen
+                      seenAccounts.add(accountIdentifier);
+                      
+                      // Return true if the account matches
                       return accountNumber === filteredAccountStringFromInput;
                   });
 
+                  
+                  // console.log(filteredAccountData);
                   const accountTrades = filteredAccountData.map((row) => ({
                       trade: tradesData.find((trade) => trade.TradeName === row.trade),
                       accountNumber: row.account,
