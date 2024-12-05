@@ -168,7 +168,6 @@ const processResultCSV = (filePath) => {
     });
   };
   
-  // Main function to import results from multiple CSV files
   async function importResultsFromCSVs(req, res) {
     const files = req.files;
     const failedFiles = [];
@@ -190,28 +189,33 @@ const processResultCSV = (filePath) => {
         attributes: ["TradeTime", "Account", "Instrument"],
         raw: true,
       });
+  
       const existingResultsSet = new Set(
         existingResults.map(
           (res) => `${res.TradeTime}-${res.Account}-${res.Instrument}`
         )
       );
   
-      // Filter results to only include new entries
-      const newResults = allResults.filter(
-        (result) =>
-          !existingResultsSet.has(
-            `${result.TradeTime}-${result.Account}-${result.Instrument}`
-          )
+      // Identify the unique identifiers of the new results
+      const newResultsSet = new Set(
+        allResults.map(
+          (result) => `${result.TradeTime}-${result.Account}-${result.Instrument}`
+        )
       );
   
+      // Delete all existing records in the Result table
+      await models.Result.destroy({
+        where: {},
+      });
+
       // Save new results to the database
-      if (newResults.length > 0) {
-        await models.Result.bulkCreate(newResults);
+      if (allResults.length > 0) {
+        await models.Result.bulkCreate(allResults);
       }
   
       res.status(201).json({
-        message: "Results imported successfully",
-        importedResults: newResults,
+        message: "Results imported and old data deleted successfully",
+        importedResults: allResults,
         failedFiles,
       });
     } catch (error) {
@@ -221,7 +225,7 @@ const processResultCSV = (filePath) => {
       });
     }
   }
-
+  
 module.exports = {
     save: save,
     index: index,
