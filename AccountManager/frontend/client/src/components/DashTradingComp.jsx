@@ -780,7 +780,7 @@ export default function DashTradingComp() {
                 trade: getTradeNameBasedOnBalance(account.account, 52900),
             });
         });
-    
+        // console.log(rows);
         // Return all rows, flattened
         return rows.flat();
     };
@@ -888,7 +888,7 @@ export default function DashTradingComp() {
             
             // Extract the numeric part from the input string in a similar manner
             const filteredAccountStringFromInput = selectedAccounts[i].replace(/APEX-/, "").split(" ")[0];
-          
+            
             // Return whether the numbers match
             return accountNumber === filteredAccountStringFromInput;
           });
@@ -940,82 +940,73 @@ export default function DashTradingComp() {
           // console.log('selectedAccounts: ', selectedAccounts);
        
           const tableData = createTableDataForThreeAccounts(accounts);
+          // console.log(tableData);
 
-          for(let i=0;i<3;i++){
-            {
-              const tableHeaders = [
-                `Trade (${selectedAccounts[i].replace(/APEX-/, "").split(" ")[0]})`,
-                `Direction (${selectedAccounts[i].replace(/APEX-/, "").split(" ")[0]})`,
-                `Account (${selectedAccounts[i].replace(/APEX-/, "").split(" ")[0]})`,
-                `Account Balance (${selectedAccounts[i].replace(/APEX-/, "").split(" ")[0]})`
-              ];
-    
-              const tableCSV = [tableHeaders.join(",")];
-              tableData.forEach((row) => {
-                tableCSV.push(
-                    [
-                        row.trade,
-                        row.direction,
-                        row.account,
-                        row.balance,
-                        row.time,
-                    ].join(",")
-                );
-              });
-    
-              // console.log('tableData: ',tableData);
-    
-              let filteredAccountData = tableData.filter((account) => {
-                // Extract the account number after "APEX-" and before any non-digit characters
-                const accountNumber = account.account.replace(/.*APEX-(\d+)-.*/, "$1"); // Match the digits after "APEX-" and before "-"
-                
-                // Extract the numeric part from the input string in a similar manner
-                const filteredAccountStringFromInput = selectedAccounts[i].replace(/APEX-/, "").split(" ")[0];
-              
-                // Return whether the numbers match
-                return accountNumber === filteredAccountStringFromInput;
-              });
-              
-              // console.log('filteredAccountData: ',filteredAccountData);
-    
-              const accountTrades = filteredAccountData.map((row) => ({
-                trade: tradesData.find((trade) => trade.TradeName === row.trade),
-                accountNumber: row.account,
-                direction: row.direction,
-                time: row.time,
-              })).filter((item) => item.trade);
-              
-              // console.log('accountTrades: ',accountTrades);
-    
-              // console.log(filteredAccountData);
-              // console.log(tradesData);
-    
-              const tradeCSV = createTradeCSV(
-                accountTrades.map((item) => item.trade),
-                selectedAccounts[i].replace(/APEX-/, "").split(" ")[0],
-                accountTrades.map((item) => item.accountNumber),
-                accountTrades.map((item) => item.direction),
-                accountTrades.map((item) => item.time)
-              );
-    
-              // console.log('tradeCSV: ',tradeCSV);
-              let accountFileName = `${selectedAccounts[i].replace(/APEX-/, "").split(" ")[0]}_Trades.csv`;
-    
-              if(selectedFilters.PA){
-                  accountFileName = `${selectedAccounts[i].replace(/APEX-/, "").split(" ")[0]}_PA.csv`;
-              }
-              
-              if(selectedFilters.EVAL){
-                  accountFileName = `${selectedAccounts[i].replace(/APEX-/, "").split(" ")[0]}_EVAL.csv`;
-              }
+          // console.log(accounts);
+          for (let i = 0; i < accounts.length; i++) {
+              {
+                  const tableHeaders = [
+                      `Trade (${accounts[i].replace(/APEX-/, "").split(" ")[0]})`,
+                      `Direction (${accounts[i].replace(/APEX-/, "").split(" ")[0]})`,
+                      `Account (${accounts[i].replace(/APEX-/, "").split(" ")[0]})`,
+                      `Account Balance (${accounts[i].replace(/APEX-/, "").split(" ")[0]})`
+                  ];
 
-              // console.log('Trade CSV: ', tradeCSV);
-    
-              promptDownloadConfirmation(tradeCSV, accountFileName);  // Check for confirmation to download
-              await saveCSVToBackend(tradeCSV, `${accountFileName}`, selectedAccounts[i].replace(/APEX-/, "").split(" ")[0]);
+                  const tableCSV = [tableHeaders.join(",")];
+                  tableData.forEach((row) => {
+                      tableCSV.push(
+                          [
+                              row.trade,
+                              row.direction,
+                              row.account,
+                              row.balance,
+                              row.time,
+                          ].join(",")
+                      );
+                  });
+
+                  let filteredAccountData = tableData.filter((account) => {
+                      // Extract the account number after "APEX-" and before any non-digit characters
+                      const accountNumber = account.account.replace(/.*APEX-(\d+)-.*/, "$1");
+                      
+                      // Extract the numeric part from the input string in a similar manner
+                      const filteredAccountStringFromInput = accounts[i].replace(/APEX-/, "").split(" ")[0];
+
+                      return accountNumber === filteredAccountStringFromInput;
+                  });
+
+                  const accountTrades = filteredAccountData.map((row) => ({
+                      trade: tradesData.find((trade) => trade.TradeName === row.trade),
+                      accountNumber: row.account,
+                      direction: row.direction,
+                      time: row.time,
+                  })).filter((item) => item.trade);
+
+                  const tradeCSV = createTradeCSV(
+                      accountTrades.map((item) => item.trade),
+                      accounts[i].replace(/APEX-/, "").split(" ")[0],
+                      accountTrades.map((item) => item.accountNumber),
+                      accountTrades.map((item) => item.direction),
+                      accountTrades.map((item) => item.time)
+                  );
+
+                  let accountFileName = `${accounts[i].replace(/APEX-/, "").split(" ")[0]}_Trades.csv`;
+
+                  if (selectedFilters.PA) {
+                      accountFileName = `${accounts[i].replace(/APEX-/, "").split(" ")[0]}_PA.csv`;
+                  }
+                  
+                  if (selectedFilters.EVAL) {
+                      accountFileName = `${accounts[i].replace(/APEX-/, "").split(" ")[0]}_EVAL.csv`;
+                  }
+
+                  // console.log(tradeCSV,accountFileName);
+
+                  promptDownloadConfirmation(tradeCSV, accountFileName);  // Check for confirmation to download
+                  await saveCSVToBackend(tradeCSV, `${accountFileName}`, accounts[i].replace(/APEX-/, "").split(" ")[0]);
+              }
             }
           }
-        }
         return;
       }
 
