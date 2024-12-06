@@ -425,14 +425,14 @@ export default function DashTrades() {
               >
                 <Dropdown.Item 
                   onClick={() => setNewTrade((prevTrade) => ({ ...prevTrade, TradeName: "EVAL STD" }))}
-                  title="Account balance between 49,500 and 52,799"
+                  title="Account balance between 49,000 and 52,799"
                 >
                   EVAL STD
                 </Dropdown.Item>
                 
                 <Dropdown.Item 
                   onClick={() => setNewTrade((prevTrade) => ({ ...prevTrade, TradeName: "EVAL Mini" }))}
-                  title="Account balance greater than 52,800"
+                  title="Account balance greater than 52,800 and 53,000"
                 >
                   EVAL Mini
                 </Dropdown.Item>
@@ -453,7 +453,7 @@ export default function DashTrades() {
                 
                 <Dropdown.Item 
                   onClick={() => setNewTrade((prevTrade) => ({ ...prevTrade, TradeName: "PA Mini" }))}
-                  title="Account balance greater than 52,800"
+                  title="Account balance greater than 52,800 and 53,000"
                 >
                   PA Mini
                 </Dropdown.Item>
@@ -463,6 +463,12 @@ export default function DashTrades() {
                   title="Account balance less than 49,000"
                 >
                   PA Max
+                </Dropdown.Item>
+                <Dropdown.Item
+                  onClick={() => setNewTrade((prevTrade) => ({ ...prevTrade, TradeName: "PA micro" }))}
+                  title="Account balance more than or equal 53,000"
+                >
+                  PA micro
                 </Dropdown.Item>
               </Dropdown>
             </div>
