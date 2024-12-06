@@ -124,108 +124,156 @@ function destroy(req, res){
         });
 }
 
+
+const convertTo24HourFormat = (time) => {
+  if (typeof time === "number") {
+    // Convert Excel time format to HH:mm:ss
+    const totalSeconds = Math.round(time * 24 * 60 * 60); // Convert days to seconds
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+    return `${hours.toString().padStart(2, "0")}:${minutes
+      .toString()
+      .padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
+  } else if (typeof time === "string") {
+    // Handle standard AM/PM formats
+    const match = time.match(/(\d+):(\d+)\s?(AM|PM)/i);
+    if (!match) {
+      throw new Error(`Time does not match expected format: ${time}`);
+    }
+    const [hours, minutes, modifier] = match.slice(1);
+    let hours24 = parseInt(hours, 10);
+    if (modifier.toUpperCase() === "PM" && hours24 < 12) hours24 += 12;
+    if (modifier.toUpperCase() === "AM" && hours24 === 12) hours24 = 0;
+    return `${hours24.toString().padStart(2, "0")}:${minutes.padStart(
+      2,
+      "0"
+    )}:00`;
+  } else {
+    throw new Error(`Invalid time format: ${time}`);
+  }
+};
+
 // Function to process a single CSV file and extract result data
 const processResultCSV = (filePath) => {
-    return new Promise((resolve, reject) => {
-      const results = [];
-  
-      fs.createReadStream(filePath)
-        .pipe(csv())
-        .on("data", (data) => {
-          // Perform necessary data extraction and validation
+  return new Promise((resolve, reject) => {
+    const results = [];
+
+    fs.createReadStream(filePath)
+      .pipe(csv())
+      .on('data', (data) => {
+        // Ensure the time fields are in 24-hour format
+        try {
           const result = {
-            ResultTime: data.ResultTime || null,
-            FileName: data.FileName || null,
+            ResultTime: data['Result Time'] || null,
+            FileName: data[' FileName'] ? data[' FileName'].trim() : null,
             TradeCount: data.TradeCount ? parseInt(data.TradeCount, 10) : 0,
             Account: data.Account || null,
             Instrument: data.Instrument || null,
             Quantity: data.Quantity ? parseInt(data.Quantity, 10) : 0,
             Profit: data.Profit ? parseFloat(data.Profit.replace(/,/g, '')) : 0.0,
-            StopLoss: data.StopLoss ? parseFloat(data.StopLoss.replace(/,/g, '')) : 0.0,
-            TradeTime: data.TradeTime || null,
+            StopLoss: data['Stop Loss'] ? parseFloat(data['Stop Loss'].replace(/,/g, '')) : 0.0,
+            TradeTime: data['Trade Time'] ? convertTo24HourFormat(data['Trade Time']) : null,  // Convert to 24-hour format
             Direction: data.Direction || null,
-            EntryTime: data.EntryTime || null,
-            EntryPrice: data.EntryPrice ? parseFloat(data.EntryPrice.replace(/,/g, '')) : 0.0,
-            ExitTime: data.ExitTime || null,
-            ExitPrice: data.ExitPrice ? parseFloat(data.ExitPrice.replace(/,/g, '')) : 0.0,
+            EntryTime: data['Entry Time'] || null,
+            EntryPrice: data['Entry Price'] ? parseFloat(data['Entry Price'].replace(/,/g, '')) : 0.0,
+            ExitTime: data['Exit Time'] || null,
+            ExitPrice: data['Exit Price'] ? parseFloat(data['Exit Price'].replace(/,/g, '')) : 0.0,
             Result: data.Result || null,
             Comment: data.Comment || null,
           };
-  
+
+          console.log("Result extracted from CSV:", result);
+
           // Add any additional validation if necessary
           if (result.Account && result.Instrument) {
             results.push(result);
           }
-        })
-        .on("end", () => {
-          console.log(`File processed successfully: ${filePath}`);
-          resolve(results);
-        })
-        .on("error", (error) => {
-          console.error(`Failed to process file: ${filePath}`, error);
-          resolve([]); // Return an empty array in case of error
-        });
-    });
-  };
-  
-  async function importResultsFromCSVs(req, res) {
-    const files = req.files;
-    const failedFiles = [];
-    const allResults = [];
-  
-    // Process each CSV file and collect results
-    for (const file of files) {
-      try {
-        const results = await processResultCSV(file.path);
-        allResults.push(...results); // Merge results from all files
-      } catch (error) {
-        failedFiles.push(file.path); // Track failed files
-      }
-    }
-  
-    try {
-      // Retrieve existing results to avoid duplicates (based on unique identifiers)
-      const existingResults = await models.Result.findAll({
-        attributes: ["TradeTime", "Account", "Instrument"],
-        raw: true,
+        } catch (error) {
+          console.error("Error processing row:", data, error);
+        }
+      })
+      .on('end', () => {
+        console.log(`File processed successfully: ${filePath}`);
+        resolve(results);
+      })
+      .on('error', (error) => {
+        console.error(`Failed to process file: ${filePath}`, error);
+        reject(error); // Reject the promise in case of error
       });
-  
-      const existingResultsSet = new Set(
-        existingResults.map(
-          (res) => `${res.TradeTime}-${res.Account}-${res.Instrument}`
-        )
-      );
-  
-      // Identify the unique identifiers of the new results
-      const newResultsSet = new Set(
-        allResults.map(
-          (result) => `${result.TradeTime}-${result.Account}-${result.Instrument}`
-        )
-      );
-  
-      // Delete all existing records in the Result table
-      await models.Result.destroy({
-        where: {},
-      });
+  });
+};
 
-      // Save new results to the database
-      if (allResults.length > 0) {
-        await models.Result.bulkCreate(allResults);
-      }
-  
-      res.status(201).json({
-        message: "Results imported and old data deleted successfully",
-        importedResults: allResults,
-        failedFiles,
-      });
+
+// Function to import results from multiple CSVs
+async function importResultsFromCSVs(req, res) {
+  const files = req.files;
+  const failedFiles = [];
+  const allResults = [];
+
+  // Process each CSV file and collect results
+  for (const file of files) {
+    try {
+      const results = await processResultCSV(file.path);
+      allResults.push(...results); // Merge results from all files
     } catch (error) {
-      res.status(500).json({
-        message: "Something went wrong while processing results",
-        error: error,
-      });
+      failedFiles.push(file.path); // Track failed files
     }
   }
-  
+
+  try {
+    // Retrieve existing results to avoid duplicates (based on unique identifiers)
+    const existingResults = await models.Result.findAll({
+      attributes: ['TradeTime', 'Account', 'Instrument'],
+      raw: true,
+    });
+
+    // Create a set of existing results for faster comparison
+    const existingResultsSet = new Set(
+      existingResults.map(
+        (res) => `${res.TradeTime}-${res.Account}-${res.Instrument}`
+      )
+    );
+
+    // Identify the unique identifiers of the new results to avoid duplicates
+    const newResults = allResults.filter((result) => {
+      const resultKey = `${result.TradeTime}-${result.Account}-${result.Instrument}`;
+      if (existingResultsSet.has(resultKey)) {
+        return false; // Skip if the result already exists
+      }
+      return true;
+    });
+
+    // If there are any new results to add
+    if (newResults.length > 0) {
+      // Optional: Delete all existing records in the Result table if needed (commented out here)
+      // await models.Result.destroy({
+      //   where: {}, // Empty condition will delete all rows
+      // });
+
+      // Save new results to the database
+      await models.Result.bulkCreate(newResults);
+
+      res.status(201).json({
+        message: "Results imported successfully",
+        importedResults: newResults,
+        failedFiles,
+      });
+    } else {
+      res.status(200).json({
+        message: "No new results to import",
+        failedFiles,
+      });
+    }
+  } catch (error) {
+    console.error("Error during database operation:", error);
+    res.status(500).json({
+      message: "Something went wrong while processing results",
+      error: error.message,
+    });
+  }
+}
+
 module.exports = {
     save: save,
     index: index,
