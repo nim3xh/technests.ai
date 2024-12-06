@@ -127,10 +127,10 @@ export default function DashboardComp() {
 
       // Categorize PA account balance ranges
       if (isPA && isActive) {
-        if (balance >= 47500 && balance <= 53200) paStats.PA1++;
-        else if (balance >= 53201 && balance <= 55800) paStats.PA2++;
-        else if (balance > 55800 && balance <= 58000) paStats.PA3++;
-        else if (balance > 58000 && balance <= 60600) paStats.PA4++;
+        if ( balance > 53000 ) paStats.PA1++;
+        else if ( balance > 56000) paStats.PA2++;
+        else if ( balance > 59000) paStats.PA3++;
+        else if ( balance > 62000) paStats.PA4++;
       }
     });
 
@@ -275,8 +275,18 @@ export default function DashboardComp() {
   }, [BaseURL, currentUser]);
 
   const formattedDateTime = createdDateTime
-    ? new Date(createdDateTime).toLocaleString()
-    : "";
+  ? new Intl.DateTimeFormat('en-US', {
+      timeZone: 'America/Los_Angeles',
+      weekday: 'short', // Optional, for full weekday names like Mon, Tue
+      year: 'numeric',
+      month: 'short',  // Optional, short month names like Jan, Feb
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: true,  // Use 12-hour format with AM/PM
+  }).format(new Date(createdDateTime))
+  : '';
 
   // Calculate unique accounts from filteredData
   const uniqueAccountsInFilteredData = new Set(
@@ -353,13 +363,28 @@ export default function DashboardComp() {
                         {/* <MdTableRows className="bg-teal-600 text-white rounded-full text-5xl p-3 shadow-lg" /> */}
                       </div>
                     </div>
+                    <div className="flex flex-col p-3 dark:bg-slate-800 gap-4 md:w-40 w-full rounded-md shadow-md">
+                      <div className="flex justify-between">
+                        <div>
+                        <h3 className="text-gray-500 text-md uppercase">
+                            PA
+                          </h3>
+                          <p className="text-2xl">
+                          {userStats.reduce(
+                            (acc, user) => acc + user.paActive,
+                            0
+                          )}
+                          </p>
+                        </div>                    
+                      </div>
+                    </div>
 
                     <Tooltip content="Balance Range: $47,500 - $53,200">
                       <div className="flex flex-col p-3 dark:bg-slate-800 gap-4 md:w-40 w-full rounded-md shadow-md">
                         <div className="flex justify-between">
                           <div>
                             <h3 className="text-gray-500 text-md uppercase">
-                              PA1
+                              PO1
                             </h3>
                             <p className="text-2xl">
                               {paStats.PA1}
@@ -374,7 +399,7 @@ export default function DashboardComp() {
                         <div className="flex justify-between">
                           <div>
                             <h3 className="text-gray-500 text-md uppercase">
-                              PA2
+                              PO2
                             </h3>
                             <p className="text-2xl">
                               {paStats.PA2}
@@ -390,7 +415,7 @@ export default function DashboardComp() {
                         <div className="flex justify-between">
                           <div>
                             <h3 className="text-gray-500 text-md uppercase">
-                              PA3
+                              PO3
                             </h3>
                             <p className="text-2xl">
                               {paStats.PA3}
@@ -406,7 +431,7 @@ export default function DashboardComp() {
                         <div className="flex justify-between">
                           <div title="Balance Range: 58,001 - 60,600">
                             <h3 className="text-gray-500 text-md uppercase">
-                              PA4
+                              PO4
                             </h3>
                             <p className="text-2xl">
                               {paStats.PA4}
@@ -500,8 +525,8 @@ export default function DashboardComp() {
                           <TableHeadCell className="sticky top-0 bg-white z-10">PA</TableHeadCell>
                           <TableHeadCell className="sticky top-0 bg-white z-10">Admin Only</TableHeadCell>
                           <TableHeadCell className="sticky top-0 bg-white z-10"><b>Total</b></TableHeadCell>
-                          <TableHeadCell className="sticky top-0 bg-white z-10">EVAL to PA</TableHeadCell>
-                          <TableHeadCell className="sticky top-0 bg-white z-10">PO</TableHeadCell>
+                          {/* <TableHeadCell className="sticky top-0 bg-white z-10">EVAL to PA</TableHeadCell> */}
+                          {/* <TableHeadCell className="sticky top-0 bg-white z-10">PO</TableHeadCell> */}
                         </TableHead>
                         <TableBody>
                           {userStats
@@ -522,8 +547,8 @@ export default function DashboardComp() {
                                 <TableCell>{user.paActive}</TableCell>
                                 <TableCell>{user.evalAdminOnly + user.paAdminOnly}</TableCell>
                                 <TableCell><b>{user.totalAccounts}</b></TableCell>
-                                <TableCell>Pending</TableCell>
-                                <TableCell>Pending</TableCell>
+                                {/* <TableCell>Pending</TableCell> */}
+                                {/* <TableCell>Pending</TableCell> */}
                               </TableRow>
                             ))}
                         </TableBody>
