@@ -357,24 +357,29 @@ export default function DashTradingComp() {
     if (accountType.startsWith("APEX")) {
       if (balance >= 49000 && balance <= 52799) {
         return "EVAL STD"; // For EVAL accounts with balance between 49500 and 52801
-      } else if (balance >= 52800 && balance <= 53000) {
+      } else if (balance >= 52800 && balance < 53000) {
         return "EVAL Mini"; // For EVAL accounts with balance above 52800
       } else if (balance < 49500) {
         return "EVAL MAX"; // For EVAL accounts with balance below 49500
+      } else {
+        return "EVAL Mini"; // For EVAL accounts with balance above 53000
       }
     }
 
     // Check if the account type is "PA"
-    if (accountType.startsWith("PA")) {
+    if (accountType.startsWith("PA")) { 
       if (balance >= 49000 && balance <= 52799) {
         return "PA STD"; // For PA accounts with balance between 49000 and 52801
-      } else if(balance >= 52800 && balance <= 53000) {
-        return "PA Mini"; // For PA accounts with balance above 52800
+      } else if(balance >= 52800 && balance < 53000) {
+        return "PA Mini"; // For PA accounts with balance between 52800 and 53000
       } else if (balance < 49000) {
         return "PA Max"; // For PA accounts with balance below 49000
+      } else if (balance >= 53000) {
+        return "PA micro"; // For PA accounts with balance 53k or more
+      } else {
+        return "PA micro"; // For PA accounts with balance above 53000
       }
     }
-
     return "-"; // Default fallback if no condition matches
   };
 
@@ -515,8 +520,8 @@ export default function DashTradingComp() {
         // Generate rows for matched PA accounts
         const rowsPA = matchesPA.map(([account1, account2], i) => {
             const tradeTime = getTradeTime(account1.accountBalance); // Same time for both trades
-            const direction1 = i % 2 === 0 ? "Long" : "Short";
-            const direction2 = direction1 === "Long" ? "Short" : "Long";
+            const direction1 = (account1.accountBalance >= 53000) ? "Long" : (i % 2 === 0 ? "Long" : "Short");
+            const direction2 = (account2.accountBalance >= 53000) ? "Long" : (direction1 === "Long" ? "Short" : "Long");
     
             return [
                 {
@@ -539,8 +544,8 @@ export default function DashTradingComp() {
         // Generate rows for matched EVAL accounts
         const rowsEVAL = matchesEVAL.map(([account1, account2], i) => {
             const tradeTime = getTradeTime(account1.accountBalance); // Same time for both trades
-            const direction1 = i % 2 === 0 ? "Long" : "Short";
-            const direction2 = direction1 === "Long" ? "Short" : "Long";
+            const direction1 = (account1.accountBalance >= 53000) ? "Long" : (i % 2 === 0 ? "Long" : "Short");
+            const direction2 = (account2.accountBalance >= 53000) ? "Long" : (direction1 === "Long" ? "Short" : "Long");
     
             return [
                 {
@@ -568,8 +573,8 @@ export default function DashTradingComp() {
                 direction: direction,
                 account: account.account,
                 balance: account.accountBalance,
-                time: getTradeTime(52900), // Use account.accountBalance here
-                trade: getTradeNameBasedOnBalance(account.account, 52900), // Default balance used
+                time: getTradeTime(53100), // Use account.accountBalance here
+                trade: getTradeNameBasedOnBalance(account.account, 53100), // Default balance used
             });
         });
     
@@ -581,8 +586,8 @@ export default function DashTradingComp() {
                 direction: direction,
                 account: account.account,
                 balance: account.accountBalance,
-                time: getTradeTime(52900), // Use account.accountBalance here
-                trade: getTradeNameBasedOnBalance(account.account, 52900), // Default balance used
+                time: getTradeTime(53100), // Use account.accountBalance here
+                trade: getTradeNameBasedOnBalance(account.account, 53100), // Default balance used
             });
         });
     
@@ -742,8 +747,12 @@ export default function DashTradingComp() {
         // Generate rows for matched accounts
         const rows = [...matchesPA, ...matchesEVAL].map(([account1, account2], i) => {
             const tradeTime = getTradeTime(account1.accountBalance); // Same time for both trades
-            const direction1 = i % 2 === 0 ? "Long" : "Short";
-            const direction2 = direction1 === "Long" ? "Short" : "Long";
+            // const direction1 = i % 2 === 0 ? "Long" : "Short";
+            // const direction2 = direction1 === "Long" ? "Short" : "Long";
+
+            // Check if either account balance is >= 53000, and set both directions to "Long" if true
+            const direction1 = (account1.accountBalance >= 53000) ? "Long" : (i % 2 === 0 ? "Long" : "Short");
+            const direction2 = (account2.accountBalance >= 53000) ? "Long" : (direction1 === "Long" ? "Short" : "Long");
     
             return [
                 {
@@ -777,7 +786,7 @@ export default function DashTradingComp() {
                 account: account.account,
                 balance: account.accountBalance,
                 time: time,
-                trade: getTradeNameBasedOnBalance(account.account, 52900),
+                trade: getTradeNameBasedOnBalance(account.account, 53100),
             });
         });
         // console.log(rows);
