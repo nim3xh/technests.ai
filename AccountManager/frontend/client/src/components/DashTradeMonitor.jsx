@@ -97,7 +97,7 @@ export default function DashTradeMonitor() {
       // Fetch the results from /results
       const response = await axios.get(`${BaseURL}results`, { headers });
 
-      // console.log("Results fetched:", response.data);
+      console.log("Results fetched:", response.data);
       setResults(response.data);
       setLoading(false);
 

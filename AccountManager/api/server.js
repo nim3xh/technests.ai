@@ -56,7 +56,7 @@ const processAndUploadResultCsvFiles = async () => {
             headers: formData.getHeaders(),
           }
         );
-        console.log(`Successfully uploaded ${filePath}:`, response.data);
+        // console.log(`Successfully uploaded ${filePath}:`, response.data);
       } catch (error) {
         console.error(`Failed to upload ${filePath}:`, error.message || error.response?.data);
       }
