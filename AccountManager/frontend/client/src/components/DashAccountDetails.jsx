@@ -276,10 +276,10 @@ export default function DashAccountDetails() {
       mergedData.forEach((account) => {
         if (account.account.startsWith("PA") && account.status !== "admin only") {
           const balance = parseFloat(account.accountBalance);
-          if (balance >= 47500 && balance <= 53200) paStats.PA1++;
-          else if (balance >= 53201 && balance <= 55800) paStats.PA2++;
-          else if (balance > 55800 && balance <= 58000) paStats.PA3++;
-          else if (balance > 58000 && balance <= 60600) paStats.PA4++;
+          if ( balance > 53000 ) paStats.PA1++;
+          else if ( balance > 56000) paStats.PA2++;
+          else if ( balance > 59000) paStats.PA3++;
+          else if ( balance > 62000) paStats.PA4++;
         }
       });
 
@@ -384,10 +384,10 @@ export default function DashAccountDetails() {
     filteredData.forEach((account) => {
       if (account.account.startsWith("PA") && account.status !== "admin only") {
         const balance = parseFloat(account.accountBalance);
-        if (balance >= 47500 && balance <= 53200) newPaStats.PA1++;
-        else if (balance >= 53201 && balance <= 55800) newPaStats.PA2++;
-        else if (balance > 55800 && balance <= 58000) newPaStats.PA3++;
-        else if (balance > 58000 && balance <= 60600) newPaStats.PA4++;
+        if ( balance > 53000 ) newPaStats.PA1++;
+        else if ( balance > 56000) newPaStats.PA2++;
+        else if ( balance > 59000) newPaStats.PA3++;
+        else if ( balance > 62000) newPaStats.PA4++;
       }
     });
   
@@ -500,8 +500,18 @@ export default function DashAccountDetails() {
   };
 
   const formattedDateTime = createdDateTime
-    ? new Date(createdDateTime).toLocaleString()
-    : "";
+    ? new Intl.DateTimeFormat('en-US', {
+        timeZone: 'America/Los_Angeles',
+        weekday: 'short', // Optional, for full weekday names like Mon, Tue
+        year: 'numeric',
+        month: 'short',  // Optional, short month names like Jan, Feb
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: true,  // Use 12-hour format with AM/PM
+    }).format(new Date(createdDateTime))
+    : '';
 
   const fetchTradeData = async () => {
     try {
@@ -670,13 +680,28 @@ export default function DashAccountDetails() {
                         {/* <MdTableRows className="bg-teal-600 text-white rounded-full text-5xl p-3 shadow-lg" /> */}
                       </div>
                     </div>
+                    <div className="flex flex-col p-3 dark:bg-slate-800 gap-4 md:w-40 w-full rounded-md shadow-md">
+                      <div className="flex justify-between">
+                        <div>
+                        <h3 className="text-gray-500 text-md uppercase">
+                            PA
+                          </h3>
+                          <p className="text-2xl">
+                          {userStats.reduce(
+                            (acc, user) => acc + user.paActive,
+                            0
+                          )}
+                          </p>
+                        </div>                    
+                      </div>
+                    </div>
 
                     <Tooltip content="Balance Range: $47,500 - $53,200">
                       <div className="flex flex-col p-3 dark:bg-slate-800 gap-4 md:w-40 w-full rounded-md shadow-md">
                         <div className="flex justify-between">
                           <div>
                             <h3 className="text-gray-500 text-md uppercase">
-                              PA1
+                              PO1
                             </h3>
                             <p className="text-2xl">
                               {paStats.PA1}
@@ -691,7 +716,7 @@ export default function DashAccountDetails() {
                         <div className="flex justify-between">
                           <div>
                             <h3 className="text-gray-500 text-md uppercase">
-                              PA2
+                              PO2
                             </h3>
                             <p className="text-2xl">
                               {paStats.PA2}
@@ -707,7 +732,7 @@ export default function DashAccountDetails() {
                         <div className="flex justify-between">
                           <div>
                             <h3 className="text-gray-500 text-md uppercase">
-                              PA3
+                              PO3
                             </h3>
                             <p className="text-2xl">
                               {paStats.PA3}
@@ -723,7 +748,7 @@ export default function DashAccountDetails() {
                         <div className="flex justify-between">
                           <div title="Balance Range: 58,001 - 60,600">
                             <h3 className="text-gray-500 text-md uppercase">
-                              PA4
+                              PO4
                             </h3>
                             <p className="text-2xl">
                               {paStats.PA4}
@@ -908,7 +933,7 @@ export default function DashAccountDetails() {
                           <TableHeadCell className="sticky top-0 bg-white z-10">#</TableHeadCell>
                           <TableHeadCell className="sticky top-0 bg-white z-10">Account</TableHeadCell>
                           <TableHeadCell className="sticky top-0 bg-white z-10">Account Balance</TableHeadCell>
-                          <TableHeadCell className="sticky top-0 bg-white z-10">Account Name</TableHeadCell>
+                          <TableHeadCell className="sticky top-0 bg-white z-10">User ID</TableHeadCell>
                         </TableHead>
                         <TableBody>
                           {filteredData.length > 0 ? (
@@ -916,23 +941,15 @@ export default function DashAccountDetails() {
                               <TableRow key={index}>
                                 <TableCell>{index + 1}</TableCell>
                                 <TableCell>
-                                  <div className="flex items-center gap-3">
-                                    <Avatar
-                                      size="sm"
-                                      src={account.profilePicture}
-                                      alt={account.name}
-                                    />
-                                    <div>
-                                      <p className="font-semibold">{account.account}</p>
-                                      <p className="text-xs text-gray-500">{account.email}</p>
-                                    </div>
-                                  </div>
+                                      <p>{account.account}</p>
                                 </TableCell>
                                 <TableCell>
-                                  <p className="font-semibold">${account.accountBalance}</p>
+                                  <p>${account.accountBalance}</p>
                                 </TableCell>
-                                <TableCell>
-                                  <p className="font-semibold">{account.name}</p>
+                                <TableCell title={account.name}>
+                                  {/* <Tooltip content={account.name}> */}
+                                    <span>{account.accountNumber.replace(/[^\d()]/g, '').match(/\d+/)?.[0]}</span>
+                                  {/* </Tooltip> */}
                                 </TableCell>
                               </TableRow>
                             ))
