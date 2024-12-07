@@ -183,7 +183,7 @@ const processResultCSV = (filePath) => {
             Comment: data.Comment || null,
           };
 
-          console.log("Result extracted from CSV:", result);
+          // console.log("Result extracted from CSV:", result);
 
           // Add any additional validation if necessary
           if (result.Account && result.Instrument) {
@@ -223,40 +223,40 @@ async function importResultsFromCSVs(req, res) {
 
   try {
     // Retrieve existing results to avoid duplicates (based on unique identifiers)
-    const existingResults = await models.Result.findAll({
-      attributes: ['TradeTime', 'Account', 'Instrument'],
-      raw: true,
-    });
+    // const existingResults = await models.Result.findAll({
+    //   attributes: ['TradeTime', 'Account', 'Instrument'],
+    //   raw: true,
+    // });
 
     // Create a set of existing results for faster comparison
-    const existingResultsSet = new Set(
-      existingResults.map(
-        (res) => `${res.TradeTime}-${res.Account}-${res.Instrument}`
-      )
-    );
+    // const existingResultsSet = new Set(
+    //   existingResults.map(
+    //     (res) => `${res.TradeTime}-${res.Account}-${res.Instrument}`
+    //   )
+    // );
 
     // Identify the unique identifiers of the new results to avoid duplicates
-    const newResults = allResults.filter((result) => {
-      const resultKey = `${result.TradeTime}-${result.Account}-${result.Instrument}`;
-      if (existingResultsSet.has(resultKey)) {
-        return false; // Skip if the result already exists
-      }
-      return true;
-    });
+    // const newResults = allResults.filter((result) => {
+    //   const resultKey = `${result.TradeTime}-${result.Account}-${result.Instrument}`;
+    //   if (existingResultsSet.has(resultKey)) {
+    //     return false; // Skip if the result already exists
+    //   }
+    //   return true;
+    // });
 
     // If there are any new results to add
-    if (newResults.length > 0) {
+    if (allResults.length > 0) {
       // Optional: Delete all existing records in the Result table if needed (commented out here)
-      // await models.Result.destroy({
-      //   where: {}, // Empty condition will delete all rows
-      // });
+      await models.Result.destroy({
+        where: {}, // Empty condition will delete all rows
+      });
 
       // Save new results to the database
-      await models.Result.bulkCreate(newResults);
+      await models.Result.bulkCreate(allResults);
 
       res.status(201).json({
         message: "Results imported successfully",
-        importedResults: newResults,
+        importedResults: allResults,
         failedFiles,
       });
     } else {

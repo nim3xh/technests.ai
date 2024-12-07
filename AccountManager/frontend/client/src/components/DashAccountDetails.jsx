@@ -44,7 +44,6 @@ export default function DashAccountDetails() {
   const [paAccountsCount, setPaAccountsCount] = useState(0);
   const [nonPaAccountsCount, setNonPaAccountsCount] = useState(0);
   const [selectedAccount, setSelectedAccount] = useState(null);
-
   const [setsData, setSetsData] = useState([]);
   const [createdDateTime, setCreatedDateTime] = useState("");
   const [setsMade, setSetsMade] = useState(false); // State to toggle between buttons
@@ -769,7 +768,7 @@ export default function DashAccountDetails() {
                   ? selectedAccount.replace(/APEX-/, "") // Remove "APEX-"
                   : "Select User"
               }
-              className="w-full text-left dark:bg-gray-800 dark:text-gray-200"
+              className="w-full text-left dark:bg-gray-800 dark:text-gray-200 relative z-20"
               inline
               disabled={setsMade || showSetsData}
             >
@@ -790,7 +789,7 @@ export default function DashAccountDetails() {
             <Dropdown
                 label={selectedProcessRange || "Select Range"}
                 disabled={setsMade || showSetsData}
-                className="w-1/4 dark:bg-gray-800 dark:text-gray-200 relative z-20" // Ensure z-index is applied
+                className="w-1/4 dark:bg-gray-800 dark:text-gray-200 relative z-20" 
                 inline
               >
                 <Dropdown.Item onClick={() => setSelectedProcessRange("")}>
@@ -868,7 +867,7 @@ export default function DashAccountDetails() {
 
               <Dropdown
                   label={selectedAccounts[0] ? selectedAccounts[0] : "Select Account 1"}
-                  className="w-full text-left dark:bg-gray-800 dark:text-gray-200"
+                  className="w-full text-left dark:bg-gray-800 dark:text-gray-200 relative z-20"
                   inline
                 >
                   <Dropdown.Item onClick={() => handleClearComparison()}>
@@ -886,7 +885,7 @@ export default function DashAccountDetails() {
                 
                 <Dropdown
                   label={selectedAccounts[1] ? selectedAccounts[1] : "Select Account 2"}
-                  className="w-full text-left dark:bg-gray-800 dark:text-gray-200"
+                  className="w-full text-left dark:bg-gray-800 dark:text-gray-200 relative z-20"
                   inline
                 >
                   <Dropdown.Item onClick={() => handleClearComparison()}>
@@ -982,8 +981,8 @@ export default function DashAccountDetails() {
                           <TableRow key={index}>
                             
                             <TableCell>{row.AccountNumber1}</TableCell>
-                            <TableCell>{row.AccountBalance1}</TableCell>
-                            <TableCell>{row.AccountBalance2}</TableCell>
+                            <TableCell>${row.AccountBalance1}</TableCell>
+                            <TableCell>${row.AccountBalance2}</TableCell>
                             <TableCell>{row.AccountNumber2}</TableCell>
                            
                           </TableRow>
