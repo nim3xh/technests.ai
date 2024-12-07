@@ -89,8 +89,6 @@ export default function DashboardComp() {
       setCreatedDateTime(null);
     }
 
-    
-
     // Initialize statistics
     const paStats = {
       PA1: 0,
@@ -379,7 +377,7 @@ export default function DashboardComp() {
                       </div>
                     </div>
 
-                    <Tooltip content="Balance Range: $47,500 - $53,200">
+                    <Tooltip content="Balance > $53,000">
                       <div className="flex flex-col p-3 dark:bg-slate-800 gap-4 md:w-40 w-full rounded-md shadow-md">
                         <div className="flex justify-between">
                           <div>
@@ -394,7 +392,7 @@ export default function DashboardComp() {
                         </div>
                       </div>
                     </Tooltip>
-                    <Tooltip content="Balance Range: $53,201 - $55,800">
+                    <Tooltip content="Balance > $56,000">
                       <div className="flex flex-col p-3 dark:bg-slate-800 gap-4 md:w-40 w-full rounded-md shadow-md">
                         <div className="flex justify-between">
                           <div>
@@ -410,8 +408,8 @@ export default function DashboardComp() {
                       </div>
                     </Tooltip>
                     
-                    <Tooltip content="Balance Range: $55,801 - $58,000">
-                      <div className="flex flex-col p-3 dark:bg-slate-800 gap-4 md:w-40 w-full rounded-md shadow-md" title="Balance Range: 58,001 - 60,600">
+                    <Tooltip content="Balance > $59,000">
+                      <div className="flex flex-col p-3 dark:bg-slate-800 gap-4 md:w-40 w-full rounded-md shadow-md" >
                         <div className="flex justify-between">
                           <div>
                             <h3 className="text-gray-500 text-md uppercase">
@@ -426,8 +424,8 @@ export default function DashboardComp() {
                       </div>
                     </Tooltip>
                       
-                    <Tooltip content="Balance Range: $58,001 - $60,600">
-                      <div className="flex flex-col p-3 dark:bg-slate-800 gap-4 md:w-40 w-full rounded-md shadow-md" title="Balance Range: 58,001 - 60,600">
+                    <Tooltip content="Balance > $62,000">
+                      <div className="flex flex-col p-3 dark:bg-slate-800 gap-4 md:w-40 w-full rounded-md shadow-md">
                         <div className="flex justify-between">
                           <div title="Balance Range: 58,001 - 60,600">
                             <h3 className="text-gray-500 text-md uppercase">
