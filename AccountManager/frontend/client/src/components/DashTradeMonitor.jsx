@@ -15,6 +15,7 @@ import {
   Checkbox,
   Spinner,
   Dropdown,
+  Datepicker,
 } from "flowbite-react";
 import useRealTimeDate from '../hooks/useRealTimeDate';
 import axios from "axios";
@@ -33,6 +34,8 @@ export default function DashTradeMonitor() {
     EVAL: false,
     PA: false,
   });
+  const [selectedDate, setSelectedDate] = useState(null);
+  const [filtered,setfiltered] = useState(null);
 
   const mergeData = (users, accountDetails) => {
     return accountDetails.map((account) => {
@@ -97,20 +100,45 @@ export default function DashTradeMonitor() {
       // Fetch the results from /results
       const response = await axios.get(`${BaseURL}results`, { headers });
 
-      console.log("Results fetched:", response.data);
-      setResults(response.data);
+      setResults(response.data.result);
+      setfiltered(response.data.result)
       setLoading(false);
-
     }catch (err) {
       setError("Something went wrong while fetching data.",err);
       setLoading(false);
     }
   };
 
+  const filter = () => {
+    let filtered = results;
+    if(selectedFilters.PA){
+      filtered = filtered.filter((item) => item.Account.startsWith("PA"));
+    }
+
+    if(selectedFilters.EVAL){
+      filtered = filtered.filter((item) => item.Account.startsWith("APEX"));
+    }
+
+    if(!selectedFilters.PA && !selectedFilters.EVAL){
+      filtered = filtered;
+    }
+
+    if (selectedAccount != null) {
+      filtered = filtered.filter((item) => {
+        return item.Account.replace(/(PA-)?(APEX-)?(\d+)(-\d+)?/, '$3') === selectedAccount.replace(/APEX-/, "").split(" ")[0];
+      });
+    }
+    setfiltered(filtered);
+  }
+
   useEffect(() => {
     fetchData();
     fetchResults();
   }, []);
+
+  useEffect(()=> {
+    filter();
+  },[selectedFilters,selectedAccount]);
 
   const handleAccountSelection = (account) => {
     setSelectedAccount(account);
@@ -130,6 +158,11 @@ export default function DashTradeMonitor() {
   
       return prevFilters;
     });
+  };
+
+  const handleDateChange = (date) => {
+    setSelectedDate(date);
+    console.log("Selected Date: ", date); // You can use this date in your fetch function or any logic
   };
 
   return (
@@ -199,7 +232,48 @@ export default function DashTradeMonitor() {
                                   PA Only
                                 </label>
                             </div>
+                            <Datepicker onChange={handleDateChange} />
                         </div>
+                      </div>
+                    </div>
+                    <div className="flex flex-col md:flex-row justify-center items-center md:space-x-4">
+                      <div className="table-wrapper overflow-x-auto max-h-[590px]">
+                        <Table hoverable className="shadow-md w-full mt-5">
+                          <TableHead hoverable className="shadow-md w-full">
+                            <TableHeadCell className="sticky top-0 bg-white z-10">#</TableHeadCell>
+                            <TableHeadCell className="sticky top-0 bg-white z-10">Account</TableHeadCell>
+                            <TableHeadCell className="sticky top-0 bg-white z-10">Stop Loss</TableHeadCell>
+                            <TableHeadCell className="sticky top-0 bg-white z-10">Profit</TableHeadCell>
+                            <TableHeadCell className="sticky top-0 bg-white z-10">Instrument</TableHeadCell>
+                            <TableHeadCell className="sticky top-0 bg-white z-10">Quantity</TableHeadCell>
+                            <TableHeadCell className="sticky top-0 bg-white z-10">Status</TableHeadCell>
+                            <TableHeadCell className="sticky top-0 bg-white z-10">Duration</TableHeadCell>
+                          </TableHead>
+                          {loading ? (
+                              <div className="flex justify-center items-center h-96">
+                                <Spinner size="xl" />
+                              </div>
+                            ) : error ? (
+                              <div className="text-red-600">{error}</div>
+                            ) : filtered.length === 0 ? (
+                              <div>No results found.</div>
+                            ) : (
+                              <TableBody>
+                                {filtered.map((result, index) => (
+                                  <TableRow key={result.id}>
+                                    <TableCell>{index + 1}</TableCell>
+                                    <TableCell>{result.Account}</TableCell>
+                                    <TableCell>{result.StopLoss ?? 'N/A'}</TableCell>
+                                    <TableCell>{result.Profit ?? 'N/A'}</TableCell>
+                                    <TableCell>{result.Instrument}</TableCell>
+                                    <TableCell>{result.Quantity}</TableCell>
+                                    <TableCell>{result.Status ?? 'N/A'}</TableCell>
+                                    <TableCell>{result.Duration ?? 'N/A'}</TableCell>
+                                  </TableRow>
+                                ))}
+                              </TableBody>
+                            )}
+                        </Table>
                       </div>
                     </div>
                 </>

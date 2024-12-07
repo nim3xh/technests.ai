@@ -46,6 +46,7 @@ export default function DashTradingComp() {
   let downloadCancelled = false;
   let newSelectedAccounts = [...selectedAccounts];
   const [alert , setAlert] = useState(false);
+  const [filteredData, setFilteredData] = useState([]);
 
   const accountDetails = [
       { accountNumber: "APEX-62849", name: "Sachin Suyamindra" },
@@ -361,8 +362,8 @@ export default function DashTradingComp() {
         return "EVAL Mini"; // For EVAL accounts with balance above 52800
       } else if (balance < 49500) {
         return "EVAL MAX"; // For EVAL accounts with balance below 49500
-      } else {
-        return "EVAL Mini"; // For EVAL accounts with balance above 53000
+      }else {
+        return "PA micro"; // For PA accounts with balance above 53000
       }
     }
 
@@ -370,11 +371,11 @@ export default function DashTradingComp() {
     if (accountType.startsWith("PA")) { 
       if (balance >= 49000 && balance <= 52799) {
         return "PA STD"; // For PA accounts with balance between 49000 and 52801
-      } else if(balance >= 52800 && balance < 53000) {
+      } else if(balance >= 52400 && balance < 53000) {
         return "PA Mini"; // For PA accounts with balance between 52800 and 53000
       } else if (balance < 49000) {
         return "PA Max"; // For PA accounts with balance below 49000
-      } else if (balance >= 53000) {
+      } else if (balance >= 52600) {
         return "PA micro"; // For PA accounts with balance 53k or more
       } else {
         return "PA micro"; // For PA accounts with balance above 53000
@@ -625,7 +626,7 @@ export default function DashTradingComp() {
     
         // Separate PA and EVAL accounts
         const paAccounts = filteredAccounts.filter((item) => item.account.startsWith("PA"));
-        const evalAccounts = filteredAccounts.filter((item) => item.account.startsWith("APEX"));
+        const evalAccounts = filteredAccounts.filter((item) => item.account.startsWith("APEX")) && filteredAccounts.filter((item) => item.balance<53000);
     
         // Group accounts by users for PA and EVAL accounts separately
         const userAccountsPA = accounts.map((user) =>
