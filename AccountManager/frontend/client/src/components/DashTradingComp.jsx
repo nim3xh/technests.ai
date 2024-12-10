@@ -27,16 +27,6 @@ export default function DashTradingComp() {
   const [error, setError] = useState(null);
   const [fileCreationData, setFileCreationData] = useState([]);
   const { currentUser } = useSelector((state) => state.user);
-  const [userStats, setUserStats] = useState([]);
-  const [selectedAccounts, setSelectedAccounts] = useState([]);
-  const [paStats, setPaStats] = useState({
-    PA1: 0,
-    PA2: 0,
-    PA3: 0,
-    PA4: 0,
-  });
-  const [timeSlots, setTimeSlots] = useState([]);
-  const [isFindingMatch, setIsFindingMatch] = useState(false);
   const [tradesData, setTradesData] = useState([]);
   const [selectedFilters, setSelectedFilters] = useState({
     EVAL: false,
@@ -44,9 +34,8 @@ export default function DashTradingComp() {
   });
   let downloadConfirmed = false;
   let downloadCancelled = false;
-  let newSelectedAccounts = [...selectedAccounts];
   const [alert , setAlert] = useState(false);
-  const [filteredData, setFilteredData] = useState([]);
+  const [stats, setStats] = useState([]);
 
   const accountDetails = [
       { accountNumber: "APEX-62849", name: "Sachin Suyamindra" },
@@ -61,8 +50,7 @@ export default function DashTradingComp() {
       { accountNumber: "APEX-266734", name: "Umesh" },
       { accountNumber: "APEX-266645", name: "Nischay Gowda" },
       { accountNumber: "APEX-266751", name: "Bobby Karami" },
-  ];
-  
+  ];  
     
     // Function to generate the formatted account string: "Company-ID (Name)"
     const formatAccountString = (account) => {
@@ -121,25 +109,7 @@ export default function DashTradingComp() {
     });
   };
 
-  const encounteredAccounts = new Set();
-
-  const uniqueAccountNumbers = combinedData
-    .map((item) => {
-      // Match and extract the account number pattern APEX-245360
-      const match = item.accountNumber.match(/^(APEX-\d+)/);
-      if (match) {
-        const accountNumber = match[1];
-        if (!encounteredAccounts.has(accountNumber)) {
-          encounteredAccounts.add(accountNumber);
-          return `${accountNumber} (${item.name})`;
-        }
-      }
-      return null; // Skip if already encountered or no match
-    })
-    .filter(Boolean); // Filter out null values
-
-    // console.log(uniqueAccountNumbers);
-    const fetchTrades = async () => {
+  const fetchTrades = async () => {
       try {
         const token = currentUser.token;
         const headers = {
@@ -155,7 +125,7 @@ export default function DashTradingComp() {
         setError("Something went wrong while fetching data.");
         setLoading(false);
       }
-    };
+  };
 
     const fetchData = async () => {
       try {
@@ -177,79 +147,6 @@ export default function DashTradingComp() {
         setCombinedData(mergedData);
         setLoading(false);
   
-        // Initialize PA account statistics
-        const paStats = {
-          PA1: 0,
-          PA2: 0,
-          PA3: 0,
-          PA4: 0,
-        };
-  
-        // Categorize and count PA accounts based on account balance
-        mergedData.forEach((account) => {
-          if (account.account.startsWith("PA") && account.status === "active") {
-            const balance = parseFloat(account.accountBalance);
-            if (balance >= 47500 && balance <= 53200) paStats.PA1++;
-            else if (balance >= 53201 && balance <= 55800) paStats.PA2++;
-            else if (balance > 55800 && balance <= 58000) paStats.PA3++;
-            else if (balance > 58000 && balance <= 60600) paStats.PA4++;
-          }
-        });
-  
-        setPaStats(paStats);
-  
-        // Initialize user statistics
-        const stats = {};
-        let totalEvalActive = 0;
-        let totalPAActive = 0;
-        let totalEvalAdminOnly = 0;
-        let totalPAAdminOnly = 0;
-  
-        // Calculate statistics for each user
-        mergedData.forEach((item) => {
-          const userName = item.name;
-          const isPA = item.account.startsWith("PA");
-          const isActive = item.status === "active";
-          const isEval = item.account.startsWith("APEX");
-          const isAdmin = item.status === "admin only";
-  
-          // Initialize stats for the user if not already present
-          if (!stats[userName]) {
-            stats[userName] = {
-              evalActive: 0,
-              paActive: 0,
-              evalAdminOnly: 0,
-              paAdminOnly: 0,
-            };
-          }
-  
-          // Update stats based on account type and status
-          if (isEval && isActive) {
-            stats[userName].evalActive++;
-            totalEvalActive++;
-          }
-          if (isPA && isActive) {
-            stats[userName].paActive++;
-            totalPAActive++;
-          }
-          if (isAdmin && isEval) {
-            stats[userName].evalAdminOnly++;
-            totalEvalAdminOnly++;
-          }
-          if (isAdmin && isPA) {
-            stats[userName].paAdminOnly++;
-            totalPAAdminOnly++;
-          }
-        });
-  
-        // Prepare user stats array for rendering
-        const userStatsArray = Object.keys(stats).map((userName) => ({
-          userName,
-          ...stats[userName],
-          totalAccounts: stats[userName].evalActive + stats[userName].paActive,
-        }));
-  
-        setUserStats(userStatsArray);
         setLoading(false);
       } catch (err) {
         alert("Error fetching data:", err);
@@ -264,12 +161,6 @@ export default function DashTradingComp() {
       fetchFileCreationTime();
     }, [BaseURL, currentUser]);
 
-  // Calculate unique accounts from filteredData
-  const uniqueAccountsInFilteredData = new Set(
-    combinedData.map((item) => `${item.accountNumber} (${item.name})`)
-  );
-
-  const totalUniqueAccountsDisplayed = uniqueAccountsInFilteredData.size;
 
   const fetchFileCreationTime = async () => {
     try {
@@ -348,227 +239,8 @@ export default function DashTradingComp() {
   };
 
   const exportCSVForEachAccount = async (groupedSets) => {
-      // console.log(selectedAccounts);
-
-      const createTableDataForOneAccount = () => {
-        // console.log('run createTableDataForOneAccount');
-        let filtered = combinedData.filter((account) => account.status !== "admin only");
-    
-        if (selectedFilters.PA) {
-            filtered = filtered.filter((item) => item.account.startsWith("PA"));
-        }
-    
-        if (selectedFilters.EVAL) {
-            filtered = filtered.filter((item) => item.account.startsWith("APEX"));
-        }
-    
-        const accountData = filtered.filter((account) => {
-            return `${account.accountNumber} (${account.name})` === newSelectedAccounts[0];
-        });
-    
-        // Additional filtering by balance
-        const filteredAccountData = accountData.filter(
-            (account) => account.accountBalance <= 53000
-        );
-    
-        // Sorting account data
-        const sortedAccountData = filteredAccountData.sort((a, b) => a.accountBalance - b.accountBalance);
-    
-        const maxRows = sortedAccountData.length;
-        let directions = [];
-    
-        const rows = Array.from({ length: maxRows }, (_, i) => {
-            const account = sortedAccountData[i] || {};
-            let direction = "-";
-            let tradeName = "-"; // Default trade name
-            let tradeTime = "-";
-    
-            if (account.account) {
-                // Select direction randomly for now (can be replaced with a more specific logic)
-                direction = directions[i]?.direction || (Math.random() < 0.5 ? "Long" : "Short");
-    
-                // Get the trade name based on the account balance
-                tradeName = getTradeNameBasedOnBalance(account.account,account.accountBalance);
-                tradeTime = getTradeTime(account.accountBalance);
-            }
-    
-            if (!directions[i] && account.account) {
-                directions[i] = { direction };
-            }
-    
-            return {
-                direction,
-                account: account.account || "-",
-                balance: account.accountBalance || "-",
-                time: tradeTime, // Trade time selected based on balance
-                trade: tradeName, // Trade name selected based on balance
-            };
-        });
-    
-        // console.log('rows: ', rows); // Output the rows for debugging
-        return rows;
-      };
-      
-
-      const createTableDataForTwoAccounts = () => {
-        // console.log('run createTableDataForTwoAccounts');
-        // Filter accounts within the specified range
-        let filteredAccounts = combinedData.filter(
-            (account) =>
-                account.status !== "admin only" &&
-                selectedAccounts.includes(`${account.accountNumber} (${account.name})`)
-        );
-
-        if (selectedFilters.PA) {
-            filteredAccounts = filteredAccounts.filter((item) => item.account.startsWith("PA"));
-        }
-
-        if (selectedFilters.EVAL) {
-            filteredAccounts = filteredAccounts.filter((item) => item.account.startsWith("APEX"));
-        }
-    
-        // console.log('filteredAccounts: ', filteredAccounts);
-        // Separate PA and EVAL accounts
-        let paAccounts = filteredAccounts.filter((item) => item.account.startsWith("PA"));
-        let evalAccounts = filteredAccounts.filter((item) => item.account.startsWith("APEX"));
-    
-        // Sort accounts by balance (PA accounts)
-        const sortedPAAccounts = paAccounts.sort((a, b) => a.accountBalance - b.accountBalance);
-        // Sort accounts by balance (EVAL accounts)
-        const sortedEVALAccounts = evalAccounts.sort((a, b) => a.accountBalance - b.accountBalance);
-    
-        // Initialize match arrays
-        const matchesPA = [];
-        const unmatchedPA = [];
-        const matchesEVAL = [];
-        const unmatchedEVAL = [];
-    
-        // Match PA accounts based on ±$125 tolerance
-        sortedPAAccounts.forEach((account, index) => {
-            const match = sortedPAAccounts.find(
-                (otherAccount, otherIndex) =>
-                    otherIndex !== index && // Avoid self-matching
-                    account.accountNumber !== otherAccount.accountNumber && // Skip same account number rows
-                    Math.abs(account.accountBalance - otherAccount.accountBalance) <= 125 && // ±$125 tolerance
-                    !matchesPA.some((m) => m.includes(account) || m.includes(otherAccount)) // Avoid duplicate matches
-            );
-    
-            if (match) {
-                matchesPA.push([account, match]);
-            } else if (
-                !matchesPA.some((m) => m.includes(account)) // Ensure account is not already matched
-            ) {
-                unmatchedPA.push(account);
-            }
-        });
-    
-        // Match EVAL accounts based on ±$125 tolerance
-        sortedEVALAccounts.forEach((account, index) => {
-            const match = sortedEVALAccounts.find(
-                (otherAccount, otherIndex) =>
-                    otherIndex !== index && // Avoid self-matching
-                    account.accountNumber !== otherAccount.accountNumber && // Skip same account number rows
-                    Math.abs(account.accountBalance - otherAccount.accountBalance) <= 125 && // ±$125 tolerance
-                    !matchesEVAL.some((m) => m.includes(account) || m.includes(otherAccount)) // Avoid duplicate matches
-            );
-    
-            if (match) {
-                matchesEVAL.push([account, match]);
-            } else if (
-                !matchesEVAL.some((m) => m.includes(account)) // Ensure account is not already matched
-            ) {
-                unmatchedEVAL.push(account);
-            }
-        });
-    
-        // Generate rows for matched PA accounts
-        const rowsPA = matchesPA.map(([account1, account2], i) => {
-            const tradeTime = getTradeTime(account1.accountBalance); // Same time for both trades
-            const direction1 = (account1.accountBalance >= 53000) ? "Long" : (i % 2 === 0 ? "Long" : "Short");
-            const direction2 = (account2.accountBalance >= 53000) ? "Long" : (direction1 === "Long" ? "Short" : "Long");
-    
-            return [
-                {
-                    direction: direction1,
-                    account: account1.account,
-                    balance: account1.accountBalance,
-                    time: tradeTime,
-                    trade: getTradeNameBasedOnBalance(account1.account, account1.accountBalance),
-                },
-                {
-                    direction: direction2,
-                    account: account2.account,
-                    balance: account2.accountBalance,
-                    time: tradeTime,
-                    trade: getTradeNameBasedOnBalance(account2.account, account2.accountBalance),
-                },
-            ];
-        });
-    
-        // Generate rows for matched EVAL accounts
-        const rowsEVAL = matchesEVAL.map(([account1, account2], i) => {
-            const tradeTime = getTradeTime(account1.accountBalance); // Same time for both trades
-            const direction1 = (account1.accountBalance >= 53000) ? "Long" : (i % 2 === 0 ? "Long" : "Short");
-            const direction2 = (account2.accountBalance >= 53000) ? "Long" : (direction1 === "Long" ? "Short" : "Long");
-    
-            return [
-                {
-                    direction: direction1,
-                    account: account1.account,
-                    balance: account1.accountBalance,
-                    time: tradeTime,
-                    trade: getTradeNameBasedOnBalance(account1.account, account1.accountBalance),
-                },
-                {
-                    direction: direction2,
-                    account: account2.account,
-                    balance: account2.accountBalance,
-                    time: tradeTime,
-                    trade: getTradeNameBasedOnBalance(account2.account, account2.accountBalance),
-                },
-            ];
-        });
-    
-        // Add unmatched PA accounts with direction and time
-        unmatchedPA.forEach((account, i) => {
-            const direction = i % 2 === 0 ? "Long" : "Short";  // Alternating direction
-            const time = "-";  // Default time for unmatched accounts
-            rowsPA.push({
-                direction: direction,
-                account: account.account,
-                balance: account.accountBalance,
-                time: getTradeTime(53100), // Use account.accountBalance here
-                trade: getTradeNameBasedOnBalance(account.account, 53100), // Default balance used
-            });
-        });
-    
-        // Add unmatched EVAL accounts with direction and time
-        unmatchedEVAL.forEach((account, i) => {
-            const direction = i % 2 === 0 ? "Long" : "Short";  // Alternating direction
-            const time = "-";  // Default time for unmatched accounts
-            rowsEVAL.push({
-                direction: direction,
-                account: account.account,
-                balance: account.accountBalance,
-                time: getTradeTime(53100), // Use account.accountBalance here
-                trade: getTradeNameBasedOnBalance(account.account, 53100), // Default balance used
-            });
-        });
-    
-        // Combine matched and unmatched PA/EVAL rows
-        const allRows = [...rowsPA, ...rowsEVAL];
-    
-        // Flatten and return all rows
-        return allRows.flat();
-      };
-    
-      
+      const newStats = [];
       const createTableDataForThreeAccounts = (accounts) => {
-        // console.log('run createTableDataForThreeAccounts', accounts);
-    
-        // Set selected accounts
-        setSelectedAccounts(accounts); // This is async, state may not update immediately
-    
         // Filter accounts within the specified range
         let filteredAccounts = combinedData.filter(
             (account) =>
@@ -583,19 +255,13 @@ export default function DashTradingComp() {
         if (selectedFilters.EVAL) {
             filteredAccounts = filteredAccounts.filter((item) => item.account.startsWith("APEX"));
         }
-  
-        // console.log('filteredAccounts: ', filteredAccounts);
-        // console.log('filteredAccounts: ', filteredAccounts);
-    
+
         // Separate PA and EVAL accounts
         const paAccounts = filteredAccounts.filter((item) => item.account.startsWith("PA"));
         let evalAccounts = filteredAccounts.filter((item) => item.account.startsWith("APEX"));
 
         evalAccounts = evalAccounts.filter((item) => item.accountBalance < 53000);
 
-        // console.log('paAccounts: ', paAccounts);
-        // console.log('evalAccounts: ', evalAccounts);
-    
         // Group accounts by users for PA and EVAL accounts separately
         const userAccountsPA = accounts.map((user) =>
             paAccounts.filter((account) => `${account.accountNumber} (${account.name})` === user)
@@ -710,14 +376,9 @@ export default function DashTradingComp() {
             }
         });
     
-        // console.log('matchesPA: ', matchesPA);
-        // console.log('matchesEVAL: ', matchesEVAL);
-    
         // Generate rows for matched accounts
         const rows = [...matchesPA, ...matchesEVAL].map(([account1, account2], i) => {
             const tradeTime = getTradeTime(account1.accountBalance); // Same time for both trades
-            // const direction1 = i % 2 === 0 ? "Long" : "Short";
-            // const direction2 = direction1 === "Long" ? "Short" : "Long";
 
             // Check if either account balance is >= 53000, and set both directions to "Long" if true
             const direction1 = (account1.accountBalance >= 53000) ? "Long" : (i % 2 === 0 ? "Long" : "Short");
@@ -758,19 +419,36 @@ export default function DashTradingComp() {
                 trade: getTradeNameBasedOnBalance(account.account, account.accountBalance),
             });
         });
-        // console.log(rows);
+
+         // Count stats
+         const totalAccounts = filteredAccounts.length;
+         const totalMatchedAccounts = matchesPA.length + matchesEVAL.length;
+         const totalUnmatchedAccounts = unmatchedAccounts.length;
+ 
+         const tradingPercentage = (totalMatchedAccounts / totalAccounts) * 100;
+ 
+         // Collect stats for this set
+         newStats.push({
+             set: accounts,
+             totalAccounts,
+             totalMatchedAccounts,
+             totalUnmatchedAccounts,
+             tradingPercentage,
+         });
+         
         // Return all rows, flattened
         return rows.flat();
     };
     
-      const convertTo12HourFormat = (time) => {
+    
+    const convertTo12HourFormat = (time) => {
         const [hours, minutes] = time.split(":");
         let hour = parseInt(hours, 10);
         const modifier = hour >= 12 ? "PM" : "AM";
         if (hour === 0) hour = 12; 
         else if (hour > 12) hour -= 12;
         return `${hour.toString().padStart(2, "0")}:${minutes} ${modifier}`;
-      };
+    };
       
       
       const createTradeCSV = (tradeData, accountLabel, accountNumbers, accountDirection,time) => {
@@ -835,92 +513,10 @@ export default function DashTradingComp() {
         }
       };
 
-      if(selectedAccounts.length == 2){
-        const tableData = createTableDataForTwoAccounts();
-        for (let i=0; i < 2; i++) {
-          const tableHeaders = [
-            `Trade (${selectedAccounts[i].replace(/APEX-/, "").split(" ")[0]})`,
-            `Direction (${selectedAccounts[i].replace(/APEX-/, "").split(" ")[0]})`,
-            `Account (${selectedAccounts[i].replace(/APEX-/, "").split(" ")[0]})`,
-            `Account Balance (${selectedAccounts[i].replace(/APEX-/, "").split(" ")[0]})`
-          ];
-
-          const tableCSV = [tableHeaders.join(",")];
-          tableData.forEach((row) => {
-            tableCSV.push(
-                [
-                    row.trade,
-                    row.direction,
-                    row.account,
-                    row.balance,
-                    row.time,
-                ].join(",")
-            );
-          });
-
-          // console.log('tableData: ',tableData);
-
-          let filteredAccountData = tableData.filter((account) => {
-            // Extract the account number after "APEX-" and before any non-digit characters
-            const accountNumber = account.account.replace(/.*APEX-(\d+)-.*/, "$1"); // Match the digits after "APEX-" and before "-"
-            
-            // Extract the numeric part from the input string in a similar manner
-            const filteredAccountStringFromInput = selectedAccounts[i].replace(/APEX-/, "").split(" ")[0];
-            
-            // Return whether the numbers match
-            return accountNumber === filteredAccountStringFromInput;
-          });
-          
-          // console.log('filteredAccountData: ',filteredAccountData);
-
-          const accountTrades = filteredAccountData.map((row) => ({
-            trade: tradesData.find((trade) => trade.TradeName === row.trade),
-            accountNumber: row.account,
-            direction: row.direction,
-            time: row.time,
-          })).filter((item) => item.trade);
-          
-          // console.log('accountTrades: ',accountTrades);
-
-          // console.log(filteredAccountData);
-          // console.log(tradesData);
-
-          const tradeCSV = createTradeCSV(
-            accountTrades.map((item) => item.trade),
-            selectedAccounts[i].replace(/APEX-/, "").split(" ")[0],
-            accountTrades.map((item) => item.accountNumber),
-            accountTrades.map((item) => item.direction),
-            accountTrades.map((item) => item.time)
-          );
-
-          // console.log('tradeCSV: ',tradeCSV);
-          let accountFileName = `${selectedAccounts[i].replace(/APEX-/, "").split(" ")[0]}_Trades.csv`;
-
-          if(selectedFilters.PA){
-              accountFileName = `${selectedAccounts[i].replace(/APEX-/, "").split(" ")[0]}_PA.csv`;
-          }
-          
-          if(selectedFilters.EVAL){
-              accountFileName = `${selectedAccounts[i].replace(/APEX-/, "").split(" ")[0]}_EVAL.csv`;
-          }
-
-          promptDownloadConfirmation(tradeCSV, accountFileName);  // Check for confirmation to download
-          await saveCSVToBackend(tradeCSV, `${accountFileName}`, selectedAccounts[i].replace(/APEX-/, "").split(" ")[0]);
-        }
-        return;
-      }
-      // console.log('selectedAccounts: ',selectedAccounts.length);
       if(groupedSets !== null){
         // Loop through each set of accounts
         for (const accounts of groupedSets) {
-          // console.log('accounts: ', accounts);
-          // setSelectedAccounts(accounts);
-          // console.log('selectedAccounts: ', selectedAccounts);
-       
           const tableData = createTableDataForThreeAccounts(accounts);
-          // console.log(tableData);
-
-          // console.log(accounts);
           for (let i = 0; i < accounts.length; i++) {
               {
                   const tableHeaders = [
@@ -973,8 +569,6 @@ export default function DashTradingComp() {
                       return accountNumber === filteredAccountStringFromInput;
                   });
 
-                  
-                  // console.log(filteredAccountData);
                   const accountTrades = filteredAccountData.map((row) => ({
                       trade: tradesData.find((trade) => trade.TradeName === row.trade),
                       accountNumber: row.account,
@@ -999,125 +593,15 @@ export default function DashTradingComp() {
                   if (selectedFilters.EVAL) {
                       accountFileName = `${accounts[i].replace(/APEX-/, "").split(" ")[0]}_EVAL.csv`;
                   }
-
-                  // console.log(tradeCSV,accountFileName);
-
                   promptDownloadConfirmation(tradeCSV, accountFileName);  // Check for confirmation to download
                   await saveCSVToBackend(tradeCSV, `${accountFileName}`, accounts[i].replace(/APEX-/, "").split(" ")[0]);
+                  setStats(newStats);
               }
             }
           }
         return;
       }
-
-      if (selectedAccounts.length === 0) {
-        for (let accountString of uniqueAccountNumbers) { 
-          // Temporarily update selectedAccounts without immediately using state
-          newSelectedAccounts = [...selectedAccounts, accountString];
-
-          const tableData = createTableDataForOneAccount();
-
-          const tableHeaders = [
-              `Trade (${accountString.replace(/APEX-/, "").split(" ")[0]})`,
-              `Direction (${accountString.replace(/APEX-/, "").split(" ")[0]})`,
-              `Account (${accountString.replace(/APEX-/, "").split(" ")[0]})`,
-              `Account Balance (${accountString.replace(/APEX-/, "").split(" ")[0]})`
-          ];
-
-          const tableCSV = [tableHeaders.join(",")];
-          tableData.forEach((row) => {
-              tableCSV.push(
-                  [
-                      row.trade,
-                      row.direction,
-                      row.account,
-                      row.balance,
-                  ].join(",")
-              );
-          });
-
-          const accountTrades = tableData.map((row) => ({
-              trade: tradesData.find((trade) => trade.TradeName === row.trade),
-              accountNumber: row.account,
-              direction: row.direction,
-              time: row.time,
-          })).filter((item) => item.trade);
-
-          const tradeCSV = createTradeCSV(
-              accountTrades.map((item) => item.trade),
-              accountString.replace(/APEX-/, "").split(" ")[0],
-              accountTrades.map((item) => item.accountNumber),
-              accountTrades.map((item) => item.direction),
-              accountTrades.map((item) => item.time)
-          );
-
-          let accountFileName = `${accountString.replace(/APEX-/, "").split(" ")[0]}_Trades.csv`;
-
-          if(selectedFilters.PA){
-              accountFileName = `${accountString.replace(/APEX-/, "").split(" ")[0]}_PA.csv`;
-          }
-          
-          if(selectedFilters.EVAL){
-              accountFileName = `${accountString.replace(/APEX-/, "").split(" ")[0]}_EVAL.csv`;
-          }
-
-          promptDownloadConfirmation(tradeCSV, accountFileName);  // Check for confirmation to download
-          await saveCSVToBackend(tradeCSV, `${accountFileName}`, accountString.replace(/APEX-/, "").split(" ")[0]);
-        }
-        return;
-      } else {
-        const tableData = createTableDataForOneAccount();
-        // console.log('user data: ',selectedAccounts[0].replace(/APEX-/, "").split(" ")[0]);
-
-        const tableHeaders = [
-            `Trade (${selectedAccounts[0].replace(/APEX-/, "").split(" ")[0]})`,
-            `Direction (${selectedAccounts[0].replace(/APEX-/, "").split(" ")[0]})`,
-            `Account (${selectedAccounts[0].replace(/APEX-/, "").split(" ")[0]})`,
-            `Account Balance (${selectedAccounts[0].replace(/APEX-/, "").split(" ")[0]})`
-        ];
-
-        const tableCSV = [tableHeaders.join(",")];
-        tableData.forEach((row) => {
-            tableCSV.push(
-                [
-                    row.trade,
-                    row.direction,
-                    row.account,
-                    row.balance,
-                ].join(",")
-            );
-        });
-
-        const accountTrades = tableData.map((row) => ({
-            trade: tradesData.find((trade) => trade.TradeName === row.trade),
-            accountNumber: row.account,
-            direction: row.direction,
-            time: row.time,
-        })).filter((item) => item.trade);
-
-        const tradeCSV = createTradeCSV(
-            accountTrades.map((item) => item.trade),
-            selectedAccounts[0].replace(/APEX-/, "").split(" ")[0],
-            accountTrades.map((item) => item.accountNumber),
-            accountTrades.map((item) => item.direction),
-            accountTrades.map((item) => item.time)
-        );
-
-        let accountFileName = `${selectedAccounts[0].replace(/APEX-/, "").split(" ")[0]}_Trades.csv`;
-
-        if(selectedFilters.PA){
-            accountFileName = `${selectedAccounts[0].replace(/APEX-/, "").split(" ")[0]}_PA.csv`;
-        }
-        
-        if(selectedFilters.EVAL){
-            accountFileName = `${selectedAccounts[0].replace(/APEX-/, "").split(" ")[0]}_EVAL.csv`;
-        }
-
-        promptDownloadConfirmation(tradeCSV, accountFileName); // Check for confirmation to download
-        await saveCSVToBackend(tradeCSV, `${accountFileName}`, selectedAccounts[0].replace(/APEX-/, "").split(" ")[0]);
-      }
   };
-
   
   // Function to save CSV to backend
   const saveCSVToBackend = async (csvData, filename, apexid) => {
@@ -1151,32 +635,6 @@ export default function DashTradingComp() {
     });
   };
 
-  // const handleOneAccountSelection = (account) => {
-  //   // Set the selected account, replacing any previous selection
-  //   setSelectedAccounts([account]);
-  // };
-
-  const handleAccountSelection = (account) => {
-    setSelectedAccounts((prevSelected) => {
-      // If account is already selected, remove it
-      if (prevSelected.includes(account)) {
-        return prevSelected.filter((item) => item !== account);
-      }
-  
-      // If selecting more than 3 accounts, show an alert and return the current selection
-      if (prevSelected.length >= 3) {
-        alert('You can only select up to 3 accounts.');
-        return prevSelected; // Don't add more than 3 accounts
-      }
-  
-      // Otherwise, add the account if there are less than 3 selected
-      return [...prevSelected, account];
-    });
-  };
-  
-  
-  
-      
   return (
     <div className="p-3 w-full">
       <Breadcrumb aria-label="Default breadcrumb example">
@@ -1185,14 +643,13 @@ export default function DashTradingComp() {
         </Breadcrumb.Item>
         <Breadcrumb.Item>Trade</Breadcrumb.Item>
       </Breadcrumb>
-    
-      <p className="text-lg font-semibold text-gray-600 dark:text-white">{formattedTodayDate}</p> 
-      <div className="flex items-center justify-between mb-3">
-      </div>
+
+      <p className="text-lg font-semibold text-gray-600 dark:text-white">{formattedTodayDate}</p>
+      <div className="flex items-center justify-between mb-3"></div>
 
       {currentUser.user.role !== "user" && (
         <>
-        {loading ? (
+          {loading ? (
             <div className="flex justify-center items-center h-96">
               <Spinner size="xl" />
             </div>
@@ -1200,71 +657,107 @@ export default function DashTradingComp() {
             <div className="text-red-600">{error}</div>
           ) : (
             <>
-                 {/* Filters */}
-                  <div className="flex space-x-4 mb-4">
-                    <div className="flex items-center">
-                      <Checkbox
-                        id="eval"
-                        checked={selectedFilters.EVAL}
-                        onChange={() => handleFilterChange("EVAL")}
-                      />
-                      <label htmlFor="eval" className="ml-2 text-sm font-medium">
-                        EVAL Only
-                      </label>
-                    </div>
-                    <div className="flex items-center">
-                      <Checkbox
-                        id="pa"
-                        checked={selectedFilters.PA}
-                        onChange={() => handleFilterChange("PA")}
-                      />
-                      <label htmlFor="pa" className="ml-2 text-sm font-medium">
-                        PA Only
-                      </label>
-                    </div>
-                    <div>
-                    </div>
-                  </div>
+              {/* Filters */}
+              <div className="flex space-x-4 mb-4">
+                <div className="flex items-center">
+                  <Checkbox
+                    id="eval"
+                    checked={selectedFilters.EVAL}
+                    onChange={() => handleFilterChange("EVAL")}
+                  />
+                  <label htmlFor="eval" className="ml-2 text-sm font-medium">
+                    EVAL Only
+                  </label>
+                </div>
+                <div className="flex items-center">
+                  <Checkbox
+                    id="pa"
+                    checked={selectedFilters.PA}
+                    onChange={() => handleFilterChange("PA")}
+                  />
+                  <label htmlFor="pa" className="ml-2 text-sm font-medium">
+                    PA Only
+                  </label>
+                </div>
+              </div>
 
-                  
-                  <div className="flex items-center space-x-4 mt-4">
-                    {!isFindingMatch && (
-                      <>
-                        {/* Find Match Button */}
-                        <Button
-                          gradientDuoTone="greenToBlue"
-                          onClick={selectSetsOfThreeAcc}
-                          className="flex items-center justify-center px-6 py-3 rounded-lg text-white font-semibold transition duration-300 transform hover:scale-105 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
-                        >
-                          <HiPlusCircle className="mr-3 text-2xl" /> {/* Adjust icon size here */}
-                          Create New Trade Data Signals
-                        </Button>
-                      </>
-                    )}
-                  </div>
-                  {alert && (
-                        <>
-                          <Alert color="success" onDismiss={() => setAlert(false)}>
-                            <span className="font-medium">Info alert!</span> {alert}
-                          </Alert>
-                        </>
-                  )}
-                  <div className="flex flex-col md:flex-row justify-center items-center md:space-x-4">
+              <div className="flex items-center space-x-4 mt-4">
+                <>
+                  {/* Find Match Button */}
+                  <Button
+                    gradientDuoTone="greenToBlue"
+                    onClick={selectSetsOfThreeAcc}
+                    className="flex items-center justify-center px-6 py-3 rounded-lg text-white font-semibold transition duration-300 transform hover:scale-105 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+                  >
+                    <HiPlusCircle className="mr-3 text-2xl" />
+                    Create New Trade Data Signals
+                  </Button>
+                </>
+              </div>
+              {alert && (
+                <Alert color="success" onDismiss={() => setAlert(false)}>
+                  <span className="font-medium">Info alert!</span> {alert}
+                </Alert>
+              )}
+
+              {/* Tables Section */}
+              <div className="flex flex-col lg:flex-row lg:space-x-6 mt-6">
+                {/* Statistics Table */}
+                <div className="flex-1">
+                  <h3 className="text-lg font-semibold text-gray-600 dark:text-white mb-4">
+                    Trade Statistics
+                  </h3>
                   <Table hoverable className="shadow-md w-full">
+                    <TableHead>
+                      <TableHeadCell>#</TableHeadCell>
+                      <TableHeadCell>Set</TableHeadCell>
+                      <TableHeadCell>Total Accounts</TableHeadCell>
+                      <TableHeadCell>Trades Matched</TableHeadCell>
+                      <TableHeadCell>Accounts Not Trading</TableHeadCell>
+                      <TableHeadCell>Trading Percentage</TableHeadCell>
+                    </TableHead>
+                    <TableBody>
+                      {stats.length > 0 ? (
+                        stats.map((stat, index) => (
+                          <TableRow key={index}>
+                            <TableCell>{index + 1}</TableCell>
+                            <TableCell>{stat.set.join(", ")}</TableCell>
+                            <TableCell>{stat.totalAccounts}</TableCell>
+                            <TableCell>{stat.totalMatchedAccounts}</TableCell>
+                            <TableCell>{stat.totalUnmatchedAccounts}</TableCell>
+                            <TableCell>{stat.tradingPercentage.toFixed(2)}%</TableCell>
+                          </TableRow>
+                        ))
+                      ) : (
+                        <TableRow>
+                          <TableCell colSpan="6">No statistics available</TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
+
+                {/* File Creation Table */}
+                <div className="flex-1">
+                  <h3 className="text-lg font-semibold text-gray-600 dark:text-white mb-4">
+                    File Creation
+                  </h3>
+                  <div className="table-wrapper overflow-x-auto max-h-[550px]">
+                    <Table hoverable className="shadow-md w-full">
                       <TableHead>
-                        <TableHeadCell>#</TableHeadCell>
-                        <TableHeadCell>File Name</TableHeadCell>
-                        <TableHeadCell>Creation Time</TableHeadCell>
+                        <TableHeadCell className="sticky top-0 bg-white z-10">#</TableHeadCell>
+                        <TableHeadCell className="sticky top-0 bg-white z-10">File Name</TableHeadCell>
+                        <TableHeadCell className="sticky top-0 bg-white z-10">Creation Time</TableHeadCell>
                       </TableHead>
                       <TableBody>
                         {Array.isArray(fileCreationData) ? (
                           fileCreationData
-                            .filter(file => /(_PA|_EVAL|_Trades)/.test(file.fileName)) // Remove account number filter, only match file name pattern
+                            .filter((file) => /(_PA|_EVAL|_Trades)/.test(file.fileName))
                             .map((file, index) => (
                               <TableRow key={index}>
                                 <TableCell>{index + 1}</TableCell>
                                 <TableCell>{file.fileName}</TableCell>
-                                <TableCell>{new Date(file.createdAt).toLocaleString()}</TableCell> {/* Format the creation time */}
+                                <TableCell>{new Date(file.createdAt).toLocaleString()}</TableCell>
                               </TableRow>
                             ))
                         ) : (
@@ -1274,11 +767,13 @@ export default function DashTradingComp() {
                         )}
                       </TableBody>
                     </Table>
-                  </div>    
-              </>
+                  </div>
+                </div>
+              </div>
+            </>
           )}
         </>
-      )}    
+      )}
     </div>
-  )
+  );
 }
