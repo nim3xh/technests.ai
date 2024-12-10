@@ -238,7 +238,7 @@ app.post("/upload-trade", upload.single("csvFile"), async (req, res) => {
 //   uploadCsvFiles();
 // });
 
-// // Schedule the task to run every minute
+// Schedule the task to run every minute
 // cron.schedule("* * * * *", () => {
 //   console.log("Running scheduled task to upload CSV files...");
 //   uploadCsvFiles();
