@@ -285,38 +285,6 @@ export default function DashTradingComp() {
     }
   };
 
-//  // Function to generate a random time within specific 30-minute intervals
-//   const getRandom30MinuteInterval = (startHour, startMinute, endHour, endMinute) => {
-//     const start = new Date();
-//     start.setHours(startHour, startMinute, 0, 0);
-
-//     const end = new Date();
-//     end.setHours(endHour, endMinute, 0, 0);
-
-//     const intervalCount = Math.ceil((end.getTime() - start.getTime()) / (30 * 60 * 1000));
-//     const randomInterval = Math.floor(Math.random() * intervalCount);
-
-//     const randomTime = new Date(start.getTime() + randomInterval * 30 * 60 * 1000);
-//     return randomTime.toTimeString().split(" ")[0]; // Format: HH:MM:SS
-//   };
-
-//   // Function to get trade time based on account balance with 30-minute intervals
-//   const getTradeTime = (accountBalance) => {
-//     if (accountBalance >= 49500 && accountBalance <= 52801) {
-//       // Big trades: 6:30 AM - 9:30 AM (30-minute intervals)
-//       return getRandom30MinuteInterval(6, 30, 9, 30);
-//     } else if (accountBalance >= 52800 && accountBalance <= 55800) {
-//       // Standard trades: 9:30 AM - 12:00 PM (30-minute intervals)
-//       return getRandom30MinuteInterval(9, 30, 12, 0);
-//     } else if (accountBalance > 55800) {
-//       // Small trades: 12:00 PM - 12:30 PM (30-minute intervals)
-//       return getRandom30MinuteInterval(12, 0, 12, 30);
-//     } else {
-//       // Default case if the balance does not match any range
-//       return "-";
-//     }
-//   };
-
   // Helper function to get a random time between two given times
   const getRandomTime = (startHour, startMinute, endHour, endMinute) => {
     const start = new Date();
@@ -352,9 +320,6 @@ export default function DashTradingComp() {
 
   // Function to determine the trade name based on account balance and account type (PA or EVAL)
   const getTradeNameBasedOnBalance = (accountType, balance) => {
-    // console.log('accountType: ', accountType);
-    // console.log('balance: ', balance);
-    // Check if the account type is "EVAL"
     if (accountType.startsWith("APEX")) {
       if (balance >= 49000 && balance <= 52799) {
         return "EVAL STD"; // For EVAL accounts with balance between 49500 and 52801
@@ -362,8 +327,6 @@ export default function DashTradingComp() {
         return "EVAL Mini"; // For EVAL accounts with balance above 52800
       } else if (balance < 49500) {
         return "EVAL MAX"; // For EVAL accounts with balance below 49500
-      }else {
-        return "PA micro"; // For PA accounts with balance above 53000
       }
     }
 
@@ -626,7 +589,12 @@ export default function DashTradingComp() {
     
         // Separate PA and EVAL accounts
         const paAccounts = filteredAccounts.filter((item) => item.account.startsWith("PA"));
-        const evalAccounts = filteredAccounts.filter((item) => item.account.startsWith("APEX")) && filteredAccounts.filter((item) => item.balance<53000);
+        let evalAccounts = filteredAccounts.filter((item) => item.account.startsWith("APEX"));
+
+        evalAccounts = evalAccounts.filter((item) => item.accountBalance < 53000);
+
+        // console.log('paAccounts: ', paAccounts);
+        // console.log('evalAccounts: ', evalAccounts);
     
         // Group accounts by users for PA and EVAL accounts separately
         const userAccountsPA = accounts.map((user) =>
@@ -787,7 +755,7 @@ export default function DashTradingComp() {
                 account: account.account,
                 balance: account.accountBalance,
                 time: time,
-                trade: getTradeNameBasedOnBalance(account.account, 53100),
+                trade: getTradeNameBasedOnBalance(account.account, account.accountBalance),
             });
         });
         // console.log(rows);
@@ -990,8 +958,11 @@ export default function DashTradingComp() {
                       // Time validation: Check if the time is in valid format (HH:mm)
                       const timeValid = /^(?:[01]\d|2[0-3]):(?:[0-5]\d)$/.test(account.time);
 
+                      //check if the trade name is valid
+                      const tradeValid = tradesData.find((trade) => trade.TradeName === account.trade);
+
                       // Skip the account if it's already been seen or the time is invalid
-                      if (seenAccounts.has(accountIdentifier) || !timeValid) {
+                      if (seenAccounts.has(accountIdentifier) || !timeValid  || !tradeValid) {
                           return false; // Skip this account
                       }
 
@@ -1252,56 +1223,6 @@ export default function DashTradingComp() {
                       </label>
                     </div>
                     <div>
-                      {/* <Dropdown
-                          label={
-                            selectedAccounts.length == 1
-                              ? selectedAccounts.map((account) => account.replace(/APEX-/, "")).join(", ")
-                              : "Select User"
-                          }
-                          className="w-full text-left dark:bg-gray-800 dark:text-gray-200"
-                          inline
-                        >
-                          
-                          <Dropdown.Item onClick={() => setSelectedAccounts([])}>
-                            Clear Selection
-                          </Dropdown.Item>
-
-                        
-                          {uniqueAccountNumbers.map((account) => (
-                            <Dropdown.Item
-                              key={account}
-                              onClick={() => handleOneAccountSelection(account)}
-                            >
-                              {selectedAccounts.includes(account) ? "✓ " : ""}
-                              {account.replace(/APEX-/, "")}
-                            </Dropdown.Item>
-                          ))}
-                        </Dropdown> */}
-                        {/*<Dropdown
-                          label={
-                            selectedAccounts.length > 0
-                              ? selectedAccounts.map((account) => account.replace(/APEX-/, "")).join(" & ")
-                              : "Select Users"
-                          }
-                          className="w-full text-left dark:bg-gray-800 dark:text-gray-200"
-                          inline
-                        >
-                          
-                          <Dropdown.Item onClick={() => setSelectedAccounts([])}>
-                            Clear Selection
-                          </Dropdown.Item>
-
-                          
-                          {uniqueAccountNumbers.map((account) => (
-                            <Dropdown.Item
-                              key={account}
-                              onClick={() => handleAccountSelection(account)} 
-                            >
-                              {selectedAccounts.includes(account) ? "✓ " : ""}
-                              {account.replace(/APEX-/, "")}
-                            </Dropdown.Item>
-                          ))}
-                        </Dropdown>*/}
                     </div>
                   </div>
 
