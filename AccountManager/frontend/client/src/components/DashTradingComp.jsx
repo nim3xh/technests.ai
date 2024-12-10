@@ -177,8 +177,8 @@ export default function DashTradingComp() {
     }
   };
 
- // Helper function to get a random time with a 30-minute gap between two given times
-  const getRandomTimeWith30MinGap = (startHour, startMinute, endHour, endMinute) => {
+  // Helper function to get a random time between two given times without gaps
+  const getRandomTime = (startHour, startMinute, endHour, endMinute) => {
     const start = new Date();
     start.setHours(startHour, startMinute, 0, 0);
 
@@ -186,44 +186,29 @@ export default function DashTradingComp() {
     end.setHours(endHour, endMinute, 0, 0);
 
     const randomTime = new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()));
-    
-    // Round time to the nearest 30 minutes
-    let minutes = Math.round(randomTime.getMinutes() / 30) * 30;
-    if (minutes === 60) {
-      randomTime.setHours(randomTime.getHours() + 1);
-      minutes = 0;
-    }
-
-    // Ensure no time exceeds the `end` time
-    if (randomTime > end) {
-      randomTime.setHours(endHour);
-      randomTime.setMinutes(endMinute);
-    }
 
     const hours = randomTime.getHours();
-    const formattedMinutes = minutes.toString().padStart(2, '0');
+    const minutes = randomTime.getMinutes().toString().padStart(2, '0');
     
-    return `${hours}:${formattedMinutes}`;
+    return `${hours}:${minutes}`;
   };
 
   // Function to get trade time based on account balance
   const getTradeTime = (accountBalance) => {
     if (accountBalance < 49000) {
       // Far Big Trades: 6:30 AM - 9:30 AM
-      return getRandomTimeWith30MinGap(6, 30, 9, 30);
+      return getRandomTime(6, 30, 9, 30);
     } else if (accountBalance >= 49000 && accountBalance <= 52799) {
       // Standard Trades: 9:30 AM - 11:30 AM
-      return getRandomTimeWith30MinGap(9, 30, 11, 30);
+      return getRandomTime(9, 30, 11, 30);
     } else if (accountBalance >= 52800) {
       // Mini Trade: 11:30 AM - 12:00 PM
-      return getRandomTimeWith30MinGap(11, 30, 12, 0);
+      return getRandomTime(11, 30, 12, 0);
     } else {
       // Default case if the balance does not match any range
       return "-";
     }
   };
-
-
 
   // Function to determine the trade name based on account balance and account type (PA or EVAL)
   const getTradeNameBasedOnBalance = (accountType, balance) => {
@@ -339,6 +324,7 @@ export default function DashTradingComp() {
                     balance: account1.accountBalance,
                     time: tradeTime,
                     trade: getTradeNameBasedOnBalance(account1.account, account1.accountBalance),
+                    accountNumber: account1.accountNumber,
                 },
                 {
                     direction: direction2,
@@ -346,6 +332,7 @@ export default function DashTradingComp() {
                     balance: account2.accountBalance,
                     time: tradeTime,
                     trade: getTradeNameBasedOnBalance(account2.account, account2.accountBalance),
+                    accountNumber: account2.accountNumber,
                 },
             ];
         });
@@ -360,9 +347,33 @@ export default function DashTradingComp() {
                 balance: account.accountBalance,
                 time: time,
                 trade: getTradeNameBasedOnBalance(account.account, account.accountBalance),
+                accountNumber: account.accountNumber,
             });
         });
 
+        // If the same account has the same time with a different direction, reassign the time
+        const flattenedRows = rows.flat();
+
+        for (let i = 0; i < flattenedRows.length; i++) {
+            for (let j = i + 1; j < flattenedRows.length; j++) {
+                if (
+                    flattenedRows[i].time === flattenedRows[j].time &&
+                    flattenedRows[i].accountNumber === flattenedRows[j].accountNumber
+                ) {
+                    flattenedRows[j].time = getTradeTime(flattenedRows[j].balance);
+                }
+            }
+        }
+
+        // Synchronize the changes back to the original rows
+        let index = 0;
+        for (let i = 0; i < rows.length; i++) {
+            for (let j = 0; j < rows[i].length; j++) {
+                rows[i][j] = flattenedRows[index];
+                index++;
+            }
+        }
+ 
         // Calculate stats
         const totalAccounts = filteredAccounts.length;
         const totalPAMatchedAccounts = matchesPA.length*2;
