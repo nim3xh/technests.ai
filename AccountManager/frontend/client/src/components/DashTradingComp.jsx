@@ -561,20 +561,24 @@ export default function DashTradingComp() {
 
                       accountFileName = `${accounts[i].replace(/APEX-/, "").split(" ")[0]}_PA.csv`;
 
-                      const filterPATradeCSV = tradeCSV.split("\n").filter((line) => {
-                          const accountNumber = line.split(",")[12];
-                          return accountNumber.startsWith("PA");
+                      const filterPATradeCSV = tradeCSV.split("\n").filter((line, index) => {
+                        if (index === 0) return true; // Keep the header row
+                        const accountNumber = line.split(",")[12];
+                        return accountNumber.startsWith("PA");
                       }).join("\n");
+                    
 
                       promptDownloadConfirmation(filterPATradeCSV, accountFileName);  // Check for confirmation to download
                       await saveCSVToBackend(filterPATradeCSV, `${accountFileName}`, accounts[i].replace(/APEX-/, "").split(" ")[0]);
 
                       accountFileName = `${accounts[i].replace(/APEX-/, "").split(" ")[0]}_EVAL.csv`;
 
-                      const filterEVALTradeCSV = tradeCSV.split("\n").filter((line) => {
-                          const accountNumber = line.split(",")[12];
-                          return accountNumber.startsWith("APEX");
+                      const filterEVALTradeCSV = tradeCSV.split("\n").filter((line, index) => {
+                        if (index === 0) return true; // Keep the header row
+                        const accountNumber = line.split(",")[12];
+                        return accountNumber.startsWith("APEX");
                       }).join("\n");
+                    
 
                       promptDownloadConfirmation(filterEVALTradeCSV, accountFileName);  // Check for confirmation to download
                       await saveCSVToBackend(filterEVALTradeCSV, `${accountFileName}`, accounts[i].replace(/APEX-/, "").split(" ")[0]);
