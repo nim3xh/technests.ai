@@ -37,12 +37,33 @@ export default function Header() {
       fluid
       rounded
     >
-      <Link
-        to="/dashboard?tab=dash"
-        className="self-center whitespace-nowrap text-sm sm:text-xl font-semibold dark:text-white"
-      >
-       < img src={LogoNew} alt="logo" className="w-10 h-10 rounded-lg" />
-      </Link>
+      {currentUser && (
+        <>
+          {currentUser.user.role !== "user" && (
+              <Link
+                to="/dashboard?tab=dash"
+                className="self-center whitespace-nowrap text-sm sm:text-xl font-semibold dark:text-white"
+              >
+              < img src={LogoNew} alt="logo" className="w-10 h-10 rounded-lg" />
+              </Link>
+        )}
+        {currentUser.user.role === "user" && (
+            <Link
+              to="/dashboard?tab=dashUser"
+              className="self-center whitespace-nowrap text-sm sm:text-xl font-semibold dark:text-white"
+            >
+            < img src={LogoNew} alt="logo" className="w-10 h-10 rounded-lg" />
+            </Link>
+        )}
+        </>
+      )}
+
+      {!currentUser && (
+        <Link to="/" className="self-center whitespace-nowrap text-sm sm:text-xl font-semibold dark:text-white">
+          < img src={LogoNew} alt="logo" className="w-10 h-10 rounded-lg" />
+          </Link>
+        )}
+      
       <div className="flex gap-2 md:order-2">
         <Button
           className="w-12 h-10 hidden sm:inline"

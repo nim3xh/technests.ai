@@ -3,9 +3,10 @@ import { useLocation } from "react-router-dom";
 import DashSidebar from "../components/DashSidebar";
 import DashProfile from "../components/DashProfile";
 import DashboardComp from "../components/DashboardComp";
-import DashboardCompUser from "../components/DashboardCompUser";
+import DashboardCompUser from "../components/User/DashboardCompUser";
 import DashboardCompSuperUser from "../components/DashboardCompSuperUser";
 import DashAccountDetails from "../components/DashAccountDetails";
+import DashAccountDetailsUser from "../components/User/DashAccountDetailsUser";
 import DashUsers from "../components/DashUsers";
 import DashAccountOwners from "../components/DashAccountOwners";
 import DashTrades from "../components/DashTrades";
@@ -60,6 +61,8 @@ export default function Dashboard() {
       {tab === "tradeMonitor" && <DashTradeMonitor />}'
       {/* Trade Matching */}
       {tab === "tradeMatching" && <TradeMatchingCom />}
+      {/* Account Details User */}
+      {tab === "accountDetailsUser" && <DashAccountDetailsUser />}
     </div>
   );
 }

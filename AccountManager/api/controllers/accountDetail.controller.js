@@ -411,6 +411,33 @@ function indexDeleted(req, res) {
     });
 }
 
+function indexDeletedbyAccNu(req, res) {
+  const account = req.params.account;
+
+  models.AccountDetail.findAll({
+    where: {
+      accountNumber: account,
+      deletedAt: { [models.Sequelize.Op.ne]: null }
+    },
+    paranoid: false
+  })
+    .then((result) => {
+      if (result) {
+        res.status(200).json(result);
+      } else {
+        res.status(404).json({
+          message: "Account not found",
+        });
+      }
+    })
+    .catch((error) => {
+      res.status(500).json({
+        message: "Something went wrong",
+        error: error,
+      });
+    });
+}
+
 module.exports = {
   save: save,
   show: show,
@@ -423,4 +450,5 @@ module.exports = {
   importFromCSV: importFromCSV,
   importFromCSVs: importFromCSVs,
   indexDeleted: indexDeleted,
+  indexDeletedbyAccNu: indexDeletedbyAccNu,
 };
