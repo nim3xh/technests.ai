@@ -48,7 +48,7 @@ export default function DashTradingComp() {
       { accountNumber: "APEX-248560", name: "Rajit Subramanya" },
       { accountNumber: "APEX-244324", name: "Avanya Innovations Llc Anant Kulkarni" },
       { accountNumber: "APEX-182660", name: "Venkatesha Belavadi" },
-      { accountNumber: "APEX-266734", name: "Umesh" },
+      { accountNumber: "APEX-266734", name: "Umesh Paduvagere Chikkkehucha" },
       { accountNumber: "APEX-266645", name: "Nischay Gowda" },
       { accountNumber: "APEX-266751", name: "Bobby Karami" },
   ];  
@@ -90,7 +90,7 @@ export default function DashTradingComp() {
       showAlertAndProceed();
     
       const formattedAccounts = accountDetails.map(formatAccountString);
-      const groupedSets = groupAccountsInSets(formattedAccounts, 3);
+      const groupedSets = groupAccountsInSets(formattedAccounts, formattedAccounts.length);
     
       // Export CSV after updating selected accounts for each set
       exportCSVForEachAccount(groupedSets);
@@ -242,6 +242,174 @@ export default function DashTradingComp() {
   const exportCSVForEachAccount = async (groupedSets) => {
     const newStats = [];
     const newMatches = [];
+
+    const createTableDataForAllAccounts = (accounts) => {
+      
+      // Filter accounts based on conditions
+      let filteredAccounts = combinedData.filter(
+          (account) =>
+              account.status !== "admin only" &&
+              accounts.includes(`${account.accountNumber} (${account.name})`)
+      );
+  
+      if (selectedFilters.PA) {
+          filteredAccounts = filteredAccounts.filter((item) => item.account.startsWith("PA"));
+      }
+  
+      if (selectedFilters.EVAL) {
+          filteredAccounts = filteredAccounts.filter((item) => item.account.startsWith("APEX"));
+      }
+  
+      const paAccounts = filteredAccounts.filter((item) => item.account.startsWith("PA"));
+      let evalAccounts = filteredAccounts.filter((item) => item.account.startsWith("APEX"));
+      evalAccounts = evalAccounts.filter((item) => item.accountBalance < 53000);
+  
+      // Group accounts by user
+      const userAccountsPA = accounts.map((user) =>
+          paAccounts.filter((account) => `${account.accountNumber} (${account.name})` === user)
+      );
+  
+      const userAccountsEVAL = accounts.map((user) =>
+          evalAccounts.filter((account) => `${account.accountNumber} (${account.name})` === user)
+      );
+  
+      // Flatten grouped accounts for easier processing
+      const unmatchedAccountsPA = userAccountsPA.flat();
+      const unmatchedAccountsEVAL = userAccountsEVAL.flat();
+  
+      const matchesPA = [];
+      const matchesEVAL = [];
+  
+      // Matching function for accounts
+      const matchAccounts = (accounts, matches) => {
+          let matchedThisRound;
+          do {
+              matchedThisRound = false;
+              for (let i = 0; i < accounts.length; i++) {
+                  for (let j = i + 1; j < accounts.length; j++) {
+                      const account1 = accounts[i];
+                      const account2 = accounts[j];
+  
+                      if (
+                          account1 &&
+                          account2 &&
+                          account1.accountNumber !== account2.accountNumber &&
+                          Math.abs(account1.accountBalance - account2.accountBalance) <= 125 &&
+                          !matches.some((match) => match.includes(account1) || match.includes(account2))
+                      ) {
+                          matches.push([account1, account2]);
+                          accounts.splice(j, 1); // Remove matched accounts
+                          accounts.splice(i, 1);
+                          matchedThisRound = true;
+                          break;
+                      }
+                  }
+                  if (matchedThisRound) break;
+              }
+          } while (matchedThisRound);
+      };
+  
+      // Match PA and EVAL accounts to maximize matches
+      matchAccounts(unmatchedAccountsPA, matchesPA);
+      matchAccounts(unmatchedAccountsEVAL, matchesEVAL);
+  
+      // Generate rows for matched accounts
+      const rows = [...matchesPA, ...matchesEVAL].map(([account1, account2], i) => {
+          const tradeTime = getTradeTime(account1.accountBalance);
+          const direction1 = account1.accountBalance >= 53000 ? "Long" : i % 2 === 0 ? "Long" : "Short";
+          const direction2 = account2.accountBalance >= 53000 ? "Long" : direction1 === "Long" ? "Short" : "Long";
+  
+          return [
+              {
+                  direction: direction1,
+                  account: account1.account,
+                  balance: account1.accountBalance,
+                  time: tradeTime,
+                  trade: getTradeNameBasedOnBalance(account1.account, account1.accountBalance),
+                  accountNumber: account1.accountNumber,
+              },
+              {
+                  direction: direction2,
+                  account: account2.account,
+                  balance: account2.accountBalance,
+                  time: tradeTime,
+                  trade: getTradeNameBasedOnBalance(account2.account, account2.accountBalance),
+                  accountNumber: account2.accountNumber,
+              },
+          ];
+      });
+  
+      // Add unmatched accounts
+      unmatchedAccountsPA.concat(unmatchedAccountsEVAL).forEach((account, i) => {
+          const direction = i % 2 === 0 ? "Long" : "Short";
+          const time = getTradeTime(account.accountBalance);
+          rows.push([
+              {
+                  direction: direction,
+                  account: account.account,
+                  balance: account.accountBalance,
+                  time: time,
+                  trade: "PA micro",
+                  accountNumber: account.accountNumber,
+              },
+          ]);
+      });
+  
+      // Ensure unique times for accounts with the same time
+      const flattenedRows = rows.flat();
+  
+      for (let i = 0; i < flattenedRows.length; i++) {
+          for (let j = i + 1; j < flattenedRows.length; j++) {
+              if (
+                  flattenedRows[i].time === flattenedRows[j].time &&
+                  flattenedRows[i].accountNumber === flattenedRows[j].accountNumber
+              ) {
+                  flattenedRows[j].time = getTradeTime(flattenedRows[j].balance);
+              }
+          }
+      }
+  
+      // Synchronize the changes back to the original rows
+      let index = 0;
+      for (let i = 0; i < rows.length; i++) {
+          for (let j = 0; j < rows[i].length; j++) {
+              rows[i][j] = flattenedRows[index];
+              index++;
+          }
+      }
+  
+      // Calculate stats
+      const totalAccounts = filteredAccounts.length;
+      const totalPAMatchedAccounts = matchesPA.length * 2;
+      const totalEVALMatchedAccounts = matchesEVAL.length * 2;
+      const totalMatchedAccounts = totalPAMatchedAccounts + totalEVALMatchedAccounts;
+      const totalUnmatchedAccounts = unmatchedAccountsPA.length + unmatchedAccountsEVAL.length;
+      const totalFilteredAccounts = totalAccounts - (totalUnmatchedAccounts + totalMatchedAccounts);
+      const tradingPercentage = (totalMatchedAccounts / totalAccounts) * 100;
+  
+      newStats.push({
+          set: accounts,
+          totalAccounts,
+          totalMatchedAccounts,
+          totalPAMatchedAccounts,
+          totalEVALMatchedAccounts,
+          totalUnmatchedAccounts,
+          totalFilteredAccounts,
+          tradingPercentage,
+      });
+
+      newMatches.push({
+          set: accounts,
+          matchesPA,
+          matchesEVAL,
+          unmatchedAccountsPA,
+          unmatchedAccountsEVAL
+      });
+
+      // Return flattened rows and stats
+      return rows.flat();
+    };
+  
     const createTableDataForThreeAccounts = (accounts) => {
         let filteredAccounts = combinedData.filter(
             (account) =>
@@ -482,7 +650,7 @@ export default function DashTradingComp() {
       if(groupedSets !== null){
         // Loop through each set of accounts
         for (const accounts of groupedSets) {
-          const tableData = createTableDataForThreeAccounts(accounts);
+          const tableData = createTableDataForAllAccounts(accounts);
           for (let i = 0; i < accounts.length; i++) {
               {
                   const tableHeaders = [
@@ -703,7 +871,7 @@ export default function DashTradingComp() {
                   <span className="font-medium">Info alert!</span> {alert}
                 </Alert>
               )}
-
+            
               {/* Tables Section */}
               <div className="flex flex-col lg:flex-row lg:space-x-6 mt-6">
                 {/* Statistics Table */}
@@ -714,7 +882,7 @@ export default function DashTradingComp() {
                   <Table hoverable className="shadow-md w-full">
                     <TableHead>
                       <TableHeadCell>#</TableHeadCell>
-                      <TableHeadCell>User ID Set</TableHeadCell>
+                      {/* <TableHeadCell>User ID Set</TableHeadCell> */}
                       <TableHeadCell>Total Accounts</TableHeadCell>
                       <TableHeadCell>EVAL Matched</TableHeadCell>
                       <TableHeadCell>PA Matched</TableHeadCell>
@@ -729,7 +897,7 @@ export default function DashTradingComp() {
                         stats.map((stat, index) => (
                           <TableRow key={index}>
                             <TableCell>{index + 1}</TableCell>
-                            <TableCell>
+                            {/* <TableCell>
                                 {stat.set.map((item, index) => {
                                   // Extract the numeric ID and the name from the string
                                   const match = item.match(/APEX-(\d+)\s+\((.+?)\)/);
@@ -747,7 +915,7 @@ export default function DashTradingComp() {
                                     </div>
                                   );
                                 })}
-                              </TableCell>
+                              </TableCell> */}
                             <TableCell>{stat.totalAccounts}</TableCell>                       
                             <TableCell>{stat.totalEVALMatchedAccounts}</TableCell>
                             <TableCell>{stat.totalPAMatchedAccounts}</TableCell>
