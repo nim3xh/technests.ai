@@ -336,6 +336,23 @@ function destroy(req, res) {
     });
 }
 
+function destroyByACnu(req, res) {
+  const account = req.params.account;
+  console.log(account);
+  models.AccountDetail.destroy({ where: { accountNumber: account } })
+    .then((result) => {
+      res.status(200).json({
+        message: "Account deleted successfully",
+      });
+    })
+    .catch((error) => {
+      res.status(500).json({
+        message: "Something went wrong",
+        error: error,
+      });
+    });
+}
+
 // Get account details by account number
 function showByACnu(req, res) {
   const account = req.params.account;
@@ -445,6 +462,7 @@ module.exports = {
   update: update,
   destroy: destroy,
   destroyAll: destroyAll,
+  destroyByACnu: destroyByACnu,
   showByACnu: showByACnu,
   updateByACnu: updateByACnu,
   importFromCSV: importFromCSV,
