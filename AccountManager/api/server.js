@@ -21,48 +21,58 @@ const getResultCsvFiles = (directory) => {
 
     if (stats.isDirectory()) {
       csvFiles = csvFiles.concat(getResultCsvFiles(itemPath)); // Recursively get files
-    } else if (item.endsWith(".csv") && item.includes("_Result")) {
-      csvFiles.push(itemPath); // Add CSV file to the list
+    } else if (item.endsWith(".csv") &&  (item.includes("_Results") || item.includes("_results"))) {
+      //if created date less than today date ignore file
+      const createdDate = new Date(stats.birthtime);
+      if(createdDate < new Date()){
+       console.log("File is older than today's date, ignoring file",itemPath,createdDate);
+      }else{
+        csvFiles.push(itemPath); // Add CSV file to the list
+      }
     }
   });
-
   return csvFiles;
 };
 
-// Function to process and upload CSV files
+// Function to process and upload all "_Result" CSV files
 const processAndUploadResultCsvFiles = async () => {
   const directoryPath = path.join(__dirname, "dashboards"); // Define your directory path
 
   try {
-    const files = getResultCsvFiles(directoryPath); // Get all CSV files with "_Result"
+    const files = getResultCsvFiles(directoryPath); // Get all CSV files with "_Results"
 
     if (files.length === 0) {
-      console.log("No '_Result' CSV files found for processing.");
+      console.log("No '_Results' CSV files found for processing.");
       return;
     }
 
-    for (const filePath of files) {
+    console.log(`Found ${files.length} '_Results' CSV files for processing.`);
+    
+    // Prepare form data for all files
+    const formData = new FormData();
+    files.forEach((filePath) => {
       const apexid = path.basename(path.dirname(filePath)); // Extract apexid from folder name
+      formData.append("csvFiles", fs.createReadStream(filePath)); // Add file stream
+      formData.append("apexids", apexid); // Append the apexid
+    });
 
-      const formData = new FormData();
-      formData.append("csvFile", fs.createReadStream(filePath));
-      formData.append("apexid", apexid);
+    try {
+      // Make a single request to upload all files
+      console.log("Uploading all '_Results' CSV files...");
+      const response = await axios.post(
+        "http://localhost:3000/results/add-results",
+        formData,
+        {
+          headers: formData.getHeaders(),
+        }
+      );
 
-      try {
-        const response = await axios.post(
-          "http://localhost:3000/results/add-results",
-          formData,
-          {
-            headers: formData.getHeaders(),
-          }
-        );
-        // console.log(`Successfully uploaded ${filePath}:`, response.data);
-      } catch (error) {
-        console.error(`Failed to upload ${filePath}:`, error.message || error.response?.data);
-      }
+      console.log("Successfully uploaded all '_Results' CSV files:", response.data);
+    } catch (error) {
+      console.error("Failed to upload '_Results' CSV files:", error.message || error.response?.data);
     }
   } catch (error) {
-    console.error(`Error processing '_Result' CSV files: ${error.message}`);
+    console.error(`Error processing '_Results' CSV files: ${error.message}`);
   }
 };
 
@@ -251,8 +261,13 @@ cron.schedule("0 * * * *", () => {
 });
 
 // Schedule the task to run every 15 minutes for '_Result' CSV files
-cron.schedule("*/15 * * * *", () => {
-  console.log("Running scheduled task to process and upload '_Result' CSV files...");
+// cron.schedule("*/15 * * * *", () => {
+//   console.log("Running scheduled task to process and upload '_Result' CSV files...");
+//   processAndUploadResultCsvFiles();
+// });
+
+cron.schedule("* * * * *", ()  => {
+  console.log("Running scheduled task to process and upload '_Results' CSV files...");
   processAndUploadResultCsvFiles();
 });
 

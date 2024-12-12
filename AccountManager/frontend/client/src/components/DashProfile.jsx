@@ -95,6 +95,7 @@ export default function DashProfile() {
             placeholder="First Name"
             value={firstName}
             onChange={(e) => setFirstName(e.target.value)}
+            disabled ={currentUser.user.role === "user"}
           />
           <TextInput
             type="text"
@@ -102,6 +103,7 @@ export default function DashProfile() {
             placeholder="Last Name"
             value={lastName}
             onChange={(e) => setLastName(e.target.value)}
+            disabled ={currentUser.user.role === "user"}
           />
           <TextInput
             type="text"
@@ -109,6 +111,7 @@ export default function DashProfile() {
             placeholder="Account Number"
             value={apexAccountNumber}
             onChange={(e) => setApexAccountNumber(e.target.value)}
+            disabled ={currentUser.user.role === "user"}
           />
           <TextInput
             type="email"
@@ -116,6 +119,7 @@ export default function DashProfile() {
             placeholder="Email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            disabled ={currentUser.user.role === "user"}
           />
           {/* <TextInput
             type="password"
@@ -123,15 +127,19 @@ export default function DashProfile() {
             placeholder="New Password (Leave empty if not changing)"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+             disabled ={currentUser.user.role === "user"}
           /> */}
+          {currentUser.user.role !== "user" && (
+             <Button
+             type="submit"
+             gradientDuoTone="greenToBlue"
+             disabled={isLoading}
+           >
+             {isLoading ? "Loading..." : "Update"}
+           </Button>
+            )}
           {errorMessage && <p className="text-red-500">{errorMessage}</p>}
-          <Button
-            type="submit"
-            gradientDuoTone="greenToBlue"
-            disabled={isLoading}
-          >
-            {isLoading ? "Loading..." : "Update"}
-          </Button>
+         
         </form>
       </div>
     </div>

@@ -11,6 +11,7 @@ router.post("/add-accounts", verifyToken, upload.array("csvFiles"), accountDetai
 router.post('/add-acc-auto', upload.array("csvFiles"), accountDetailController.importFromCSVs);
 router.get("/", verifyToken, accountDetailController.index);
 router.get('/viewDeleted', verifyToken,accountDetailController.indexDeleted);
+router.get('/viewDeleted/:account', verifyToken,accountDetailController.indexDeletedbyAccNu);
 router.get("/:id", verifyToken, accountDetailController.show);
 router.get("/account/:account", verifyToken, accountDetailController.showByACnu);
 router.patch("/:id", verifyToken, accountDetailController.update);

@@ -16,16 +16,17 @@ import { MdAccountBalance, MdPerson, MdTableRows } from "react-icons/md";
 import { CiMemoPad } from "react-icons/ci";
 import axios from "axios";
 import { Datepicker } from "flowbite-react";
-import useRealTimeDate from '../hooks/useRealTimeDate';
+import useRealTimeDate from '../../hooks/useRealTimeDate';
+
 
 const BaseURL = import.meta.env.VITE_BASE_URL;
 
-export default function DashboardComp() {
+export default function DashboardCompUser() {
+  const { currentUser } = useSelector((state) => state.user);
   const [combinedData, setCombinedData] = useState([]);
   const [combinedDeletedData, setCombinedDeletedData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const { currentUser } = useSelector((state) => state.user);
   const [userStats, setUserStats] = useState([]);
   const [selectedDate, setSelectedDate] = useState(null);
   const [todayDate, setTodayDate] = useState(new Date());
@@ -51,7 +52,7 @@ export default function DashboardComp() {
   const [createdDateTime, setCreatedDateTime] = useState("");
 
   const formattedTodayDate = useRealTimeDate();
-  
+
   // Function to merge users and account details data
   const mergeData = (users, accountDetails) => {
     return accountDetails.map((account) => {
@@ -72,7 +73,7 @@ export default function DashboardComp() {
 
     const [usersResponse, accountDetailsResponse] = await Promise.all([
       axios.get(`${BaseURL}users`, { headers }),
-      axios.get(`${BaseURL}accountDetails`, { headers }),
+      axios.get(`${BaseURL}accountDetails/account/APEX-${currentUser.user.ApexAccountNumber}`, { headers }),
     ]);
 
     const mergedData = mergeData(
@@ -203,7 +204,7 @@ export default function DashboardComp() {
 
       const [usersResponse, accountDetailsResponse] = await Promise.all([
         axios.get(`${BaseURL}users`, { headers }),
-        axios.get(`${BaseURL}accountDetails/viewDeleted`, { headers }),
+        axios.get(`${BaseURL}accountDetails/viewDeleted/APEX-${currentUser.user.ApexAccountNumber}`, { headers }),
       ]);
 
       const mergedData = mergeData(
@@ -299,17 +300,12 @@ export default function DashboardComp() {
         <Breadcrumb.Item href="#" icon={HiHome}>
           Home
         </Breadcrumb.Item>
-        <Breadcrumb.Item></Breadcrumb.Item>
       </Breadcrumb>
-      
-      <div className="text-center mt-4">
-      <div className="text-2xl">
-          Welcome, {currentUser.user.FirstName} {currentUser.user.LastName}!
-        </div>
-      <p className="text-lg font-semibold text-gray-600 dark:text-white">{formattedTodayDate}</p> 
+      <div className="text-2xl text-center mt-4">
+        Welcome, {currentUser.user.FirstName} {currentUser.user.LastName}!
       </div>
-      
-      {currentUser.user.role !== "user" && (
+      <p className="text-lg font-semibold text-gray-600 dark:text-white">{formattedTodayDate}</p> 
+      {currentUser.user.role === "user" && (
         <>
           {loading ? (
             <div className="flex justify-center items-center h-96">
@@ -320,7 +316,7 @@ export default function DashboardComp() {
           ) : (
             <>
               <div className="flex-wrap flex gap-4 justify-center mt-4">
-                    <div className="flex flex-col p-3 dark:bg-slate-800 gap-4 md:w-40 w-full rounded-md shadow-md">
+                    {/* <div className="flex flex-col p-3 dark:bg-slate-800 gap-4 md:w-40 w-full rounded-md shadow-md">
                       <div className="flex justify-between">
                         <div className="">
                           <h3 className="text-gray-500 text-md uppercase">
@@ -328,9 +324,8 @@ export default function DashboardComp() {
                           </h3>
                           <p className="text-2xl">{totalUniqueAccountsDisplayed}</p>
                         </div>
-                        {/* <MdPerson className="bg-teal-600  text-white rounded-full text-5xl p-3 shadow-lg" /> */}
                       </div>
-                    </div>
+                    </div> */}
 
                     <div className="flex flex-col p-3 dark:bg-slate-800 gap-4 md:w-40 w-full rounded-md shadow-md">
                       <div className="flex justify-between">
@@ -493,14 +488,14 @@ export default function DashboardComp() {
                   <div className="flex flex-col md:flex-row justify-center items-center md:space-x-4">
                     {/* Table Section */}
                     <div>
-                    <div className="w-full flex justify-between items-center mb-3 mt-5">
+                    {/* <div className="w-full flex justify-between items-center mb-3 mt-5">
                       <p className="text-left text-sm md:text-base text-gray-700 dark:text-white">
                         Last Updated: 
                         <span className="font-medium text-gray-600 dark:text-white">
                           {formattedDateTime ? `(${formattedDateTime})` : 'N/A'}
                         </span>
                       </p>
-                    </div>
+                    </div> */}
                     <div className="table-wrapper overflow-x-auto max-h-[400px]">
                       <Table hoverable className="shadow-md w-full">
                         <TableHead>
