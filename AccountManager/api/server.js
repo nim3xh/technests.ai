@@ -88,8 +88,8 @@ const getCsvFiles = (directory) => {
     if (stats.isDirectory()) {
       // If item is a directory, recursively search it
       csvFiles = csvFiles.concat(getCsvFiles(itemPath));
-    } else if (item.endsWith(".csv")) {
-      // If item is a CSV file, add it to the list
+    } else if (item.endsWith(".csv") && /^\d+\.csv$/.test(item)) {
+      // If item is a CSV file and its name is entirely numeric
       csvFiles.push(itemPath);
     }
   });
@@ -125,6 +125,7 @@ const uploadCsvFiles = async () => {
   const directoryPath = path.join(__dirname, "dashboards");
 
   try {
+    // Get all CSV files from the directory
     const files = getCsvFiles(directoryPath);
 
     if (files.length === 0) {
@@ -132,14 +133,57 @@ const uploadCsvFiles = async () => {
       return;
     }
 
-    await axios.delete("http://localhost:3000/accountDetails/");
+    // Filter out empty files and keep track of ignored files
+    const validFiles = files.filter((filePath) => {
+      const fileContent = fs.readFileSync(filePath, "utf8");
+      if (!fileContent) {
+        console.log("File content is empty, ignoring file:", filePath);
+        return false; // Ignore empty file
+      }
+      return true;
+    });
 
-    for (const filePath of files) {
+    if (validFiles.length === 0) {
+      console.log("All files were empty. Skipping further processing.");
+      return;
+    }
+
+    // Delete accounts data for valid files only
+    for (const filePath of validFiles) {
+      const apexid = path.basename(path.dirname(filePath));
+      try {
+        await axios.delete(`http://localhost:3000/accountDetails/account/APEX-${apexid}`);
+      } catch (error) {
+        console.error(
+          `Failed to delete accounts for apexid ${apexid}:`,
+          error.code || error.message || error.response?.data
+        );
+      }
+    }
+
+    // If all files are non-empty, delete all account data
+    const allFilesNotEmpty = files.every((filePath) => {
+      const fileContent = fs.readFileSync(filePath, "utf8");
+      return fileContent.trim().length > 0;
+    });
+
+    if (allFilesNotEmpty) {
+      try {
+        await axios.delete("http://localhost:3000/accountDetails/");
+      } catch (error) {
+        console.error(
+          "Failed to delete all accounts:",
+          error.code || error.message || error.response?.data
+        );
+      }
+    }
+
+    // Upload valid files and call addUsers for each file
+    for (const filePath of validFiles) {
       const formData = new FormData();
       formData.append("csvFiles", fs.createReadStream(filePath));
 
       try {
-        // Upload to the accountDetails endpoint
         const accountResponse = await axios.post(
           "http://localhost:3000/accountDetails/add-acc-auto",
           formData,
@@ -149,7 +193,7 @@ const uploadCsvFiles = async () => {
             },
           }
         );
-        // console.log(`Successfully uploaded ${filePath} to add-acc-auto:`, accountResponse.data);
+        console.log(`Successfully uploaded ${filePath}:`, accountResponse.data);
       } catch (error) {
         console.error(
           `Failed to upload ${filePath} to add-acc-auto:`,
@@ -157,16 +201,26 @@ const uploadCsvFiles = async () => {
         );
       }
 
-      // Call the addUsers function
-      await addUsers(filePath);
+      try {
+        await addUsers(filePath); // Assuming addUsers is defined elsewhere
+      } catch (error) {
+        console.error(
+          `Failed to process addUsers for ${filePath}:`,
+          error.message
+        );
+      }
     }
 
-    deleteDashboards();
+    // Call deleteDashboards after all uploads
+    try {
+      await deleteDashboards(); // Assuming deleteDashboards is defined elsewhere
+    } catch (error) {
+      console.error("Failed to delete dashboards:", error.message);
+    }
   } catch (error) {
     console.error(`Error during CSV upload process: ${error.message}`);
   }
 };
-
 
 
 app.post("/upload-csv", async (req, res) => {
@@ -261,15 +315,15 @@ cron.schedule("0 * * * *", () => {
 });
 
 // Schedule the task to run every 15 minutes for '_Result' CSV files
-// cron.schedule("*/15 * * * *", () => {
-//   console.log("Running scheduled task to process and upload '_Result' CSV files...");
-//   processAndUploadResultCsvFiles();
-// });
-
-cron.schedule("* * * * *", ()  => {
-  console.log("Running scheduled task to process and upload '_Results' CSV files...");
+cron.schedule("*/15 * * * *", () => {
+  console.log("Running scheduled task to process and upload '_Result' CSV files...");
   processAndUploadResultCsvFiles();
 });
+
+// cron.schedule("* * * * *", ()  => {
+//   console.log("Running scheduled task to process and upload '_Results' CSV files...");
+//   processAndUploadResultCsvFiles();
+// });
 
 // HTTP server creation
 const server = http.createServer(app);

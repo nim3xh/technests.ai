@@ -19,6 +19,6 @@ router.patch("/account/:account", verifyToken, accountDetailController.updateByA
 router.delete("/:id", verifyToken, accountDetailController.destroy);
 router.delete("/", accountDetailController.destroyAll);
 router.delete('/auto-delete', accountDetailController.destroyAll);
+router.delete("/account/:account",accountDetailController.destroyByACnu);
  
-
 module.exports = router;
