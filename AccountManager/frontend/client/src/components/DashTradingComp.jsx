@@ -346,7 +346,7 @@ export default function DashTradingComp() {
                 account: account.account,
                 balance: account.accountBalance,
                 time: time,
-                trade: getTradeNameBasedOnBalance(account.account, account.accountBalance),
+                trade: 'PA micro',
                 accountNumber: account.accountNumber,
             });
         });
