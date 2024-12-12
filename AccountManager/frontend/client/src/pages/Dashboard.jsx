@@ -7,6 +7,7 @@ import DashboardCompUser from "../components/User/DashboardCompUser";
 import DashboardCompSuperUser from "../components/DashboardCompSuperUser";
 import DashAccountDetails from "../components/DashAccountDetails";
 import DashAccountDetailsUser from "../components/User/DashAccountDetailsUser";
+import DashTradeMonitorUser from "../components/User/DashTradeMonitorUser";
 import DashUsers from "../components/DashUsers";
 import DashAccountOwners from "../components/DashAccountOwners";
 import DashTrades from "../components/DashTrades";
@@ -56,13 +57,15 @@ export default function Dashboard() {
       {/* Trades */}
       {tab === "trades" && <DashTrades />}
       {/* Trading */}
-      {tab === "trading" && <DashTradingComp />}'
+      {tab === "trading" && <DashTradingComp />}
       {/* Trade Monitor */}
-      {tab === "tradeMonitor" && <DashTradeMonitor />}'
+      {tab === "tradeMonitor" && <DashTradeMonitor />}
       {/* Trade Matching */}
       {tab === "tradeMatching" && <TradeMatchingCom />}
       {/* Account Details User */}
       {tab === "accountDetailsUser" && <DashAccountDetailsUser />}
+      {/* Trade Monitor User */}
+      {tab === "tradeMonitorUser" && <DashTradeMonitorUser />}
     </div>
   );
 }

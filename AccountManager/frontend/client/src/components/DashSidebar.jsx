@@ -69,16 +69,16 @@ export default function DashSidebar() {
             )}
             {currentUser.user.role === "user" && (
               <>
-              <Link to="/dashboard?tab=dashUser">
-                <Sidebar.Item
-                  active={tab === "dashUser"}
-                  icon={HiChartPie}
-                  as="div"
-                >
-                  Summary
-                </Sidebar.Item>
-              </Link>
-              <Link to="/dashboard?tab=profile">
+                <Link to="/dashboard?tab=dashUser">
+                  <Sidebar.Item
+                    active={tab === "dashUser"}
+                    icon={HiChartPie}
+                    as="div"
+                  >
+                    Summary
+                  </Sidebar.Item>
+                </Link>
+                <Link to="/dashboard?tab=profile">
                   <Sidebar.Item
                     active={tab === "profile"}
                     icon={HiUser}
@@ -93,6 +93,15 @@ export default function DashSidebar() {
                     as="div"
                   >
                     Profile
+                  </Sidebar.Item>
+                </Link>
+                <Link to="/dashboard?tab=tradeMonitorUser">
+                  <Sidebar.Item
+                    active={tab === "tradeMonitor"}
+                    icon={TbHeartRateMonitor}
+                    as="div"
+                  >
+                    Trade Monitor
                   </Sidebar.Item>
                 </Link>
                 <Link to="/dashboard?tab=accountDetailsUser">

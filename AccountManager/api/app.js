@@ -26,6 +26,13 @@ app.use(cors({
     credentials: true,     // Allow credentials (cookies, authorization headers)
 }));
 
+// //need to allow for all
+// app.use((req, res, next) => {
+//     res.header("Access-Control-Allow-Origin", "*");
+//     res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
+//     next();
+// });
+
 // Middleware to parse JSON requests
 app.use(express.json());
 app.use(bodyParser.json());
@@ -45,7 +52,6 @@ app.use("/results", resultRouter);
 app.get("/", (req, res) => {
   res.send("API is running!");
 });
-
 
 app.get('/file-creation-time', async (req, res) => {
   try {

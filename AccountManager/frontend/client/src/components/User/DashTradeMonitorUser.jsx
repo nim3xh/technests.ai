@@ -17,15 +17,13 @@ import {
   Dropdown,
   Datepicker,
 } from "flowbite-react";
-import useRealTimeDate from '../hooks/useRealTimeDate';
+import useRealTimeDate from '../../hooks/useRealTimeDate';
 import axios from "axios";
 
 const BaseURL = import.meta.env.VITE_BASE_URL;
 
-export default function DashTradeMonitor() {
+export default function DashTradeMonitorUser() {
   const formattedTodayDate = useRealTimeDate();
-  const [selectedAccount, setSelectedAccount] = useState(null);
-  const [combinedData, setCombinedData] = useState([]);
   const [results, setResults] = useState([]);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -34,65 +32,11 @@ export default function DashTradeMonitor() {
     EVAL: false,
     PA: false,
   });
-  const [selectedDate, setSelectedDate] = useState(null);
   const [filtered,setfiltered] = useState(null);
   const [selectedResult, setSelectedResult] = useState(null);
   const [createdDateTime, setCreatedDateTime] = useState("");
 
   const resultsDropDown = ['Profit', 'Stop Loss', 'In-progress', 'Rejected'];
-
-  const mergeData = (users, accountDetails) => {
-    return accountDetails.map((account) => {
-      const user = users.find((u) => u.accountNumber === account.accountNumber);
-      return {
-        ...account,
-        name: user ? user.name : "Unknown",
-      };
-    });
-  };
-
-  const encounteredAccounts = new Set();
-
-  const uniqueAccountNumbers = combinedData
-    .map((item) => {
-      // Match and extract the account number pattern APEX-245360
-      const match = item.accountNumber.match(/^(APEX-\d+)/);
-      if (match) {
-        const accountNumber = match[1];
-        if (!encounteredAccounts.has(accountNumber)) {
-          encounteredAccounts.add(accountNumber);
-          return `${accountNumber} (${item.name})`;
-        }
-      }
-      return null; // Skip if already encountered or no match
-    })
-    .filter(Boolean); // Filter out null values
-
-  const fetchData = async () => {
-    try {
-      const token = currentUser.token; // Get the token from the currentUser object
-
-      const headers = {
-        Authorization: `Bearer ${token}`, // Add token in the Authorization header
-      };
-
-      const [usersResponse, accountDetailsResponse] = await Promise.all([
-        axios.get(`${BaseURL}users`, { headers }), // Pass headers with the token
-        axios.get(`${BaseURL}accountDetails`, { headers }), // Pass headers with the token
-      ]);
-
-      const mergedData = mergeData(
-        usersResponse.data,
-        accountDetailsResponse.data
-      );
-      setCombinedData(mergedData);
-
-      setLoading(false);
-    } catch (err) {
-      setError("Something went wrong while fetching data.",err);
-      setLoading(false);
-    }
-  };
 
   const fetchResults = async () => {
     setLoading(true);
@@ -102,7 +46,7 @@ export default function DashTradeMonitor() {
         Authorization: `Bearer ${token}`,
       };
       // Fetch the results from /results
-      const response = await axios.get(`${BaseURL}results`, { headers });
+      const response = await axios.get(`${BaseURL}results//account/APEX-${currentUser.user.ApexAccountNumber}`, { headers });
 
       if(response.data.result.length > 0){
         setCreatedDateTime(response.data.result[0].createdAt);
@@ -133,12 +77,6 @@ export default function DashTradeMonitor() {
       filtered = filtered;
     }
 
-    if (selectedAccount != null) {
-      filtered = filtered.filter((item) => {
-        return item.Account.replace(/(PA-)?(APEX-)?(\d+)(-\d+)?/, '$3') === selectedAccount.replace(/APEX-/, "").split(" ")[0];
-      });
-    }
-
     if (selectedResult != null) {
       if(selectedResult === 'In-progress'){
         filtered = filtered.filter((item) => item.ExitTime === null);
@@ -152,7 +90,7 @@ export default function DashTradeMonitor() {
   }
 
   useEffect(() => {
-    fetchData();
+    // Fetch results immediately
     fetchResults();
 
     // Set up an interval to fetch results every 15 minutes (15 * 60 * 1000 ms)
@@ -164,11 +102,7 @@ export default function DashTradeMonitor() {
 
   useEffect(()=> {
     filter();
-  },[selectedFilters,selectedAccount,selectedResult]);
-
-  const handleAccountSelection = (account) => {
-    setSelectedAccount(account);
-  };
+  },[selectedFilters,selectedResult]);
 
   const handleFilterChange = (filter) => {
     setSelectedFilters((prevFilters) => {
@@ -184,11 +118,6 @@ export default function DashTradeMonitor() {
   
       return prevFilters;
     });
-  };
-
-  const handleDateChange = (date) => {
-    setSelectedDate(date);
-    console.log("Selected Date: ", date); // You can use this date in your fetch function or any logic
   };
 
   const handleResultSelection = (result) => {
@@ -233,8 +162,7 @@ export default function DashTradeMonitor() {
         return 'bg-gray-100 text-gray-800'; // Lighter gray for neutral state
     }
   };
-  
-  
+
   return (
     <div className="p-3 w-full">
       <Breadcrumb aria-label="Default breadcrumb example">
@@ -246,8 +174,8 @@ export default function DashTradeMonitor() {
       <h1 className="mt-3 mb-3 text-left font-semibold text-xl">
       Trade Monitor
       </h1>
-      <p className="text-lg font-semibold text-gray-600 dark:text-white">{formattedTodayDate}</p> {/* Display the formatted date */}
-        {currentUser.user.role !== "user" && (
+      <p className="text-lg font-semibold text-gray-600 dark:text-white">{formattedTodayDate}</p>
+        {currentUser.user.role === "user" && (
           <>
           {loading ? (
             <div className="flex justify-center items-center h-96">
@@ -260,28 +188,6 @@ export default function DashTradeMonitor() {
                   <div className="text-center">
                       <div>
                         <div className="flex flex-col md:flex-row justify-left items-center md:space-x-4 mt-2">
-                          <Dropdown
-                                label={
-                                  selectedAccount
-                                    ? selectedAccount.replace(/APEX-/, "") // Remove "APEX-"
-                                    : "Select User"
-                                }
-                                className="w-full text-left dark:bg-gray-800 dark:text-gray-200  relative z-20"
-                                inline
-                              >
-                                <Dropdown.Item onClick={() => setSelectedAccount(null)}>
-                                  Clear Selection
-                                </Dropdown.Item>
-                                {uniqueAccountNumbers.map((account) => (
-                                  <Dropdown.Item
-                                    key={account}
-                                    onClick={() => handleAccountSelection(account)}
-                                  >
-                                    {selectedAccount === account ? "✓ " : ""}{" "}
-                                    {account.replace(/APEX-/, "")} {/* Display without "APEX-" */}
-                                  </Dropdown.Item>
-                                ))}
-                            </Dropdown>
                             <Dropdown
                               label={selectedResult ? selectedResult : "Select Result"}
                               className="w-full text-left dark:bg-gray-800 dark:text-gray-200 relative z-20"
@@ -323,14 +229,14 @@ export default function DashTradeMonitor() {
                         </div>
                       </div>
                     </div>
-                    <div className="w-full flex justify-between items-center mb-3 mt-5">
+                    {/* <div className="w-full flex justify-between items-center mb-3 mt-5">
                       <p className="text-left text-sm md:text-base text-gray-700 dark:text-white">
                         Last Updated: 
                         <span className="font-medium text-gray-600 dark:text-white">
                           {formattedDateTime ? `(${formattedDateTime})` : 'N/A'}
                         </span>
                       </p>
-                    </div>
+                    </div> */}
                     <div className="flex flex-col md:flex-row justify-center items-center md:space-x-4">
                       <div className="table-wrapper overflow-x-auto max-h-[590px]">
                         <Table hoverable className="shadow-md w-full mt-5">

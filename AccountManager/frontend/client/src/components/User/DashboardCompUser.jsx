@@ -488,14 +488,14 @@ export default function DashboardCompUser() {
                   <div className="flex flex-col md:flex-row justify-center items-center md:space-x-4">
                     {/* Table Section */}
                     <div>
-                    <div className="w-full flex justify-between items-center mb-3 mt-5">
+                    {/* <div className="w-full flex justify-between items-center mb-3 mt-5">
                       <p className="text-left text-sm md:text-base text-gray-700 dark:text-white">
                         Last Updated: 
                         <span className="font-medium text-gray-600 dark:text-white">
                           {formattedDateTime ? `(${formattedDateTime})` : 'N/A'}
                         </span>
                       </p>
-                    </div>
+                    </div> */}
                     <div className="table-wrapper overflow-x-auto max-h-[400px]">
                       <Table hoverable className="shadow-md w-full">
                         <TableHead>

@@ -763,12 +763,12 @@ export default function DashAccountDetailsUser() {
             <>
              <div className="tables-container">
                 <div className="w-full flex justify-center items-center mb-3 mt-5">
-                      <p className="text-left text-sm md:text-base text-gray-700 dark:text-white">
+                      {/* <p className="text-left text-sm md:text-base text-gray-700 dark:text-white">
                         Last Updated: 
                         <span className="font-medium text-gray-600 dark:text-white">
                           {formattedDateTime ? `(${formattedDateTime})` : 'N/A'}
                         </span>
-                      </p>
+                      </p> */}
                     </div>
                     {/* Show filteredData table if setsData is not displayed */}
                     {!showSetsData && (

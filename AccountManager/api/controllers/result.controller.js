@@ -162,7 +162,6 @@ const processResultCSV = (filePath) => {
     fs.createReadStream(filePath)
       .pipe(csv())
       .on('data', (data) => {
-        // Ensure the time fields are in 24-hour format
         try {
           const result = {
             ResultTime: data['Result Time'] || null,
@@ -173,7 +172,7 @@ const processResultCSV = (filePath) => {
             Quantity: data.Quantity ? parseInt(data.Quantity, 10) : 0,
             Profit: data.Profit ? parseFloat(data.Profit.replace(/,/g, '')) : 0.0,
             StopLoss: data['Stop Loss'] ? parseFloat(data['Stop Loss'].replace(/,/g, '')) : 0.0,
-            TradeTime: data['Trade Time'] ? convertTo24HourFormat(data['Trade Time']) : null,  // Convert to 24-hour format
+            TradeTime: data['Trade Time'] ? convertTo24HourFormat(data['Trade Time']) : null,
             Direction: data.Direction || null,
             EntryTime: data['Entry Time'] || null,
             EntryPrice: data['Entry Price'] ? parseFloat(data['Entry Price'].replace(/,/g, '')) : 0.0,
@@ -183,9 +182,6 @@ const processResultCSV = (filePath) => {
             Comment: data.Comment || null,
           };
 
-          // console.log("Result extracted from CSV:", result);
-
-          // Add any additional validation if necessary
           if (result.Account && result.Instrument) {
             results.push(result);
           }
@@ -199,79 +195,87 @@ const processResultCSV = (filePath) => {
       })
       .on('error', (error) => {
         console.error(`Failed to process file: ${filePath}`, error);
-        reject(error); // Reject the promise in case of error
+        reject(error);
       });
   });
 };
 
-
 // Function to import results from multiple CSVs
 async function importResultsFromCSVs(req, res) {
-  const files = req.files;
+  const files = req.files || []; // Ensure req.files exists
   const failedFiles = [];
-  const allResults = [];
+  let allResults = [];
 
-  // Process each CSV file and collect results
-  for (const file of files) {
-    try {
-      const results = await processResultCSV(file.path);
-      allResults.push(...results); // Merge results from all files
-    } catch (error) {
-      failedFiles.push(file.path); // Track failed files
-    }
+  if (files.length === 0) {
+    return res.status(400).json({ message: "No files provided for processing" });
   }
 
+  console.log("Received files for processing:", files.map(file => file.originalname));
+
   try {
-    // Retrieve existing results to avoid duplicates (based on unique identifiers)
-    // const existingResults = await models.Result.findAll({
-    //   attributes: ['TradeTime', 'Account', 'Instrument'],
-    //   raw: true,
-    // });
+    // Step 1: Clear the table only once before processing any files
+    console.log("Clearing existing data from the database...");
+    await models.Result.destroy({ where: {} });
 
-    // Create a set of existing results for faster comparison
-    // const existingResultsSet = new Set(
-    //   existingResults.map(
-    //     (res) => `${res.TradeTime}-${res.Account}-${res.Instrument}`
-    //   )
-    // );
+    // Step 2: Process all files and collect their results
+    const fileProcessingPromises = files.map((file) =>
+      processResultCSV(file.path).catch((error) => {
+        console.error(`Failed to process file: ${file.originalname}`, error);
+        failedFiles.push(file.originalname);
+        return []; // Return empty array for failed files
+      })
+    );
 
-    // Identify the unique identifiers of the new results to avoid duplicates
-    // const newResults = allResults.filter((result) => {
-    //   const resultKey = `${result.TradeTime}-${result.Account}-${result.Instrument}`;
-    //   if (existingResultsSet.has(resultKey)) {
-    //     return false; // Skip if the result already exists
-    //   }
-    //   return true;
-    // });
+    const resultsArrays = await Promise.all(fileProcessingPromises);
+    allResults = resultsArrays.flat(); // Combine results from all files
 
-    // If there are any new results to add
+    // Step 3: Insert all results into the database
     if (allResults.length > 0) {
-      // Optional: Delete all existing records in the Result table if needed (commented out here)
-      await models.Result.destroy({
-        where: {}, // Empty condition will delete all rows
-      });
-
-      // Save new results to the database
+      console.log(`Inserting ${allResults.length} records into the database...`);
       await models.Result.bulkCreate(allResults);
 
       res.status(201).json({
         message: "Results imported successfully",
-        importedResults: allResults,
+        importedResultsCount: allResults.length,
         failedFiles,
       });
     } else {
       res.status(200).json({
-        message: "No new results to import",
+        message: "No valid data found to import",
         failedFiles,
       });
     }
   } catch (error) {
-    console.error("Error during database operation:", error);
+    console.error("Error during import operation:", error);
     res.status(500).json({
-      message: "Something went wrong while processing results",
+      message: "Something went wrong while importing results",
       error: error.message,
     });
   }
+}
+
+function indexbyAccount(req, res) {
+  const account = req.params.account.replace(/APEX-/, "").split(" ")[0];
+
+  models.Result.findAll({
+      where: models.sequelize.where(
+          models.sequelize.literal(`
+              CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(Account, 'APEX-', -1), '-', 1) AS UNSIGNED)
+          `),
+          account
+      )
+  })
+      .then((data) => {
+          res.status(200).json({
+              result: data,
+          });
+      })
+      .catch((error) => {
+          res.status(500).json({
+              message: "Something went wrong",
+              error: error,
+          });
+      });
 }
 
 module.exports = {
@@ -281,4 +285,5 @@ module.exports = {
     update: update,
     destroy: destroy,
     importResultsFromCSVs: importResultsFromCSVs,
+    indexbyAccount: indexbyAccount
 };
