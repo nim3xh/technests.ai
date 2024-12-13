@@ -23,12 +23,12 @@ const getResultCsvFiles = (directory) => {
       csvFiles = csvFiles.concat(getResultCsvFiles(itemPath)); // Recursively get files
     } else if (item.endsWith(".csv") &&  (item.includes("_Results") || item.includes("_results"))) {
       //if created date less than today date ignore file
-      const createdDate = new Date(stats.birthtime);
-      if(createdDate < new Date()){
-       console.log("File is older than today's date, ignoring file",itemPath,createdDate);
-      }else{
+      // const createdDate = new Date(stats.birthtime);
+      // if(createdDate < new Date()){
+      //  console.log("File is older than today's date, ignoring file",itemPath,createdDate);
+      // }else{
         csvFiles.push(itemPath); // Add CSV file to the list
-      }
+      // }
     }
   });
   return csvFiles;
