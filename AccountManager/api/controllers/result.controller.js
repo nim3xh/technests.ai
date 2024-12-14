@@ -1,6 +1,7 @@
 const models = require('../models');
 const fs = require("fs");
 const csv = require("csv-parser");
+const moment = require('moment');
 const deleteUploads = require("../delete-uploads");
 
 function save(req, res){
@@ -154,6 +155,14 @@ const convertTo24HourFormat = (time) => {
   }
 };
 
+// Function to validate and normalize datetime fields
+const validateDateTime = (datetime) => {
+  if (!datetime || datetime === 'Invalid date') return null;
+  const validDate = moment(datetime, ['YYYY-MM-DD HH:mm:ss', 'YYYY-MM-DD', 'MM/DD/YYYY HH:mm:ss', 'MM/DD/YYYY'], true);
+  return validDate.isValid() ? validDate.format('YYYY-MM-DD HH:mm:ss') : null;
+};
+
+
 // Function to process a single CSV file and extract result data
 const processResultCSV = (filePath) => {
   return new Promise((resolve, reject) => {
@@ -164,7 +173,7 @@ const processResultCSV = (filePath) => {
       .on('data', (data) => {
         try {
           const result = {
-            ResultTime: data['Result Time'] || null,
+            ResultTime: validateDateTime(data['Result Time']),
             FileName: data[' FileName'] ? data[' FileName'].trim() : null,
             TradeCount: data.TradeCount ? parseInt(data.TradeCount, 10) : 0,
             Account: data.Account || null,

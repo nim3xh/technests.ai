@@ -343,10 +343,6 @@ export default function DashTradeMonitor() {
                             <TableHeadCell className="sticky top-0 bg-white z-10 hidden sm:table-cell">Stop Loss</TableHeadCell>
                             <TableHeadCell className="sticky top-0 bg-white z-10 hidden sm:table-cell">Trade Time</TableHeadCell>
                             <TableHeadCell className="sticky top-0 bg-white z-10 hidden sm:table-cell">Direction</TableHeadCell>
-                            <TableHeadCell className="sticky top-0 bg-white z-10 hidden sm:table-cell">Entry Time</TableHeadCell>
-                            <TableHeadCell className="sticky top-0 bg-white z-10 hidden sm:table-cell">Entry Price</TableHeadCell>
-                            <TableHeadCell className="sticky top-0 bg-white z-10 hidden sm:table-cell">Exit Time</TableHeadCell>
-                            <TableHeadCell className="sticky top-0 bg-white z-10 hidden sm:table-cell">Exit Price</TableHeadCell>                                                      
                             <TableHeadCell className="sticky top-0 bg-white z-10 hidden sm:table-cell">Status</TableHeadCell>
                             <TableHeadCell className="sticky top-0 bg-white z-10 hidden sm:table-cell">Duration</TableHeadCell>
                           </TableHead>
@@ -370,40 +366,6 @@ export default function DashTradeMonitor() {
                                     <TableCell  >{result.StopLoss ?? 'N/A'}</TableCell>
                                     <TableCell  >{result.TradeTime ? convertTo12HourFormat(result.TradeTime) : 'N/A'}</TableCell>
                                     <TableCell  >{result.Direction}</TableCell>
-                                    <TableCell  >
-                                      {new Date(result.EntryTime).toLocaleString('en-US', {
-                                        // timeZone: 'America/Los_Angeles',
-                                        // weekday: 'short', // 'Mon'
-                                        // year: 'numeric', // '2024'
-                                        // month: 'short', // 'Nov'
-                                        // day: 'numeric', // '29'
-                                        hour: 'numeric', // '1'
-                                        minute: 'numeric', // '00'
-                                        second: 'numeric', // '00'
-                                      })}
-                                    </TableCell>
-
-                                    <TableCell >
-                                      ${result.EntryPrice}
-                                    </TableCell>
-
-                                    <TableCell >
-                                      {
-                                        result.Result === 'Rejected'
-                                        ? new Date(result.EntryTime).toLocaleString('en-US', {
-                                            hour: 'numeric',
-                                            minute: 'numeric',
-                                            second: 'numeric',
-                                          })
-                                        : (new Date(result.ExitTime).toLocaleString('en-US', {
-                                            hour: 'numeric',
-                                            minute: 'numeric',
-                                            second: 'numeric',
-                                          }) ?? 'In-progress')
-                                      }
-                                    </TableCell>
-
-                                    <TableCell >${result.ExitPrice ?? 'In-progress'}</TableCell>          
                                     <TableCell className={` ${getColorClass(result.Result ?? 'In-progress')}`} title={result.Comment}>
                                       {result.Result ?? 'In-progress'}
                                     </TableCell>
