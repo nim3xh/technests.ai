@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Button, TextInput, Textarea, ToggleSwitch } from 'flowbite-react';
 
 export default function ContactUs() {
   const [isOrganization, setIsOrganization] = useState(false);
@@ -12,20 +13,14 @@ export default function ContactUs() {
       <form className="space-y-6">
         {/* Toggle Organization/Individual */}
         <div className="flex items-center justify-center mb-4">
-          <button
-            type="button"
-            onClick={() => setIsOrganization(false)}
-            className={`px-4 py-2 rounded-l-lg ${!isOrganization ? 'bg-teal-600 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'}`}
-          >
-            Individual
-          </button>
-          <button
-            type="button"
-            onClick={() => setIsOrganization(true)}
-            className={`px-4 py-2 rounded-r-lg ${isOrganization ? 'bg-teal-600 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'}`}
-          >
-            Organization
-          </button>
+          <div className="flex items-center space-x-2">
+            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Individual</span>
+            <ToggleSwitch
+              checked={isOrganization}
+              onChange={() => setIsOrganization(!isOrganization)}
+              label="Organization"
+            />
+          </div>
         </div>
 
         {/* Name Field */}
@@ -33,11 +28,10 @@ export default function ContactUs() {
           <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             {isOrganization ? 'Organization Name' : 'Your Name'}
           </label>
-          <input
+          <TextInput
             type="text"
             id="name"
             name="name"
-            className="w-full p-3 border rounded-lg bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-200"
             placeholder={isOrganization ? 'Enter your organization name' : 'Enter your name'}
           />
         </div>
@@ -47,11 +41,10 @@ export default function ContactUs() {
           <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Email Address
           </label>
-          <input
+          <TextInput
             type="email"
             id="email"
             name="email"
-            className="w-full p-3 border rounded-lg bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-200"
             placeholder="Enter your email"
           />
         </div>
@@ -62,11 +55,10 @@ export default function ContactUs() {
             <label htmlFor="contact-person" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Contact Person
             </label>
-            <input
+            <TextInput
               type="text"
               id="contact-person"
               name="contact-person"
-              className="w-full p-3 border rounded-lg bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-200"
               placeholder="Enter the contact person's name"
             />
           </div>
@@ -77,23 +69,19 @@ export default function ContactUs() {
           <label htmlFor="message" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Your Message
           </label>
-          <textarea
+          <Textarea
             id="message"
             name="message"
             rows="4"
-            className="w-full p-3 border rounded-lg bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-200"
             placeholder="Write your message here"
-          ></textarea>
+          />
         </div>
 
         {/* Submit Button */}
-        <div className="text-center">
-          <button
-            type="submit"
-            className="px-6 py-3 bg-teal-600 text-white rounded-lg hover:bg-teal-700 focus:outline-none focus:ring focus:ring-teal-300"
-          >
+        <div className="flex justify-center items-center">
+        <Button gradientMonochrome='teal' className="px-6 py-3">
             Send Message
-          </button>
+        </Button>
         </div>
       </form>
     </div>
