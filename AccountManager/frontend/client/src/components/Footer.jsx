@@ -26,12 +26,12 @@ export default function Footer() {
             className="text-xl border-b-2 border-gray-300 pb-2"
           />
           <FlowbiteFooter.LinkGroup col={true}>
-            <p>1621 Central Avenue</p>
-            <p>Cheyenne, WY 82001</p>
+            <p>30 N Gould ST STE R</p>
+            <p>Sheridan, WY 82801</p>
             <p>United States</p>
-            <p>+1 (925) 315-4786</p>
+            <p>+1 (424) 436-8150</p>
             <FlowbiteFooter.Link href="mailto:support@blueedgefinancial.com">
-              support@blueedgefinancial.com
+              support@technests.ai
             </FlowbiteFooter.Link>
           </FlowbiteFooter.LinkGroup>
         </div>

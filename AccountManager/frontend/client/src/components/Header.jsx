@@ -1,6 +1,6 @@
 import { Avatar, Button, Dropdown, Navbar, TextInput } from "flowbite-react";
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link,useLocation } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { signoutSuccess } from "../redux/user/userSlice";
 import LogoNew from "../assets/logonew.jpg";
@@ -13,7 +13,8 @@ const BaseURL = import.meta.env.VITE_BASE_URL;
 export default function Header() {
   const { theme } = useSelector((state) => state.theme);
   const dispatch = useDispatch();
-    const { currentUser } = useSelector((state) => state.user);
+  const { currentUser } = useSelector((state) => state.user);
+  const path = useLocation().pathname;
     
     const handleSignout = async () => {
       try {
@@ -103,6 +104,24 @@ export default function Header() {
           </Link>
         )}
       </div>
+      {!currentUser && (
+        <>
+          <Navbar.Collapse className="flex justify-center items-center">
+            <Navbar.Link active={path === "/"} as={"div"}>
+              <a href="#home" className="text-gray-900 dark:text-white hover:text-teal-500">Home</a>
+            </Navbar.Link>
+            <Navbar.Link active={path === "/about-us"} as={"div"}>
+              <a href="#about-us" className="text-gray-900 dark:text-white hover:text-teal-500">About</a>
+            </Navbar.Link>
+            <Navbar.Link active={path === "/services"} as={"div"}>
+              <a href="#services" className="text-gray-900 dark:text-white hover:text-teal-500">Services</a>
+            </Navbar.Link>
+            <Navbar.Link active={path === "/contact-us"} as={"div"}>
+              <a href="#contact-us" className="text-gray-900 dark:text-white hover:text-teal-500">Contact Us</a>
+            </Navbar.Link>
+          </Navbar.Collapse>
+        </>
+      )}
     </Navbar>
   );
 }
