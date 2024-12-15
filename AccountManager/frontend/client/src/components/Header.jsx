@@ -107,30 +107,34 @@ export default function Header() {
         </button>
       </div>
 
-      {/* Collapse Navbar Links for Mobile */}
-      <Navbar.Collapse className={`${isOpen ? "block" : "hidden"} md:flex justify-center items-center`}>
-        <Navbar.Link active={path === "/"} as={"div"}>
-          <a href="#home" className="text-gray-900 dark:text-white hover:text-teal-500">Home</a>
-        </Navbar.Link>
-        <Navbar.Link active={path === "/about-us"} as={"div"}>
-          <a href="#about-us" className="text-gray-900 dark:text-white hover:text-teal-500">About</a>
-        </Navbar.Link>
-        <Navbar.Link active={path === "/services"} as={"div"}>
-          <a href="#services" className="text-gray-900 dark:text-white hover:text-teal-500">Services</a>
-        </Navbar.Link>
-        <Navbar.Link active={path === "/contact-us"} as={"div"}>
-          <a href="#contact-us" className="text-gray-900 dark:text-white hover:text-teal-500">Contact Us</a>
-        </Navbar.Link>
+      {!currentUser && (
+        <>
+          {/* Collapse Navbar Links for Mobile */}
+          <Navbar.Collapse className={`${isOpen ? "block" : "hidden"} md:flex justify-center items-center`}>
+            <Navbar.Link active={path === "/"} as={"div"}>
+              <a href="https://app.technests.ai/" className="text-gray-900 dark:text-white hover:text-teal-500">Home</a>
+            </Navbar.Link>
+            <Navbar.Link active={path === "/about-us"} as={"div"}>
+              <a href="#about-us" className="text-gray-900 dark:text-white hover:text-teal-500">About</a>
+            </Navbar.Link>
+            <Navbar.Link active={path === "/services"} as={"div"}>
+              <a href="#services" className="text-gray-900 dark:text-white hover:text-teal-500">Services</a>
+            </Navbar.Link>
+            <Navbar.Link active={path === "/contact-us"} as={"div"}>
+              <a href="#contact-us" className="text-gray-900 dark:text-white hover:text-teal-500">Contact Us</a>
+            </Navbar.Link>
 
-        {/* Add Sign In Button to Collapse (for mobile view) */}
-        {!currentUser && (
-          <Link to="/sign-in" className="block md:hidden">
-            <Button gradientMonochrome="teal" className="w-full">
-              Sign In
-            </Button>
-          </Link>
-        )}
-      </Navbar.Collapse>
+            {/* Add Sign In Button to Collapse (for mobile view) */}
+            {!currentUser && (
+              <Link to="/sign-in" className="block md:hidden">
+                <Button gradientMonochrome="teal" className="w-full">
+                  Sign In
+                </Button>
+              </Link>
+            )}
+          </Navbar.Collapse>
+        </>
+      )} 
     </Navbar>
   );
 }
