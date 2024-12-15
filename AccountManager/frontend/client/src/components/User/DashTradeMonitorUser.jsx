@@ -242,15 +242,14 @@ export default function DashTradeMonitorUser() {
 <Table hoverable className="shadow-md w-full mt-5">
                           <TableHead hoverable className="shadow-md w-full">
                             <TableHeadCell className="sticky top-0 bg-white z-10 hidden sm:table-cell">#</TableHeadCell>
-                            <TableHeadCell className="sticky top-0 bg-white z-10 hidden sm:table-cell">Account</TableHeadCell>
                             <TableHeadCell className="sticky top-0 bg-white z-10 hidden sm:table-cell">Instrument</TableHeadCell>
                             <TableHeadCell className="sticky top-0 bg-white z-10 hidden sm:table-cell">Quantity</TableHeadCell>
-                            <TableHeadCell className="sticky top-0 bg-white z-10 hidden sm:table-cell">Profit</TableHeadCell>
+                            <TableHeadCell className="sticky top-0 bg-white z-10 hidden sm:table-cell">Direction</TableHeadCell>
                             <TableHeadCell className="sticky top-0 bg-white z-10 hidden sm:table-cell">Stop Loss</TableHeadCell>
                             <TableHeadCell className="sticky top-0 bg-white z-10 hidden sm:table-cell">Trade Time</TableHeadCell>
-                            <TableHeadCell className="sticky top-0 bg-white z-10 hidden sm:table-cell">Direction</TableHeadCell>
-                            <TableHeadCell className="sticky top-0 bg-white z-10 hidden sm:table-cell">Status</TableHeadCell>
+                            <TableHeadCell className="sticky top-0 bg-white z-10 hidden sm:table-cell">Result</TableHeadCell>
                             <TableHeadCell className="sticky top-0 bg-white z-10 hidden sm:table-cell">Duration</TableHeadCell>
+                            <TableHeadCell className="sticky top-0 bg-white z-10 hidden sm:table-cell">Amount</TableHeadCell>
                           </TableHead>
                           {loading ? (
                               <div className="flex justify-center items-center h-96">
@@ -265,13 +264,11 @@ export default function DashTradeMonitorUser() {
                                 {filtered.map((result, index) => (
                                   <TableRow key={result.id}>
                                     <TableCell >{index + 1}</TableCell>
-                                    <TableCell >{result.Account}</TableCell>
                                     <TableCell  >{result.Instrument}</TableCell>
-                                    <TableCell >{result.Quantity}</TableCell>
-                                    <TableCell >{result.Profit ?? 'N/A'}</TableCell>
+                                    <TableCell  >{result.Quantity}</TableCell>
+                                    <TableCell  >{result.Direction}</TableCell>
                                     <TableCell  >{result.StopLoss ?? 'N/A'}</TableCell>
                                     <TableCell  >{result.TradeTime ? convertTo12HourFormat(result.TradeTime) : 'N/A'}</TableCell>
-                                    <TableCell  >{result.Direction}</TableCell>
                                     <TableCell className={` ${getColorClass(result.Result ?? 'In-progress')}`} title={result.Comment}>
                                       {result.Result ?? 'In-progress'}
                                     </TableCell>
@@ -304,6 +301,7 @@ export default function DashTradeMonitorUser() {
                                         })()
                                       }
                                     </TableCell>
+                                    <TableCell  >{result.EntryPrice}</TableCell>
                                   </TableRow>
                                 ))}
                               </TableBody>
