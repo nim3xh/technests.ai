@@ -108,9 +108,6 @@ export default function Home() {
           <ContactUs />
         </div>
       </section>
-
-      {/* Footer Section */}
-      <Footer />
     </div>
   );
 }
