@@ -2,6 +2,7 @@ const models = require('../models');
 const fs = require("fs");
 const csv = require("csv-parser");
 const moment = require('moment');
+const { Op } = require('sequelize');
 const deleteUploads = require("../delete-uploads");
 
 function save(req, res){
@@ -56,7 +57,22 @@ function index(req, res){
 }
 
 function indexDeleted(req, res){
-    models.Result.findAll({ paranoid: false })
+
+    // Get today's start and end date-time
+    const startOfToday = new Date();
+    startOfToday.setHours(0, 0, 0, 0);
+
+    const endOfToday = new Date();
+    endOfToday.setHours(23, 59, 59, 999);
+
+    models.Result.findAll
+    ({ 
+            paranoid: false, 
+            where: {
+              deletedAt: {
+                  [Op.between]: [startOfToday, endOfToday], // Filter for today's deletedAt
+              },
+        }, })
         .then((data) => {
             res.status(200).json({
                 result : data,

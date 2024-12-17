@@ -49,6 +49,14 @@ export default function DashboardComp() {
     poCount: 0, // PO Count > 53,000
     adminOnly: 0, // Admin Only
   });
+
+  const [tradeStats, setTradeStats] = useState({
+    PaWin: 0,
+    PaLoss: 0,
+    EvalWin: 0,
+    EvalLoss: 0,
+  });
+  
   const [createdDateTime, setCreatedDateTime] = useState("");
 
   const formattedTodayDate = useRealTimeDate();
@@ -270,27 +278,67 @@ export default function DashboardComp() {
 
   const fetchAllResults = async () => {
     setLoading(true);
-    try{
+    try {
       const token = currentUser.token;
       const headers = {
         Authorization: `Bearer ${token}`,
       };
-
-      const [results,deltedResults] = await Promise.all([
+  
+      // Fetch results
+      const [results, deletedResults] = await Promise.all([
         axios.get(`${BaseURL}results`, { headers }),
         axios.get(`${BaseURL}results/deleted`, { headers }),
       ]);
-
-      //merge the results and deleted results
-      const mergedResults = results.data.result.concat(deltedResults.data.result);
+  
+      // Merge the results and deleted results
+      const mergedResults = results.data.result.concat(deletedResults.data.result);
+  
+      // Set merged results to state
       setResults(mergedResults);
-      setLoading(false);
-    }catch (err) {
-      setError("Something went wrong while fetching data.",err);
-      setLoading(false);
-    } 
-  }
 
+      console.log(mergedResults);
+  
+      // Calculate today's win/loss counts
+      calculateTodayStats(mergedResults);
+  
+      setLoading(false);
+    } catch (err) {
+      setError("Something went wrong while fetching data.", err);
+      setLoading(false);
+    }
+  };
+  
+  const calculateTodayStats = (results) => {
+    const today = new Date();
+    today.setHours(2, 0, 0, 0); // Set the time to 2 AM today
+    const nextDay = new Date(today);
+    nextDay.setDate(nextDay.getDate() + 1);
+  
+    // Initialize counts
+    let stats = {
+      PaWin: 0,
+      PaLoss: 0,
+      EvalWin: 0,
+      EvalLoss: 0,
+    };
+  
+    results.forEach((result) => {
+      const resultDate = new Date(result.createdAt);
+      if (resultDate >= today && resultDate < nextDay) { 
+        if (result.Account.startsWith("PA")) {
+          if (result.Result === "Profit") stats.PaWin++;
+          if (result.Result === "Stop Loss" || result.Result === "Loss") stats.PaLoss++;
+        } else if (result.Account.startsWith("APEX")) {
+          if (result.Result === "Profit") stats.EvalWin++;
+          if (result.Result === "Stop Loss" || result.Result === "Loss") stats.EvalLoss++;
+        }
+      }
+    });
+  
+    // Update trade stats
+    setTradeStats(stats);
+  };
+  
   useEffect(() => {
     fetchData();
     fetchDeletedData();
@@ -470,10 +518,10 @@ export default function DashboardComp() {
                       </div>
                     </div> */}
                   </div>
-
-                  <div className="flex flex-col md:flex-row justify-center items-center md:space-x-4">
-                      {/* Table Section */}
-                      <div>
+                  <div className="flex flex-col md:flex-row justify-between items-start md:space-x-4 w-full">
+                      {/* First Section */}
+                      <div className="w-full md:w-1/2">
+                        <h3 className="text-sm font-semibold text-center mb-2 mt-4">Overall Statistics</h3>
                         <Table hoverable className="shadow-md w-full mt-5">
                           <TableHead>
                             <TableHeadCell></TableHeadCell>
@@ -498,7 +546,7 @@ export default function DashboardComp() {
                               <TableCell>
                                 <div>
                                   <p>{paStats.poCount}</p>
-                                  <p>{deletedpaStats.poCount}</p> 
+                                  <p>{deletedpaStats.poCount}</p>
                                 </div>
                               </TableCell>
                               <TableCell>
@@ -510,63 +558,84 @@ export default function DashboardComp() {
                             </TableRow>
                           </TableBody>
                         </Table>
+                        <h3 className="text-sm font-semibold text-center mb-2 mt-4">Trade Statistics</h3>
+                        <Table hoverable className="shadow-md w-full mt-5">
+                          <TableHead>
+                            <TableHeadCell></TableHeadCell>
+                            <TableHeadCell>PA</TableHeadCell>
+                            <TableHeadCell>Eval</TableHeadCell>
+                          </TableHead>
+                          <TableBody>
+                            <TableRow>
+                              <TableCell>
+                                <div>
+                                  <p><b>Today's:</b></p>
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                <div>
+                                  <p>Wins: {tradeStats.PaWin}</p>
+                                  <p>Losses: {tradeStats.PaLoss}</p>
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                <div>
+                                  <p>Wins: {tradeStats.EvalWin}</p>
+                                  <p>Losses: {tradeStats.EvalLoss}</p>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          </TableBody>
+                        </Table>
+                      </div>
+
+                      {/* Second Section */}
+                      <div className="w-full md:w-1/2">
+                        <div className="w-full flex justify-between items-center mb-3 mt-5">
+                          <p className="text-left text-sm md:text-base text-gray-700 dark:text-white">
+                            Last Updated: 
+                            <span className="font-medium text-gray-600 dark:text-white">
+                              {formattedDateTime ? `(${formattedDateTime})` : 'N/A'}
+                            </span>
+                          </p>
+                        </div>
+                        <div className="table-wrapper overflow-x-auto max-h-[600px]">
+                          <Table hoverable className="shadow-md w-full">
+                            <TableHead>
+                              <TableHeadCell className="sticky top-0 bg-white z-10">#</TableHeadCell>
+                              <TableHeadCell className="sticky top-0 bg-white z-10">User ID</TableHeadCell>
+                              <TableHeadCell className="sticky top-0 bg-white z-10">EVAL</TableHeadCell>
+                              <TableHeadCell className="sticky top-0 bg-white z-10">PA</TableHeadCell>
+                              <TableHeadCell className="sticky top-0 bg-white z-10">Admin Only</TableHeadCell>
+                              <TableHeadCell className="sticky top-0 bg-white z-10"><b>Total</b></TableHeadCell>
+                            </TableHead>
+                            <TableBody>
+                              {userStats
+                                .sort((a, b) => {
+                                  const numA = parseInt(a.userName.replace(/[^\d()]/g, '').match(/\d+/)?.[0] || 0, 10);
+                                  const numB = parseInt(b.userName.replace(/[^\d()]/g, '').match(/\d+/)?.[0] || 0, 10);
+                                  return numA - numB;
+                                })
+                                .map((user, index) => (
+                                  <TableRow key={index}>
+                                    <TableCell>{index + 1}</TableCell>
+                                    <TableCell>
+                                      <Tooltip content={user.userName.replace(/\s*\(.*?\)/, '')}>
+                                        <span>{user.userName.replace(/[^\d()]/g, '').match(/\d+/)?.[0]}</span>
+                                      </Tooltip>
+                                    </TableCell>
+                                    <TableCell>{user.evalActive}</TableCell>
+                                    <TableCell>{user.paActive}</TableCell>
+                                    <TableCell>{user.evalAdminOnly + user.paAdminOnly}</TableCell>
+                                    <TableCell><b>{user.totalAccounts}</b></TableCell>
+                                  </TableRow>
+                                ))}
+                            </TableBody>
+                          </Table>
+                        </div>
                       </div>
                     </div>
-
-
-
-                  <div className="flex flex-col md:flex-row justify-center items-center md:space-x-4">
-                    {/* Table Section */}
-                    <div>
-                    <div className="w-full flex justify-between items-center mb-3 mt-5">
-                      <p className="text-left text-sm md:text-base text-gray-700 dark:text-white">
-                        Last Updated: 
-                        <span className="font-medium text-gray-600 dark:text-white">
-                          {formattedDateTime ? `(${formattedDateTime})` : 'N/A'}
-                        </span>
-                      </p>
-                    </div>
-                    <div className="table-wrapper overflow-x-auto max-h-[400px]">
-                      <Table hoverable className="shadow-md w-full">
-                        <TableHead>
-                          <TableHeadCell className="sticky top-0 bg-white z-10">#</TableHeadCell>
-                          <TableHeadCell className="sticky top-0 bg-white z-10">User ID</TableHeadCell>
-                          <TableHeadCell className="sticky top-0 bg-white z-10">EVAL</TableHeadCell>
-                          <TableHeadCell className="sticky top-0 bg-white z-10">PA</TableHeadCell>
-                          <TableHeadCell className="sticky top-0 bg-white z-10">Admin Only</TableHeadCell>
-                          <TableHeadCell className="sticky top-0 bg-white z-10"><b>Total</b></TableHeadCell>
-                          {/* <TableHeadCell className="sticky top-0 bg-white z-10">EVAL to PA</TableHeadCell> */}
-                          {/* <TableHeadCell className="sticky top-0 bg-white z-10">PO</TableHeadCell> */}
-                        </TableHead>
-                        <TableBody>
-                          {userStats
-                            .sort((a, b) => {
-                              const numA = parseInt(a.userName.replace(/[^\d()]/g, '').match(/\d+/)?.[0] || 0, 10);
-                              const numB = parseInt(b.userName.replace(/[^\d()]/g, '').match(/\d+/)?.[0] || 0, 10);
-                              return numA - numB; // Sorting numerically
-                            })
-                            .map((user, index) => (
-                              <TableRow key={index}>
-                                <TableCell>{index + 1}</TableCell>
-                                <TableCell>
-                                  <Tooltip content={user.userName.replace(/\s*\(.*?\)/, '')}>
-                                    <span>{user.userName.replace(/[^\d()]/g, '').match(/\d+/)?.[0]}</span>
-                                  </Tooltip>
-                                </TableCell>
-                                <TableCell>{user.evalActive}</TableCell>
-                                <TableCell>{user.paActive}</TableCell>
-                                <TableCell>{user.evalAdminOnly + user.paAdminOnly}</TableCell>
-                                <TableCell><b>{user.totalAccounts}</b></TableCell>
-                                {/* <TableCell>Pending</TableCell> */}
-                                {/* <TableCell>Pending</TableCell> */}
-                              </TableRow>
-                            ))}
-                        </TableBody>
-                      </Table>
-                    </div>
-                      
-                    </div>
-                  </div>
+    
             </>
           )}
         </>
