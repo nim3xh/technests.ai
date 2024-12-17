@@ -295,8 +295,6 @@ export default function DashboardComp() {
   
       // Set merged results to state
       setResults(mergedResults);
-
-      console.log(mergedResults);
   
       // Calculate today's win/loss counts
       calculateTodayStats(mergedResults);
