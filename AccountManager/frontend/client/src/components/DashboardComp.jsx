@@ -29,6 +29,7 @@ export default function DashboardComp() {
   const [userStats, setUserStats] = useState([]);
   const [selectedDate, setSelectedDate] = useState(null);
   const [todayDate, setTodayDate] = useState(new Date());
+  const [results, setResults] = useState([]);
   const [deletedpaStats, setDeletedpaStats] = useState({
     PA1: 0,
     PA2: 0,
@@ -267,9 +268,33 @@ export default function DashboardComp() {
     }
   };
 
+  const fetchAllResults = async () => {
+    setLoading(true);
+    try{
+      const token = currentUser.token;
+      const headers = {
+        Authorization: `Bearer ${token}`,
+      };
+
+      const [results,deltedResults] = await Promise.all([
+        axios.get(`${BaseURL}results`, { headers }),
+        axios.get(`${BaseURL}results/deleted`, { headers }),
+      ]);
+
+      //merge the results and deleted results
+      const mergedResults = results.data.result.concat(deltedResults.data.result);
+      setResults(mergedResults);
+      setLoading(false);
+    }catch (err) {
+      setError("Something went wrong while fetching data.",err);
+      setLoading(false);
+    } 
+  }
+
   useEffect(() => {
     fetchData();
     fetchDeletedData();
+    fetchAllResults();
   }, [BaseURL, currentUser]);
 
   const formattedDateTime = createdDateTime

@@ -55,6 +55,21 @@ function index(req, res){
         });
 }
 
+function indexDeleted(req, res){
+    models.Result.findAll({ paranoid: false })
+        .then((data) => {
+            res.status(200).json({
+                result : data,
+            });
+        })
+        .catch((error) => {
+            res.status(500).json({
+                message : "Something went wrong",
+                error : error,
+            });
+        });
+}
+
 function show(req, res){
     const id = req.params.id;
 
@@ -290,6 +305,7 @@ function indexbyAccount(req, res) {
 module.exports = {
     save: save,
     index: index,
+    indexDeleted: indexDeleted,
     show: show,
     update: update,
     destroy: destroy,

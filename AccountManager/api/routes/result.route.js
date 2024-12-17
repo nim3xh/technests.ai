@@ -7,6 +7,7 @@ const router = express.Router();
 
 router.post("/", verifyToken, resultController.save);
 router.get("/", verifyToken, resultController.index);
+router.get('/deleted', verifyToken, resultController.indexDeleted);
 router.get("/account/:account", verifyToken, resultController.indexbyAccount);
 router.get("/:id", verifyToken, resultController.show);
 router.patch("/:id", verifyToken, resultController.update);
