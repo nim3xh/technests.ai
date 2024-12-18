@@ -315,9 +315,11 @@ cron.schedule("0 * * * *", () => {
 });
 
 // Schedule the task to run every 15 minutes for '_Result' CSV files
-cron.schedule("*/15 * * * *", () => {
-  console.log("Running scheduled task to process and upload '_Result' CSV files...");
+cron.schedule("0 13 * * *", () => {
+  console.log("Running scheduled task to process and upload '_Result' CSV files at 1 PM PST...");
   processAndUploadResultCsvFiles();
+}, {
+  timezone: "America/Los_Angeles" // Set the timezone to PST
 });
 
 // cron.schedule("* * * * *", ()  => {
