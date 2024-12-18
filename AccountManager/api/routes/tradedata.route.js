@@ -10,5 +10,6 @@ router.get('/', verifyToken, tradeDataController.index);
 router.get('/:id', verifyToken, tradeDataController.show);
 router.patch('/:id', verifyToken, tradeDataController.update);
 router.delete('/:id', verifyToken, tradeDataController.destroy);
+router.delete('/deleteAll', verifyToken, tradeDataController.destroyAll);
 
 module.exports = router;
