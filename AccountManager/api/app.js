@@ -17,6 +17,7 @@ const tradeRouter = require("./routes/trade.route");
 const tradeTypeRouter = require("./routes/tradetype.route");
 const resultRouter = require("./routes/result.route");
 const tradeDataRouter = require("./routes/tradedata.route");
+const todaystrade = require("./routes/todaystrade.route");
 
 // Define your allowed origin
 const allowedOrigin = "http://localhost:5173";
@@ -48,6 +49,7 @@ app.use("/trades", tradeRouter);
 app.use("/tradeType", tradeTypeRouter);
 app.use("/results", resultRouter);
 app.use("/tradeData", tradeDataRouter);
+app.use("/todaystrade", todaystrade);
 
 
 // Optional: A basic health check route
