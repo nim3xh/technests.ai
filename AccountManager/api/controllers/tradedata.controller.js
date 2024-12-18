@@ -102,10 +102,26 @@ function destroy(req, res){
     });
 }
 
+function destroyAll(req, res){
+    models.TradeData.destroy({
+        where: {},
+        truncate: false
+    })
+    .then(nums => {
+        res.send({ message: `${nums} TradeData were deleted successfully!` });
+    })
+    .catch(err => {
+        res.status(500).send({
+            message: err.message || 'Some error occurred while removing all TradeData.'
+        });
+    });
+}
+
 module.exports = {
     save: save,
     index: index,
     show: show,
     update: update,
-    destroy: destroy
+    destroy: destroy,
+    destroyAll: destroyAll
 };
