@@ -6,7 +6,8 @@ const verifyToken = require('../utils/verifyUser');
 const router = express.Router();
 
 router.post('/', verifyToken, tradeDataController.save);
-router.get('/', verifyToken, tradeDataController.index);
+router.get('/', tradeDataController.index);
+router.get('/getByUserId/:account_number', tradeDataController.tradeDataByAccount);
 router.get('/:id', verifyToken, tradeDataController.show);
 router.patch('/:id', verifyToken, tradeDataController.update);
 router.delete('/delete/:id', verifyToken, tradeDataController.destroy);
