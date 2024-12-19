@@ -105,7 +105,7 @@ function destroy(req, res){
 function destroyAll(req, res){
     models.TradeData.destroy({
         where: {},
-        truncate: false
+        truncate: true
     })
     .then(nums => {
         res.send({ message: `${nums} TradeData were deleted successfully!` });
