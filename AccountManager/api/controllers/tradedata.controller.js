@@ -117,11 +117,44 @@ function destroyAll(req, res){
     });
 }
 
+function tradeDataByAccount(req, res) {
+    const accountNumber = req.params.account_number;
+
+    if (!accountNumber) {
+        return res.status(400).json({
+            message: "Account number parameter is missing",
+        });
+    }
+
+    const account = accountNumber.replace(/APEX-/, "").split(" ")[0];
+
+    models.TradeData.findAll({
+        where: models.sequelize.where(
+            models.sequelize.literal(`
+                CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(Account_Number, 'APEX-', -1), '-', 1) AS UNSIGNED)
+            `),
+            account
+        )
+    })
+    .then((data) => {
+        res.status(200).json({
+            result: data,
+        });
+    })
+    .catch((error) => {
+        res.status(500).json({
+            message: "Something went wrong",
+            error: error,
+        });
+    });
+}
+
 module.exports = {
     save: save,
     index: index,
     show: show,
     update: update,
     destroy: destroy,
-    destroyAll: destroyAll
+    destroyAll: destroyAll,
+    tradeDataByAccount: tradeDataByAccount
 };
