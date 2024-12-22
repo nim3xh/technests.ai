@@ -10,6 +10,7 @@ router.post("/add-account", verifyToken, upload.single("csvFile"), accountDetail
 router.post("/add-accounts", verifyToken, upload.array("csvFiles"), accountDetailController.importFromCSVs);
 router.post('/add-acc-auto', upload.array("csvFiles"), accountDetailController.importFromCSVs);
 router.get("/", verifyToken, accountDetailController.index);
+router.get("/index", accountDetailController.index);
 router.get('/viewDeleted', verifyToken,accountDetailController.indexDeleted);
 router.get('/viewDeleted/:account', verifyToken,accountDetailController.indexDeletedbyAccNu);
 router.get("/:id", verifyToken, accountDetailController.show);

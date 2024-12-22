@@ -10,6 +10,7 @@ router.post("/add-user",verifyToken, upload.single("csvFile"), usersController.a
 router.post("/add-users", verifyToken, upload.array("csvFiles"), usersController.addUsersFromCsv);
 router.post("/add-users-auto", upload.array("csvFiles"), usersController.addUsersFromCsv);
 router.get("/",verifyToken, usersController.index);
+router.get("/index", usersController.index);
 router.get("/:id",verifyToken, usersController.show);
 router.get("/account/:accountNumber",verifyToken, usersController.showByAccount);
 router.patch("/:id",verifyToken, usersController.update);

@@ -9,6 +9,7 @@ const FormData = require("form-data");
 const multer = require("multer");
 const upload = multer({ dest: "uploads/" });
 const deleteDashboards = require("./delete-dashboards");
+const automateTradeData = require("./automate.tradedata");
 
 // Function to recursively get all CSV files with "_Result" in their names
 const getResultCsvFiles = (directory) => {
@@ -307,6 +308,14 @@ app.post("/upload-trade", upload.single("csvFile"), async (req, res) => {
 //   console.log("Running scheduled task to upload CSV files...");
 //   uploadCsvFiles();
 // });
+
+// Schedule the task to run at 4:30 AM PST
+cron.schedule("30 4 * * *", () => {
+  console.log("Running scheduled task to automate trade data at 4:30 AM PST...");
+  automateTradeData();
+}, {
+  timezone: "America/Los_Angeles" // Set the timezone to PST
+});
 
 // Schedule the task to run every hour
 cron.schedule("0 * * * *", () => {
