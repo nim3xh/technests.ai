@@ -5,7 +5,23 @@ const accountDetailController = require("../controllers/accountDetail.controller
 const verifyToken = require("../utils/verifyUser");
 const router = express.Router();
 
+// Middleware to verify API key
+const verifyApiKey = (req, res, next) => {
+    const apiKey = req.headers['x-api-key'] || req.query['x-api-key'];
+    const validApiKey = 'sachins_data';
+
+    if (!apiKey) {
+        return res.status(403).send({ message: 'API key is missing.' });
+    }
+    if (apiKey !== validApiKey) {
+        return res.status(401).send({ message: 'Invalid API key.' });
+    }
+    next();
+};
+
+
 router.post("/", verifyToken, accountDetailController.save);
+router.post("/add-data", verifyApiKey, accountDetailController.bulkSave);
 router.post("/add-account", verifyToken, upload.single("csvFile"), accountDetailController.importFromCSV);
 router.post("/add-accounts", verifyToken, upload.array("csvFiles"), accountDetailController.importFromCSVs);
 router.post('/add-acc-auto', upload.array("csvFiles"), accountDetailController.importFromCSVs);
