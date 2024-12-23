@@ -28,6 +28,58 @@ function save(req, res) {
     });
 }
 
+function bulkSave(req, res) {
+  const accountDetails = req.body;
+
+  if (!Array.isArray(accountDetails) || accountDetails.length === 0) {
+    return res.status(400).json({
+      message: "Invalid input, an array of account details is required",
+    });
+  }
+
+  try {
+    // Validate and construct JSON with mandatory fields
+    const validatedAccounts = accountDetails.map((account) => {
+      if (
+        !account.account ||
+        account.accountBalance === undefined ||
+        !account.accountNumber ||
+        !account.status
+      ) {
+        throw new Error(
+          "Each account must include 'account', 'accountBalance', 'accountNumber', and 'status'."
+        );
+      }
+      return {
+        account: account.account,
+        accountBalance: account.accountBalance,
+        accountNumber: account.accountNumber,
+        status: account.status,
+        trailingThreshold: account.trailingThreshold || null, // Optional fields default to null
+        PnL: account.PnL || null,
+      };
+    });
+
+    models.AccountDetail.bulkCreate(validatedAccounts, { returning: true })
+      .then((results) => {
+        res.status(201).json({
+          message: "Accounts created successfully",
+          accounts: results,
+        });
+      })
+      .catch((error) => {
+        res.status(500).json({
+          message: "Something went wrong",
+          error: error.message,
+        });
+      });
+  } catch (error) {
+    res.status(400).json({
+      message: error.message,
+    });
+  }
+}
+
 function importFromCSV(req, res) {
   const results = [];
   const filePath = req.file.path;
@@ -457,6 +509,7 @@ function indexDeletedbyAccNu(req, res) {
 
 module.exports = {
   save: save,
+  bulkSave: bulkSave,
   show: show,
   index: index,
   update: update,
