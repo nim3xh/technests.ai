@@ -5,7 +5,22 @@ const resultController = require("../controllers/result.controller");
 const verifyToken = require("../utils/verifyUser");
 const router = express.Router();
 
+// Middleware to verify API key
+const verifyApiKey = (req, res, next) => {
+    const apiKey = req.headers['x-api-key'] || req.query['x-api-key'];
+    const validApiKey = 'sachins_data';
+
+    if (!apiKey) {
+        return res.status(403).send({ message: 'API key is missing.' });
+    }
+    if (apiKey !== validApiKey) {
+        return res.status(401).send({ message: 'Invalid API key.' });
+    }
+    next();
+};
+
 router.post("/", verifyToken, resultController.save);
+router.post("/add-results", verifyApiKey, resultController.bulkSaveResults);
 router.get("/", verifyToken, resultController.index);
 router.get('/deleted', verifyToken, resultController.indexDeleted);
 router.get("/account/:account", verifyToken, resultController.indexbyAccount);

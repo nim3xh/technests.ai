@@ -40,6 +40,88 @@ function save(req, res){
         });
 }
 
+function bulkSaveResults(req, res) {
+  const results = req.body;
+
+  if (!Array.isArray(results) || results.length === 0) {
+    return res.status(400).json({
+      message: "Invalid input, an array of results is required.",
+    });
+  }
+
+  try {
+    // Validate and construct JSON with all mandatory fields
+    const validatedResults = results.map((result, index) => {
+      const missingFields = [];
+
+      if (!result.ResultTime) missingFields.push("ResultTime");
+      if (!result.FileName) missingFields.push("FileName");
+      if (!result.TradeCount) missingFields.push("TradeCount");
+      if (!result.Account) missingFields.push("Account");
+      if (!result.Instrument) missingFields.push("Instrument");
+      if (!result.Quantity) missingFields.push("Quantity");
+      if (!result.Profit) missingFields.push("Profit");
+      if (!result.StopLoss) missingFields.push("StopLoss");
+      if (!result.TradeTime) missingFields.push("TradeTime");
+      if (!result.Direction) missingFields.push("Direction");
+      if (!result.EntryTime) missingFields.push("EntryTime");
+      if (!result.EntryPrice) missingFields.push("EntryPrice");
+      if (!result.ExitTime) missingFields.push("ExitTime");
+      if (!result.ExitPrice) missingFields.push("ExitPrice");
+      if (!result.Result) missingFields.push("Result");
+      if (!result.Comment) missingFields.push("Comment");
+
+      if (missingFields.length > 0) {
+        throw new Error(
+          `Record at index ${index} is missing the following fields: ${missingFields.join(
+            ", "
+          )}`
+        );
+      }
+
+      return {
+        ResultTime: result.ResultTime,
+        FileName: result.FileName,
+        TradeCount: result.TradeCount,
+        Account: result.Account,
+        Instrument: result.Instrument,
+        Quantity: result.Quantity,
+        Profit: result.Profit,
+        StopLoss: result.StopLoss,
+        TradeTime: result.TradeTime,
+        Direction: result.Direction,
+        EntryTime: result.EntryTime,
+        EntryPrice: result.EntryPrice,
+        ExitTime: result.ExitTime,
+        ExitPrice: result.ExitPrice,
+        Result: result.Result,
+        Comment: result.Comment,
+      };
+    });
+
+    // Bulk insert validated data
+    models.Result.bulkCreate(validatedResults, { returning: true })
+      .then((data) => {
+        res.status(201).json({
+          message: "Results created successfully",
+          results: data,
+        });
+      })
+      .catch((error) => {
+        res.status(500).json({
+          message: "Something went wrong",
+          error: error.message,
+        });
+      });
+  } catch (error) {
+    res.status(400).json({
+      message: "Validation error",
+      error: error.message,
+    });
+  }
+}
+
+
 
 function index(req, res){
     models.Result.findAll()
@@ -320,6 +402,7 @@ function indexbyAccount(req, res) {
 
 module.exports = {
     save: save,
+    bulkSaveResults: bulkSaveResults,
     index: index,
     indexDeleted: indexDeleted,
     show: show,
