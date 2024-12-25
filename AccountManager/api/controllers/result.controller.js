@@ -55,8 +55,6 @@ function bulkSaveResults(req, res) {
       const missingFields = [];
 
       if (!result.ResultTime) missingFields.push("ResultTime");
-      if (!result.FileName) missingFields.push("FileName");
-      if (!result.TradeCount) missingFields.push("TradeCount");
       if (!result.Account) missingFields.push("Account");
       if (!result.Instrument) missingFields.push("Instrument");
       if (!result.Quantity) missingFields.push("Quantity");
@@ -69,7 +67,6 @@ function bulkSaveResults(req, res) {
       if (!result.ExitTime) missingFields.push("ExitTime");
       if (!result.ExitPrice) missingFields.push("ExitPrice");
       if (!result.Result) missingFields.push("Result");
-      if (!result.Comment) missingFields.push("Comment");
 
       if (missingFields.length > 0) {
         throw new Error(
@@ -79,8 +76,23 @@ function bulkSaveResults(req, res) {
         );
       }
 
+      // Normalize time fields
+      let normalizedResultTime = validateDateTime(result.ResultTime);
+      let normalizedTradeTime = convertTo24HourFormat(result.TradeTime);
+      let normalizedEntryTime = validateDateTime(result.EntryTime);
+      let normalizedExitTime = validateDateTime(result.ExitTime);
+
+      if (!normalizedResultTime)
+        throw new Error(`Invalid ResultTime at index ${index}: ${result.ResultTime}`);
+      if (!normalizedTradeTime)
+        throw new Error(`Invalid TradeTime at index ${index}: ${result.TradeTime}`);
+      if (!normalizedEntryTime)
+        throw new Error(`Invalid EntryTime at index ${index}: ${result.EntryTime}`);
+      if (!normalizedExitTime)
+        throw new Error(`Invalid ExitTime at index ${index}: ${result.ExitTime}`);
+
       return {
-        ResultTime: result.ResultTime,
+        ResultTime: normalizedResultTime,
         FileName: result.FileName,
         TradeCount: result.TradeCount,
         Account: result.Account,
@@ -88,11 +100,11 @@ function bulkSaveResults(req, res) {
         Quantity: result.Quantity,
         Profit: result.Profit,
         StopLoss: result.StopLoss,
-        TradeTime: result.TradeTime,
+        TradeTime: normalizedTradeTime,
         Direction: result.Direction,
-        EntryTime: result.EntryTime,
+        EntryTime: normalizedEntryTime,
         EntryPrice: result.EntryPrice,
-        ExitTime: result.ExitTime,
+        ExitTime: normalizedExitTime,
         ExitPrice: result.ExitPrice,
         Result: result.Result,
         Comment: result.Comment,
@@ -120,6 +132,7 @@ function bulkSaveResults(req, res) {
     });
   }
 }
+
 
 
 
@@ -271,9 +284,24 @@ const convertTo24HourFormat = (time) => {
 // Function to validate and normalize datetime fields
 const validateDateTime = (datetime) => {
   if (!datetime || datetime === 'Invalid date') return null;
-  const validDate = moment(datetime, ['YYYY-MM-DD HH:mm:ss', 'YYYY-MM-DD', 'MM/DD/YYYY HH:mm:ss', 'MM/DD/YYYY'], true);
+
+  // Add support for 12-hour format with AM/PM
+  const validDate = moment(
+    datetime,
+    [
+      'YYYY-MM-DD HH:mm:ss', // 24-hour format
+      'YYYY-MM-DD h:mm A',   // 12-hour format with AM/PM
+      'MM/DD/YYYY HH:mm:ss', // 24-hour format (US style)
+      'MM/DD/YYYY h:mm A',   // 12-hour format with AM/PM (US style)
+      'YYYY-MM-DD',          // Date only
+      'MM/DD/YYYY'           // Date only (US style)
+    ],
+    true // Strict parsing
+  );
+
   return validDate.isValid() ? validDate.format('YYYY-MM-DD HH:mm:ss') : null;
 };
+
 
 
 // Function to process a single CSV file and extract result data

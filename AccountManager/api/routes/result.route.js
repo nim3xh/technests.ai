@@ -20,7 +20,7 @@ const verifyApiKey = (req, res, next) => {
 };
 
 router.post("/", verifyToken, resultController.save);
-router.post("/add-results", verifyApiKey, resultController.bulkSaveResults);
+router.post("/add-data", verifyApiKey, resultController.bulkSaveResults);
 router.get("/", verifyToken, resultController.index);
 router.get('/deleted', verifyToken, resultController.indexDeleted);
 router.get("/account/:account", verifyToken, resultController.indexbyAccount);
