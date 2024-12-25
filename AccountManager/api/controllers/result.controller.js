@@ -40,6 +40,101 @@ function save(req, res){
         });
 }
 
+function bulkSaveResults(req, res) {
+  const results = req.body;
+
+  if (!Array.isArray(results) || results.length === 0) {
+    return res.status(400).json({
+      message: "Invalid input, an array of results is required.",
+    });
+  }
+
+  try {
+    // Validate and construct JSON with all mandatory fields
+    const validatedResults = results.map((result, index) => {
+      const missingFields = [];
+
+      if (!result.ResultTime) missingFields.push("ResultTime");
+      if (!result.Account) missingFields.push("Account");
+      if (!result.Instrument) missingFields.push("Instrument");
+      if (!result.Quantity) missingFields.push("Quantity");
+      if (!result.Profit) missingFields.push("Profit");
+      if (!result.StopLoss) missingFields.push("StopLoss");
+      if (!result.TradeTime) missingFields.push("TradeTime");
+      if (!result.Direction) missingFields.push("Direction");
+      if (!result.EntryTime) missingFields.push("EntryTime");
+      if (!result.EntryPrice) missingFields.push("EntryPrice");
+      if (!result.ExitTime) missingFields.push("ExitTime");
+      if (!result.ExitPrice) missingFields.push("ExitPrice");
+      if (!result.Result) missingFields.push("Result");
+
+      if (missingFields.length > 0) {
+        throw new Error(
+          `Record at index ${index} is missing the following fields: ${missingFields.join(
+            ", "
+          )}`
+        );
+      }
+
+      // Normalize time fields
+      let normalizedResultTime = validateDateTime(result.ResultTime);
+      let normalizedTradeTime = convertTo24HourFormat(result.TradeTime);
+      let normalizedEntryTime = validateDateTime(result.EntryTime);
+      let normalizedExitTime = validateDateTime(result.ExitTime);
+
+      if (!normalizedResultTime)
+        throw new Error(`Invalid ResultTime at index ${index}: ${result.ResultTime}`);
+      if (!normalizedTradeTime)
+        throw new Error(`Invalid TradeTime at index ${index}: ${result.TradeTime}`);
+      if (!normalizedEntryTime)
+        throw new Error(`Invalid EntryTime at index ${index}: ${result.EntryTime}`);
+      if (!normalizedExitTime)
+        throw new Error(`Invalid ExitTime at index ${index}: ${result.ExitTime}`);
+
+      return {
+        ResultTime: normalizedResultTime,
+        FileName: result.FileName,
+        TradeCount: result.TradeCount,
+        Account: result.Account,
+        Instrument: result.Instrument,
+        Quantity: result.Quantity,
+        Profit: result.Profit,
+        StopLoss: result.StopLoss,
+        TradeTime: normalizedTradeTime,
+        Direction: result.Direction,
+        EntryTime: normalizedEntryTime,
+        EntryPrice: result.EntryPrice,
+        ExitTime: normalizedExitTime,
+        ExitPrice: result.ExitPrice,
+        Result: result.Result,
+        Comment: result.Comment,
+      };
+    });
+
+    // Bulk insert validated data
+    models.Result.bulkCreate(validatedResults, { returning: true })
+      .then((data) => {
+        res.status(201).json({
+          message: "Results created successfully",
+          results: data,
+        });
+      })
+      .catch((error) => {
+        res.status(500).json({
+          message: "Something went wrong",
+          error: error.message,
+        });
+      });
+  } catch (error) {
+    res.status(400).json({
+      message: "Validation error",
+      error: error.message,
+    });
+  }
+}
+
+
+
 
 function index(req, res){
     models.Result.findAll()
@@ -189,9 +284,24 @@ const convertTo24HourFormat = (time) => {
 // Function to validate and normalize datetime fields
 const validateDateTime = (datetime) => {
   if (!datetime || datetime === 'Invalid date') return null;
-  const validDate = moment(datetime, ['YYYY-MM-DD HH:mm:ss', 'YYYY-MM-DD', 'MM/DD/YYYY HH:mm:ss', 'MM/DD/YYYY'], true);
+
+  // Add support for 12-hour format with AM/PM
+  const validDate = moment(
+    datetime,
+    [
+      'YYYY-MM-DD HH:mm:ss', // 24-hour format
+      'YYYY-MM-DD h:mm A',   // 12-hour format with AM/PM
+      'MM/DD/YYYY HH:mm:ss', // 24-hour format (US style)
+      'MM/DD/YYYY h:mm A',   // 12-hour format with AM/PM (US style)
+      'YYYY-MM-DD',          // Date only
+      'MM/DD/YYYY'           // Date only (US style)
+    ],
+    true // Strict parsing
+  );
+
   return validDate.isValid() ? validDate.format('YYYY-MM-DD HH:mm:ss') : null;
 };
+
 
 
 // Function to process a single CSV file and extract result data
@@ -320,6 +430,7 @@ function indexbyAccount(req, res) {
 
 module.exports = {
     save: save,
+    bulkSaveResults: bulkSaveResults,
     index: index,
     indexDeleted: indexDeleted,
     show: show,

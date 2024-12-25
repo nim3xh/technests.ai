@@ -43,17 +43,22 @@ function bulkSave(req, res) {
       if (
         !account.account ||
         account.accountBalance === undefined ||
-        !account.accountNumber ||
         !account.status
       ) {
         throw new Error(
-          "Each account must include 'account', 'accountBalance', 'accountNumber', and 'status'."
+          "Each account must include 'account', 'accountBalance', and 'status'."
         );
       }
+
+      // Derive accountNumber by removing the part after the last hyphen in account
+      const accountNumber = account.account.includes("-")
+        ? account.account.substring(0, account.account.lastIndexOf("-"))
+        : account.account;
+
       return {
         account: account.account,
         accountBalance: account.accountBalance,
-        accountNumber: account.accountNumber,
+        accountNumber: accountNumber, // Derived accountNumber
         status: account.status,
         trailingThreshold: account.trailingThreshold || null, // Optional fields default to null
         PnL: account.PnL || null,
@@ -79,6 +84,7 @@ function bulkSave(req, res) {
     });
   }
 }
+
 
 function importFromCSV(req, res) {
   const results = [];
