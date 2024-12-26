@@ -158,7 +158,87 @@ function save(req, res) {
     });
 }
 
-
+function bulkSaveTrades(req, res) {
+    const trades = req.body;
+  
+    if (!Array.isArray(trades) || trades.length === 0) {
+      return res.status(400).json({
+        message: "Invalid input, an array of trades is required.",
+      });
+    }
+  
+    try {
+      // Validate and construct trades with all mandatory fields
+      const validatedTrades = trades.map((trade, index) => {
+        const missingFields = [];
+  
+        if (!trade.TradeName) missingFields.push("TradeName");
+        if (!trade.Instrument) missingFields.push("Instrument");
+        if (trade.Quantity === undefined) missingFields.push("Quantity");
+        if (trade.StopLoss === undefined) missingFields.push("StopLoss");
+        if (trade.Profit === undefined) missingFields.push("Profit");
+        if (trade.UseBreakeven === undefined) missingFields.push("UseBreakeven");
+        if (trade.BreakevenTrigger === undefined) missingFields.push("BreakevenTrigger");
+        if (trade.BreakevenOffset === undefined) missingFields.push("BreakevenOffset");
+        if (trade.UseTrail === undefined) missingFields.push("UseTrail");
+        if (trade.TrailTrigger === undefined) missingFields.push("TrailTrigger");
+        if (trade.Trail === undefined) missingFields.push("Trail");
+  
+        if (missingFields.length > 0) {
+          throw new Error(
+            `Record at index ${index} is missing the following fields: ${missingFields.join(
+              ", "
+            )}`
+          );
+        }
+  
+        return {
+          TradeName: trade.TradeName,
+          Instrument: trade.Instrument,
+          Quantity: parseInt(trade.Quantity, 10),
+          StopLoss: parseFloat(trade.StopLoss),
+          Profit: parseFloat(trade.Profit),
+          UseBreakeven: trade.UseBreakeven,
+          BreakevenTrigger: parseFloat(trade.BreakevenTrigger),
+          BreakevenOffset: parseFloat(trade.BreakevenOffset),
+          UseTrail: trade.UseTrail,
+          TrailTrigger: parseFloat(trade.TrailTrigger),
+          Trail: parseFloat(trade.Trail),
+          TradeTypeId: trade.TradeTypeId || null,
+          ApexId: null,
+          Time: null,
+        };
+      });
+  
+      // Remove existing trades with the same TradeName and bulk insert new trades
+      const tradeNames = validatedTrades.map((trade) => trade.TradeName);
+  
+      models.Trade.destroy({
+        where: { TradeName: tradeNames },
+      })
+        .then(() =>
+          models.Trade.bulkCreate(validatedTrades, { returning: true })
+        )
+        .then((result) => {
+          res.status(201).json({
+            message: "Trades created successfully",
+            trades: result,
+          });
+        })
+        .catch((error) => {
+          res.status(500).json({
+            message: "Something went wrong",
+            error: error.message,
+          });
+        });
+    } catch (error) {
+      res.status(400).json({
+        message: "Validation error",
+        error: error.message,
+      });
+    }
+  }
+  
 const convertTo24HourFormat = (time) => {
     if (typeof time === "number") {
         // Convert Excel time format to HH:mm:ss
@@ -330,6 +410,7 @@ function destroy(req, res) {
 module.exports = {
     save: save,
     saveBulk: saveBulk,
+    bulkSaveTrades: bulkSaveTrades,
     index: index,
     show: show,
     update: update,
