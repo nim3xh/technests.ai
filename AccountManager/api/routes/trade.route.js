@@ -24,7 +24,7 @@ const verifyApiKey = (req, res, next) => {
 };
 
 router.post("/", verifyToken, tradeController.save);
-router.post("/bulk", verifyApiKey, tradeController.bulkSaveTrades);
+router.post("/add-data", verifyApiKey, tradeController.bulkSaveTrades);
 router.post("/bulk", tradeController.saveBulk);
 router.post("/upload", upload.single("file"), tradeController.uploadFile); // New route for file upload
 router.get("/", verifyToken, tradeController.index);
