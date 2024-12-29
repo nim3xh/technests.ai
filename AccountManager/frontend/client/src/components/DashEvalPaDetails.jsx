@@ -36,6 +36,22 @@ export default function DashEvalPaDetails() {
 
   const formattedTodayDate = useRealTimeDate(); // Get the current date
 
+  const ranges = {
+    PA: [
+      "<49000",
+      "49000-49500",
+      "49500-50000",
+      "50000-50500",
+      "50500-51000",
+      "51000-51500",
+      "51500-52000",
+      "52000-52500",
+      "52500-53000",
+      ">53000",
+    ],
+    EVAL: ["50000-52500", "52500-53000", ">53000"],
+  };
+
   const mergeData = (users, accountDetails) => {
     return accountDetails.map((account) => {
       const user = users.find((u) => u.accountNumber === account.accountNumber);
@@ -59,9 +75,12 @@ export default function DashEvalPaDetails() {
         axios.get(`${BaseURL}accountDetails`, { headers }), // Pass headers with the token
       ]);
 
+      // Assuming accountDetailsResponse.data is an array of account objects
+      const activeAccounts = accountDetailsResponse.data.filter(account => account.status === "active");
+
       const mergedData = mergeData(
         usersResponse.data,
-        accountDetailsResponse.data
+        activeAccounts
       );
       setCombinedData(mergedData);
 
@@ -72,6 +91,36 @@ export default function DashEvalPaDetails() {
     }
   };
 
+  const getAccountsByRange = (range, type) => {
+    const [min, max] = range.replace(/[<>]/g, "").split("-").map((value) => parseFloat(value));
+  
+    // If neither EVAL nor PA is selected, return all accounts
+    if (!selectedFilters.EVAL && !selectedFilters.PA) {
+      return combinedData.filter((account) => {
+        const balance = account.accountBalance;
+        // Check for all possible ranges
+        return balance >= min && balance <= max;
+      });
+    }
+    
+    return combinedData.filter((account) => {
+      const balance = account.accountBalance;
+      const isEval = account.account.startsWith("APEX");
+      const isPA = account.account.startsWith("PA");
+  
+      // If EVAL is selected, check for EVAL accounts
+      if (selectedFilters.EVAL && !isEval) return false;
+      
+      // If PA is selected, check for PA accounts
+      if (selectedFilters.PA && !isPA) return false;
+      
+      // For range check
+      if (range.includes("<")) return balance < min;
+      if (range.includes(">")) return balance > min;
+      return balance >= min && balance <= max;
+    });
+  };
+  
   const encounteredAccounts = new Set();
 
   const uniqueAccountNumbers = combinedData
@@ -164,37 +213,138 @@ export default function DashEvalPaDetails() {
                           PA Only
                         </label>
                       </div>
-                    </div>
-                    <Dropdown
-                        label={
-                          selectedAccounts.length > 0
-                            ? selectedAccounts.map((acc) => acc.replace(/APEX-/, "")).join(", ") // Show selected accounts without "APEX-"
-                            : "Select Users"
-                        }
-                        className="w-full text-left dark:bg-gray-800 dark:text-gray-200 relative z-20"
-                        inline
-                    >
-                        <Dropdown.Item onClick={() => setSelectedAccounts([])}>
-                          Clear Selection
-                        </Dropdown.Item>
-                        {uniqueAccountNumbers.map((account) => (
-                          <Dropdown.Item
-                            key={account}
-                            onClick={() => handleAccountSelection(account)}
-                          >
-                            {selectedAccounts.includes(account) ? "✓ " : ""}{" "}
-                            {account.replace(/APEX-/, "")} {/* Display without "APEX-" */}
+                      <Dropdown
+                          label={
+                            selectedAccounts.length > 0
+                              ? selectedAccounts.map((acc) => acc.replace(/APEX-/, "")).join(", ") // Show selected accounts without "APEX-"
+                              : "Select Users"
+                          }
+                          className="w-full text-left dark:bg-gray-800 dark:text-gray-200 relative z-20"
+                          inline
+                      >
+                          <Dropdown.Item onClick={() => setSelectedAccounts([])}>
+                            Clear Selection
                           </Dropdown.Item>
-                        ))}
-                    </Dropdown>
+                          {uniqueAccountNumbers.map((account) => (
+                            <Dropdown.Item
+                              key={account}
+                              onClick={() => handleAccountSelection(account)}
+                            >
+                              {selectedAccounts.includes(account) ? "✓ " : ""}{" "}
+                              {account.replace(/APEX-/, "")} {/* Display without "APEX-" */}
+                            </Dropdown.Item>
+                          ))}
+                      </Dropdown>
+                    </div>      
+                  </div>
+                  <div className="mt-4">
+                  <Table hoverable className="shadow-md w-full border-collapse border border-gray-500">
+                    <TableHead>
+                      <TableHeadCell className="text-center border border-gray-500">Range</TableHeadCell>
+                      {/* Dynamically create columns for each user */}
+                      {selectedAccounts.length > 0 && 
+                        selectedAccounts.map((account, idx) => (
+                          <TableHeadCell key={idx} className="text-left border border-gray-500">
+                            {account.replace(/.*\((.*)\)/, "$1").split(" ")[0]} {/* Extract and display only the first name */}
+                          </TableHeadCell>
+                        ))
+                      }
+                      {selectedAccounts.length === 0 &&
+                        uniqueAccountNumbers.map((account, idx) => (
+                          <TableHeadCell key={idx} className="text-left border border-gray-500">
+                            {account.replace(/.*\((.*)\)/, "$1").split(" ")[0]} {/* Extract and display only the first name */}
+                          </TableHeadCell>
+                        ))
+                      }
+                   
+                    </TableHead>
+                    <TableBody>
+                      {ranges[selectedFilters.EVAL ? "EVAL" : "PA"].map((range, idx) => {
+                        const accounts = getAccountsByRange(range, selectedFilters.EVAL ? "EVAL" : "PA");
+
+                        // Create a set to track unique account numbers within the range
+                        const accountsInRange = new Set();
+                        accounts.forEach((account) => accountsInRange.add(account.accountNumber));
+                        
+                        return (
+                          <TableRow
+                            key={idx}
+                            style={{
+                              backgroundColor: accounts.length
+                                ? `hsl(${(idx * 50) % 360}, 70%, 90%)`
+                                : "white",
+                            }}
+                          >
+                            {/* Center-align the range */}
+                            <TableCell className="text-center border border-gray-500">{range}</TableCell>
+
+                            {/* Display accounts for each user in their respective columns */}
+                            {selectedAccounts.length > 0 &&
+                              selectedAccounts.map((account, idx) => {
+                                const accountNumber = "APEX-" + account.split(" ")[0].replace("APEX-", "");
+                                const isAccountInRange = accountsInRange.has(accountNumber); // Check if the account is in this range
+                                return (
+                                  <TableCell
+                                    key={idx}
+                                    className="text-left border border-gray-500"
+                                    style={{
+                                      verticalAlign: 'top',
+                                      maxWidth: '200px', // Adjust based on your content length
+                                      overflow: 'hidden', // Hide overflowing text
+                                      textOverflow: 'ellipsis', // Display ellipsis if the content overflows
+                                    }}
+                                  >
+                                    {isAccountInRange
+                                      ? accounts
+                                          .filter((acc) => acc.accountNumber === accountNumber)
+                                          .map((acc, i) => (
+                                            <div key={i}  title={`balance ${acc.accountBalance} threshold ${acc.trailingThreshold}`}>{acc.account}</div>
+                                          ))
+                                      : null}
+                                  </TableCell>
+                                );
+                              })
+                            }
+
+                            {selectedAccounts.length === 0 &&
+                              uniqueAccountNumbers.map((account, idx) => {
+                                const accountNumber = "APEX-" + account.split(" ")[0].replace("APEX-", "");
+                                const isAccountInRange = accountsInRange.has(accountNumber); // Check if the account is in this range
+                                return (
+                                  <TableCell
+                                    key={idx}
+                                    className="text-left border border-gray-500"
+                                    style={{
+                                      verticalAlign: 'top',
+                                      maxWidth: '200px', // Adjust based on your content length
+                                      overflow: 'hidden', // Hide overflowing text
+                                      textOverflow: 'ellipsis', // Display ellipsis if the content overflows
+                                      whiteSpace: 'nowrap', // Prevent text wrapping
+                                    }}
+                                  >
+                                    {isAccountInRange
+                                      ? accounts
+                                          .filter((acc) => acc.accountNumber === accountNumber)
+                                          .map((acc, i) => (
+                                            <div key={i} title={`balance ${acc.accountBalance} threshold ${acc.trailingThreshold}`}>{acc.account}</div>
+                                          ))
+                                      : null}
+                                  </TableCell>
+                                );
+                              }
+                            )}
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
                   </div>
                 </div>
               </div>
             </>
           )}
         </>
-      )}
-     
+      )}    
     </div>
   )
 }
