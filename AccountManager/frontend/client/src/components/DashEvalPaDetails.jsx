@@ -8,6 +8,7 @@ import {
   Spinner,
   Breadcrumb,
   Dropdown,
+  Checkbox,
   Button,
   Modal,
   Label,
@@ -28,6 +29,10 @@ export default function DashEvalPaDetails() {
   const [loading, setLoading] = useState(true);
   const [selectedAccounts, setSelectedAccounts] = useState([]);
   const [combinedData, setCombinedData] = useState([]);
+  const [selectedFilters, setSelectedFilters] = useState({
+      EVAL: false,
+      PA: false,
+  });
 
   const formattedTodayDate = useRealTimeDate(); // Get the current date
 
@@ -92,6 +97,22 @@ export default function DashEvalPaDetails() {
     );
   };
 
+  const handleFilterChange = (filter) => {
+    setSelectedFilters((prevFilters) => {
+      // If the 'EVAL' checkbox is clicked, uncheck 'PA'
+      if (filter === "EVAL") {
+        return { EVAL: !prevFilters.EVAL, PA: false };
+      }
+  
+      // If the 'PA' checkbox is clicked, uncheck 'EVAL'
+      if (filter === "PA") {
+        return { EVAL: false, PA: !prevFilters.PA };
+      }
+  
+      return prevFilters;
+    });
+  };
+
   useEffect(() => {
     fetchData();
   }, []);
@@ -121,6 +142,29 @@ export default function DashEvalPaDetails() {
               <div className="text-center">
                 <div>
                   <div className="flex flex-col md:flex-row justify-left items-center md:space-x-4 mt-2">
+                    {/* Filters */}
+                    <div className="flex space-x-4 mb-4">
+                      <div className="flex items-center">
+                        <Checkbox
+                          id="eval"
+                          checked={selectedFilters.EVAL}
+                          onChange={() => handleFilterChange("EVAL")}
+                        />
+                        <label htmlFor="eval" className="ml-2 text-sm font-medium">
+                          EVAL Only
+                        </label>
+                      </div>
+                      <div className="flex items-center">
+                        <Checkbox
+                          id="pa"
+                          checked={selectedFilters.PA}
+                          onChange={() => handleFilterChange("PA")}
+                        />
+                        <label htmlFor="pa" className="ml-2 text-sm font-medium">
+                          PA Only
+                        </label>
+                      </div>
+                    </div>
                     <Dropdown
                         label={
                           selectedAccounts.length > 0
