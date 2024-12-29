@@ -16,6 +16,7 @@ import DashAccountDatailHistoryComp from "../components/DashAccountDatailHistory
 import DashTradingComp from "../components/DashTradingComp";
 import DashTradeMonitor from "../components/DashTradeMonitor";
 import TradeMatchingCom from "../components/TradeMatchingCom";
+import DashEvalPaDetails from "../components/DashEvalPaDetails";
 
 export default function Dashboard() {
   const location = useLocation();
@@ -66,6 +67,8 @@ export default function Dashboard() {
       {tab === "accountDetailsUser" && <DashAccountDetailsUser />}
       {/* Trade Monitor User */}
       {tab === "tradeMonitorUser" && <DashTradeMonitorUser />}
+      {/* Eval Pa Details */}
+      {tab === "evalPaDetails" && <DashEvalPaDetails />}
     </div>
   );
 }

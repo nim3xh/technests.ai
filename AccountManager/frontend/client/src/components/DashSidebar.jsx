@@ -189,6 +189,15 @@ export default function DashSidebar() {
                     Trade Monitor
                   </Sidebar.Item>
               </Link>
+              <Link to="/dashboard?tab=evalPaDetails">
+                  <Sidebar.Item
+                    active={tab === "evalPaDetails"}
+                    icon={FaMoneyBillTrendUp}
+                    as="div"
+                  >
+                    Eval Pa Details
+                  </Sidebar.Item>
+              </Link>
               <Link to="/dashboard?tab=accountDetails">
                   <Sidebar.Item
                     active={tab === "accountDetails"}
