@@ -240,23 +240,22 @@ export default function DashEvalPaDetails() {
                   <div className="mt-4">
                   <Table hoverable className="shadow-md w-full border-collapse border border-gray-500">
                     <TableHead>
-                      <TableHeadCell className="text-center border border-gray-500">Range</TableHeadCell>
+                      <TableHeadCell className="text-center border border-gray-500 text-black">
+                        Range
+                      </TableHeadCell>
                       {/* Dynamically create columns for each user */}
-                      {selectedAccounts.length > 0 && 
+                      {selectedAccounts.length > 0 &&
                         selectedAccounts.map((account, idx) => (
-                          <TableHeadCell key={idx} className="text-left border border-gray-500">
+                          <TableHeadCell key={idx} className="text-left border border-gray-500 text-black">
                             {account.replace(/.*\((.*)\)/, "$1").split(" ")[0]} {/* Extract and display only the first name */}
                           </TableHeadCell>
-                        ))
-                      }
+                        ))}
                       {selectedAccounts.length === 0 &&
                         uniqueAccountNumbers.map((account, idx) => (
-                          <TableHeadCell key={idx} className="text-left border border-gray-500">
+                          <TableHeadCell key={idx} className="text-left border border-gray-500 text-black">
                             {account.replace(/.*\((.*)\)/, "$1").split(" ")[0]} {/* Extract and display only the first name */}
                           </TableHeadCell>
-                        ))
-                      }
-                   
+                        ))}
                     </TableHead>
                     <TableBody>
                       {ranges[selectedFilters.EVAL ? "EVAL" : "PA"].map((range, idx) => {
@@ -265,7 +264,7 @@ export default function DashEvalPaDetails() {
                         // Create a set to track unique account numbers within the range
                         const accountsInRange = new Set();
                         accounts.forEach((account) => accountsInRange.add(account.accountNumber));
-                        
+
                         return (
                           <TableRow
                             key={idx}
@@ -276,7 +275,7 @@ export default function DashEvalPaDetails() {
                             }}
                           >
                             {/* Center-align the range */}
-                            <TableCell className="text-center border border-gray-500">{range}</TableCell>
+                            <TableCell className="text-center border border-gray-500 text-black">{range}</TableCell>
 
                             {/* Display accounts for each user in their respective columns */}
                             {selectedAccounts.length > 0 &&
@@ -286,7 +285,7 @@ export default function DashEvalPaDetails() {
                                 return (
                                   <TableCell
                                     key={idx}
-                                    className="text-left border border-gray-500"
+                                    className="text-left border border-gray-500 text-black"
                                     style={{
                                       verticalAlign: 'top',
                                       maxWidth: '200px', // Adjust based on your content length
@@ -298,13 +297,14 @@ export default function DashEvalPaDetails() {
                                       ? accounts
                                           .filter((acc) => acc.accountNumber === accountNumber)
                                           .map((acc, i) => (
-                                            <div key={i}  title={`balance ${acc.accountBalance} threshold ${acc.trailingThreshold}`}>{acc.account}</div>
+                                            <div key={i} title={`balance ${acc.accountBalance} threshold ${acc.trailingThreshold}`}>
+                                              {acc.account}
+                                            </div>
                                           ))
                                       : null}
                                   </TableCell>
                                 );
-                              })
-                            }
+                              })}
 
                             {selectedAccounts.length === 0 &&
                               uniqueAccountNumbers.map((account, idx) => {
@@ -313,7 +313,7 @@ export default function DashEvalPaDetails() {
                                 return (
                                   <TableCell
                                     key={idx}
-                                    className="text-left border border-gray-500"
+                                    className="text-left border border-gray-500 text-black"
                                     style={{
                                       verticalAlign: 'top',
                                       maxWidth: '200px', // Adjust based on your content length
@@ -326,18 +326,20 @@ export default function DashEvalPaDetails() {
                                       ? accounts
                                           .filter((acc) => acc.accountNumber === accountNumber)
                                           .map((acc, i) => (
-                                            <div key={i} title={`balance ${acc.accountBalance} threshold ${acc.trailingThreshold}`}>{acc.account}</div>
+                                            <div key={i} title={`balance ${acc.accountBalance} threshold ${acc.trailingThreshold}`}>
+                                              {acc.account}
+                                            </div>
                                           ))
                                       : null}
                                   </TableCell>
                                 );
-                              }
-                            )}
+                              })}
                           </TableRow>
                         );
                       })}
                     </TableBody>
                   </Table>
+
                   </div>
                 </div>
               </div>
