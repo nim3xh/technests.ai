@@ -26,6 +26,7 @@ import axios from "axios";
 import { CSVLink } from "react-csv";
 import { MdAccountBalance, MdPerson, MdTableRows } from "react-icons/md";
 import useRealTimeDate from '../hooks/useRealTimeDate';
+import { formatBalance } from "./utils/formatBalance";
 
 const BaseURL = import.meta.env.VITE_BASE_URL;
 
@@ -943,7 +944,7 @@ export default function DashAccountDetails() {
                                       <p>{account.account}</p>
                                 </TableCell>
                                 <TableCell>
-                                  <p>${account.accountBalance}</p>
+                                  <p>{formatBalance(account.accountBalance)}</p>
                                 </TableCell>
                                 <TableCell title={account.name}>
                                   {/* <Tooltip content={account.name}> */}
@@ -981,8 +982,8 @@ export default function DashAccountDetails() {
                           <TableRow key={index}>
                             
                             <TableCell>{row.AccountNumber1}</TableCell>
-                            <TableCell>${row.AccountBalance1}</TableCell>
-                            <TableCell>${row.AccountBalance2}</TableCell>
+                            <TableCell>{formatBalance(row.AccountBalance1)}</TableCell>
+                            <TableCell>{formatBalance(row.AccountBalance2)}</TableCell>
                             <TableCell>{row.AccountNumber2}</TableCell>
                            
                           </TableRow>

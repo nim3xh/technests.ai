@@ -19,7 +19,8 @@ import React, { useState ,useEffect} from "react";
 import { useSelector, useDispatch } from "react-redux";
 import axios from "axios";
 import { HiHome } from "react-icons/hi";
-import useRealTimeDate from '../hooks/useRealTimeDate';
+import useRealTimeDate from '../hooks/useRealTimeDate'
+import { formatBalance } from "./utils/formatBalance";
 
 const BaseURL = import.meta.env.VITE_BASE_URL;
 
@@ -39,19 +40,30 @@ export default function DashEvalPaDetails() {
   const ranges = {
     PA: [
       "<49000",
-      "49000-49500",
-      "49500-50000",
+      "49000-50000",
       "50000-50500",
       "50500-51000",
       "51000-51500",
       "51500-52000",
       "52000-52500",
-      "52500-53000",
+      "52500-52600",
+      "52600-52700",
+      "52700-52800",
+      "52800-52900",
+      "52900-53000",
+      "53000-53100",
+    ],
+    EVAL: [
+      "<48000",
+      "<49000",
+      "<50000",
+      "<51000",
+      "<52000",
+      "<53000",
       ">53000",
     ],
-    EVAL: ["50000-52500", "52500-53000", ">53000"],
   };
-
+  
   const mergeData = (users, accountDetails) => {
     return accountDetails.map((account) => {
       const user = users.find((u) => u.accountNumber === account.accountNumber);
@@ -297,7 +309,10 @@ export default function DashEvalPaDetails() {
                                       ? accounts
                                           .filter((acc) => acc.accountNumber === accountNumber)
                                           .map((acc, i) => (
-                                            <div key={i} title={`balance ${acc.accountBalance} threshold ${acc.trailingThreshold}`}>
+                                            <div 
+                                              key={i} 
+                                              title={`Balance ${formatBalance(acc.accountBalance)} -  Auto Liquidate Threshold ${formatBalance(acc.trailingThreshold)}`}
+                                            >
                                               {acc.account}
                                             </div>
                                           ))
@@ -326,7 +341,10 @@ export default function DashEvalPaDetails() {
                                       ? accounts
                                           .filter((acc) => acc.accountNumber === accountNumber)
                                           .map((acc, i) => (
-                                            <div key={i} title={`balance ${acc.accountBalance} threshold ${acc.trailingThreshold}`}>
+                                            <div 
+                                              key={i} 
+                                              title={`Balance ${formatBalance(acc.accountBalance)} -  Auto Liquidate Threshold ${formatBalance(acc.trailingThreshold)}`}
+                                            >
                                               {acc.account}
                                             </div>
                                           ))
