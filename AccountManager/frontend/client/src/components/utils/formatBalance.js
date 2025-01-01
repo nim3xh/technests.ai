@@ -1,5 +1,6 @@
 export const formatBalance = (balance) => {
     if (isNaN(balance)) return "$0"; // Handle invalid numbers
-    return `$${Number(balance).toLocaleString('en-US')}`;
+    // Convert to a number, remove decimals, and format with commas
+    return `$${Math.trunc(Number(balance)).toLocaleString('en-US')}`;
   };
   

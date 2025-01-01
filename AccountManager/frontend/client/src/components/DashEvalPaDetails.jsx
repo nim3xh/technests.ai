@@ -311,7 +311,7 @@ export default function DashEvalPaDetails() {
                                           .map((acc, i) => (
                                             <div 
                                               key={i} 
-                                              title={`Balance ${formatBalance(acc.accountBalance)} -  Auto Liquidate Threshold ${formatBalance(acc.trailingThreshold)}`}
+                                              title={`${formatBalance(acc.accountBalance - acc.trailingThreshold)}`}
                                             >
                                               {acc.account}
                                             </div>
@@ -343,7 +343,7 @@ export default function DashEvalPaDetails() {
                                           .map((acc, i) => (
                                             <div 
                                               key={i} 
-                                              title={`Balance ${formatBalance(acc.accountBalance)} -  Auto Liquidate Threshold ${formatBalance(acc.trailingThreshold)}`}
+                                              title={`${formatBalance(acc.accountBalance - acc.trailingThreshold)}`}
                                             >
                                               {acc.account}
                                             </div>
