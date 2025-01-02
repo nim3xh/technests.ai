@@ -14,6 +14,7 @@ import {
   Label,
   TextInput,
   Select,
+  Tooltip,
 } from "flowbite-react";
 import React, { useState ,useEffect} from "react";
 import { useSelector, useDispatch } from "react-redux";
@@ -305,53 +306,68 @@ export default function DashEvalPaDetails() {
                                       textOverflow: 'ellipsis', // Display ellipsis if the content overflows
                                     }}
                                   >
-                                    {isAccountInRange
-                                      ? accounts
-                                          .filter((acc) => acc.accountNumber === accountNumber)
-                                          .map((acc, i) => (
-                                            <div 
-                                              key={i} 
-                                              title={`${formatBalance(acc.accountBalance - acc.trailingThreshold)}`}
-                                            >
-                                              {acc.account}
-                                            </div>
-                                          ))
-                                      : null}
+                                     {isAccountInRange
+                                        ? accounts
+                                            .filter((acc) => acc.accountNumber === accountNumber)
+                                            .sort(
+                                              (a, b) =>
+                                                (a.accountBalance - a.trailingThreshold) -
+                                                (b.accountBalance - b.trailingThreshold)
+                                            ) // Sort in ascending order by title
+                                            .map((acc, i) => (
+                                              <Tooltip 
+                                                key={i} 
+                                                content={`${formatBalance(acc.accountBalance - acc.trailingThreshold)}`}
+                                              >
+                                                <div>
+                                                  {acc.account}
+                                                </div>
+                                              </Tooltip>
+                                            ))
+                                        : null}
                                   </TableCell>
                                 );
                               })}
 
-                            {selectedAccounts.length === 0 &&
-                              uniqueAccountNumbers.map((account, idx) => {
-                                const accountNumber = "APEX-" + account.split(" ")[0].replace("APEX-", "");
-                                const isAccountInRange = accountsInRange.has(accountNumber); // Check if the account is in this range
-                                return (
-                                  <TableCell
-                                    key={idx}
-                                    className="text-left border border-gray-500 text-black"
-                                    style={{
-                                      verticalAlign: 'top',
-                                      maxWidth: '200px', // Adjust based on your content length
-                                      overflow: 'hidden', // Hide overflowing text
-                                      textOverflow: 'ellipsis', // Display ellipsis if the content overflows
-                                      whiteSpace: 'nowrap', // Prevent text wrapping
-                                    }}
-                                  >
-                                    {isAccountInRange
-                                      ? accounts
-                                          .filter((acc) => acc.accountNumber === accountNumber)
-                                          .map((acc, i) => (
-                                            <div 
-                                              key={i} 
-                                              title={`${formatBalance(acc.accountBalance - acc.trailingThreshold)}`}
-                                            >
-                                              {acc.account}
-                                            </div>
-                                          ))
-                                      : null}
-                                  </TableCell>
-                                );
-                              })}
+                              {selectedAccounts.length === 0 &&
+                                uniqueAccountNumbers.map((account, idx) => {
+                                  const accountNumber = "APEX-" + account.split(" ")[0].replace("APEX-", "");
+                                  const isAccountInRange = accountsInRange.has(accountNumber); // Check if the account is in this range
+                                  return (
+                                    <TableCell
+                                      key={idx}
+                                      className="text-left border border-gray-500 text-black"
+                                      style={{
+                                        verticalAlign: 'top',
+                                        maxWidth: '200px', // Adjust based on your content length
+                                        overflow: 'hidden', // Hide overflowing text
+                                        textOverflow: 'ellipsis', // Display ellipsis if the content overflows
+                                        whiteSpace: 'nowrap', // Prevent text wrapping
+                                      }}
+                                    >
+                                      {isAccountInRange
+                                        ? accounts
+                                            .filter((acc) => acc.accountNumber === accountNumber)
+                                            .sort(
+                                              (a, b) =>
+                                                (a.accountBalance - a.trailingThreshold) -
+                                                (b.accountBalance - b.trailingThreshold)
+                                            ) // Sort in ascending order by title
+                                            .map((acc, i) => (
+                                              <Tooltip 
+                                                key={i} 
+                                                content={`${formatBalance(acc.accountBalance - acc.trailingThreshold)}`}
+                                              >
+                                                <div>
+                                                  {acc.account}
+                                                </div>
+                                              </Tooltip>
+                                            ))
+                                        : null}
+                                    </TableCell>
+                                  );
+                                })}
+
                           </TableRow>
                         );
                       })}
