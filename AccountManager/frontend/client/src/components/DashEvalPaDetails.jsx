@@ -256,19 +256,48 @@ export default function DashEvalPaDetails() {
                       <TableHeadCell className="text-center border border-gray-500 text-black">
                         Range
                       </TableHeadCell>
-                      {/* Dynamically create columns for each user */}
-                      {selectedAccounts.length > 0 &&
-                        selectedAccounts.map((account, idx) => (
-                          <TableHeadCell key={idx} className="text-left border border-gray-500 text-black">
-                            {account.replace(/.*\((.*)\)/, "$1").split(" ")[0]} {/* Extract and display only the first name */}
-                          </TableHeadCell>
-                        ))}
-                      {selectedAccounts.length === 0 &&
-                        uniqueAccountNumbers.map((account, idx) => (
-                          <TableHeadCell key={idx} className="text-left border border-gray-500 text-black">
-                            {account.replace(/.*\((.*)\)/, "$1").split(" ")[0]} {/* Extract and display only the first name */}
-                          </TableHeadCell>
-                        ))}
+                     {/* Dynamically create columns for each user */}
+{selectedAccounts.length > 0 &&
+  selectedAccounts.map((account, idx) => (
+    <TableHeadCell
+      key={idx}
+      className="border border-gray-500 text-black"
+      style={{
+        textAlign: 'center', // Center align the text
+        verticalAlign: 'middle', // Center align vertically
+        padding: '0.5rem', // Consistent padding
+        maxWidth: '15vw', // Dynamic sizing based on viewport width
+        minWidth: '100px', // Set a minimum width for smaller screens
+        fontSize: '1rem', // Maintain readable font size
+        overflow: 'hidden', // Hide overflow
+        textOverflow: 'ellipsis', // Display ellipsis for overflowing content
+        whiteSpace: 'nowrap', // Prevent text wrapping
+      }}
+    >
+      {account.replace(/.*\((.*)\)/, "$1").split(" ")[0]} {/* Extract and display only the first name */}
+    </TableHeadCell>
+  ))}
+{selectedAccounts.length === 0 &&
+  uniqueAccountNumbers.map((account, idx) => (
+    <TableHeadCell
+      key={idx}
+      className="border border-gray-500 text-black"
+      style={{
+        textAlign: 'center', // Center align the text
+        verticalAlign: 'middle', // Center align vertically
+        padding: '0.5rem', // Consistent padding
+        maxWidth: '15vw', // Dynamic sizing based on viewport width
+        minWidth: '100px', // Set a minimum width for smaller screens
+        fontSize: '1rem', // Maintain readable font size
+        overflow: 'hidden', // Hide overflow
+        textOverflow: 'ellipsis', // Display ellipsis for overflowing content
+        whiteSpace: 'nowrap', // Prevent text wrapping
+      }}
+    >
+      {account.replace(/.*\((.*)\)/, "$1").split(" ")[0]} {/* Extract and display only the first name */}
+    </TableHeadCell>
+  ))}
+
                     </TableHead>
                     <TableBody>
                       {ranges[selectedFilters.EVAL ? "EVAL" : "PA"].map((range, idx) => {
@@ -299,12 +328,15 @@ export default function DashEvalPaDetails() {
                                   <TableCell
                                     key={idx}
                                     className="text-left border border-gray-500 text-black"
-                                    style={{
-                                      verticalAlign: 'top',
-                                      maxWidth: '200px', // Adjust based on your content length
-                                      overflow: 'hidden', // Hide overflowing text
-                                      textOverflow: 'ellipsis', // Display ellipsis if the content overflows
-                                    }}
+                                      style={{
+                                        verticalAlign: 'top',
+                                        padding: '0.5rem', // Keep consistent spacing
+                                        maxWidth: '20vw', // Use a percentage of the viewport width for responsiveness
+                                        minWidth: '150px', // Set a minimum width for smaller screens
+                                        overflow: 'hidden', // Hide overflowing text
+                                        textOverflow: 'ellipsis', // Display ellipsis if the content overflows
+                                        whiteSpace: 'nowrap', // Prevent wrapping of text
+                                      }}
                                   >
                                      {isAccountInRange
                                         ? accounts
@@ -339,10 +371,12 @@ export default function DashEvalPaDetails() {
                                       className="text-left border border-gray-500 text-black"
                                       style={{
                                         verticalAlign: 'top',
-                                        maxWidth: '200px', // Adjust based on your content length
+                                        padding: '0.5rem', // Keep consistent spacing
+                                        maxWidth: '20vw', // Use a percentage of the viewport width for responsiveness
+                                        minWidth: '150px', // Set a minimum width for smaller screens
                                         overflow: 'hidden', // Hide overflowing text
                                         textOverflow: 'ellipsis', // Display ellipsis if the content overflows
-                                        whiteSpace: 'nowrap', // Prevent text wrapping
+                                        whiteSpace: 'nowrap', // Prevent wrapping of text
                                       }}
                                     >
                                       {isAccountInRange
