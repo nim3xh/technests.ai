@@ -257,46 +257,46 @@ export default function DashEvalPaDetails() {
                         Range
                       </TableHeadCell>
                      {/* Dynamically create columns for each user */}
-{selectedAccounts.length > 0 &&
-  selectedAccounts.map((account, idx) => (
-    <TableHeadCell
-      key={idx}
-      className="border border-gray-500 text-black"
-      style={{
-        textAlign: 'center', // Center align the text
-        verticalAlign: 'middle', // Center align vertically
-        padding: '0.5rem', // Consistent padding
-        maxWidth: '15vw', // Dynamic sizing based on viewport width
-        minWidth: '100px', // Set a minimum width for smaller screens
-        fontSize: '1rem', // Maintain readable font size
-        overflow: 'hidden', // Hide overflow
-        textOverflow: 'ellipsis', // Display ellipsis for overflowing content
-        whiteSpace: 'nowrap', // Prevent text wrapping
-      }}
-    >
-      {account.replace(/.*\((.*)\)/, "$1").split(" ")[0]} {/* Extract and display only the first name */}
-    </TableHeadCell>
-  ))}
-{selectedAccounts.length === 0 &&
-  uniqueAccountNumbers.map((account, idx) => (
-    <TableHeadCell
-      key={idx}
-      className="border border-gray-500 text-black"
-      style={{
-        textAlign: 'center', // Center align the text
-        verticalAlign: 'middle', // Center align vertically
-        padding: '0.5rem', // Consistent padding
-        maxWidth: '15vw', // Dynamic sizing based on viewport width
-        minWidth: '100px', // Set a minimum width for smaller screens
-        fontSize: '1rem', // Maintain readable font size
-        overflow: 'hidden', // Hide overflow
-        textOverflow: 'ellipsis', // Display ellipsis for overflowing content
-        whiteSpace: 'nowrap', // Prevent text wrapping
-      }}
-    >
-      {account.replace(/.*\((.*)\)/, "$1").split(" ")[0]} {/* Extract and display only the first name */}
-    </TableHeadCell>
-  ))}
+                    {selectedAccounts.length > 0 &&
+                      selectedAccounts.map((account, idx) => (
+                        <TableHeadCell
+                          key={idx}
+                          className="border border-gray-500 text-black"
+                          style={{
+                            textAlign: 'center', // Center align the text
+                            verticalAlign: 'middle', // Center align vertically
+                            padding: '0.5rem', // Consistent padding
+                            maxWidth: '15vw', // Dynamic sizing based on viewport width
+                            minWidth: '100px', // Set a minimum width for smaller screens
+                            fontSize: '1rem', // Maintain readable font size
+                            overflow: 'hidden', // Hide overflow
+                            textOverflow: 'ellipsis', // Display ellipsis for overflowing content
+                            whiteSpace: 'nowrap', // Prevent text wrapping
+                          }}
+                        >
+                          {account.replace(/.*\((.*)\)/, "$1").split(" ")[0]} {/* Extract and display only the first name */}
+                        </TableHeadCell>
+                      ))}
+                    {selectedAccounts.length === 0 &&
+                      uniqueAccountNumbers.map((account, idx) => (
+                        <TableHeadCell
+                          key={idx}
+                          className="border border-gray-500 text-black"
+                          style={{
+                            textAlign: 'center', // Center align the text
+                            verticalAlign: 'middle', // Center align vertically
+                            padding: '0.5rem', // Consistent padding
+                            maxWidth: '15vw', // Dynamic sizing based on viewport width
+                            minWidth: '100px', // Set a minimum width for smaller screens
+                            fontSize: '1rem', // Maintain readable font size
+                            overflow: 'hidden', // Hide overflow
+                            textOverflow: 'ellipsis', // Display ellipsis for overflowing content
+                            whiteSpace: 'nowrap', // Prevent text wrapping
+                          }}
+                        >
+                          {account.replace(/.*\((.*)\)/, "$1").split(" ")[0]} {/* Extract and display only the first name */}
+                        </TableHeadCell>
+                      ))}
 
                     </TableHead>
                     <TableBody>
