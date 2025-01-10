@@ -282,7 +282,7 @@ export default function DashSidebar() {
             </Link>
             <Link to="/dashboard?tab=termsConditions">
               <Sidebar.Item active={tab === "termsConditions"} as="div">
-                T & C
+                T&C
               </Sidebar.Item>
             </Link>
             <Link to="/dashboard?tab=disclaimers">
