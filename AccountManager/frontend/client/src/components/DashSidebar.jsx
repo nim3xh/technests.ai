@@ -272,6 +272,25 @@ export default function DashSidebar() {
             >
               Sign Out
             </Sidebar.Item>
+
+          {/* Rules, T & C, Disclaimers */}
+          <div className="absolute bottom-0 w-full">
+            <Link to="/dashboard?tab=rules">
+              <Sidebar.Item active={tab === "rules"} as="div">
+                Rules
+              </Sidebar.Item>
+            </Link>
+            <Link to="/dashboard?tab=terms-and-conditions">
+              <Sidebar.Item active={tab === "terms-and-conditions"} as="div">
+                T & C
+              </Sidebar.Item>
+            </Link>
+            <Link to="/dashboard?tab=disclaimers">
+              <Sidebar.Item active={tab === "disclaimers"} as="div">
+                Disclaimers
+              </Sidebar.Item>
+            </Link>
+          </div>
           </Sidebar.ItemGroup>
         </Sidebar.Items>
       </Sidebar>
