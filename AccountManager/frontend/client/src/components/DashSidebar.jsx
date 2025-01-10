@@ -18,6 +18,7 @@ import { FaMoneyBillTrendUp } from "react-icons/fa6";
 import { TbHeartRateMonitor } from "react-icons/tb";
 import { IoGitCompare } from "react-icons/io5";
 import { MdVideoLibrary } from "react-icons/md";
+import { FaUserFriends } from "react-icons/fa";
 
 const BaseURL = import.meta.env.VITE_BASE_URL;
 
@@ -112,6 +113,15 @@ export default function DashSidebar() {
                     as="div"
                   >
                    Account Details
+                  </Sidebar.Item>
+                </Link>
+                <Link	to='/dashboard?tab=referFriend'>
+                  <Sidebar.Item
+                    active={tab === "referFriend"}
+                    icon={FaUserFriends}
+                    as="div"
+                  >
+                    Refer a Friend
                   </Sidebar.Item>
                 </Link>
                 <Link to='/dashboard?tab=trainingVideos'>
