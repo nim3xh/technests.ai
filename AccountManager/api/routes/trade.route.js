@@ -28,6 +28,7 @@ router.post("/add-data", verifyApiKey, tradeController.bulkSaveTrades);
 router.post("/bulk", tradeController.saveBulk);
 router.post("/upload", upload.single("file"), tradeController.uploadFile); // New route for file upload
 router.get("/", verifyToken, tradeController.index);
+router.get("/info", verifyApiKey, tradeController.index);
 router.get("/index", tradeController.index);
 router.get("/:id", verifyToken, tradeController.show);
 router.patch("/:id", verifyToken, tradeController.update);

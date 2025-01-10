@@ -17,6 +17,7 @@ import { MdPassword } from "react-icons/md";
 import { FaMoneyBillTrendUp } from "react-icons/fa6";
 import { TbHeartRateMonitor } from "react-icons/tb";
 import { IoGitCompare } from "react-icons/io5";
+import { MdVideoLibrary } from "react-icons/md";
 
 const BaseURL = import.meta.env.VITE_BASE_URL;
 
@@ -111,6 +112,15 @@ export default function DashSidebar() {
                     as="div"
                   >
                    Account Details
+                  </Sidebar.Item>
+                </Link>
+                <Link to='/dashboard?tab=trainingVideos'>
+                  <Sidebar.Item
+                    active={tab === "trainingVideos"}
+                    icon={MdVideoLibrary}
+                    as="div"
+                  >
+                    Training Videos
                   </Sidebar.Item>
                 </Link>
               </>

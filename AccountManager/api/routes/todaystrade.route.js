@@ -21,6 +21,7 @@ const verifyApiKey = (req, res, next) => {
 
 router.post('/', verifyApiKey, tradeDataController.save); // Add API key verification to POST
 router.get('/', verifyToken, tradeDataController.index);
+router.get('/info', verifyApiKey, tradeDataController.index);
 router.get('/:id', verifyToken, tradeDataController.show);
 router.patch('/:id', verifyToken, tradeDataController.update);
 router.delete('/delete/:id', verifyToken, tradeDataController.destroy);
