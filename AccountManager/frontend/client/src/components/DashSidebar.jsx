@@ -18,6 +18,7 @@ import { FaMoneyBillTrendUp } from "react-icons/fa6";
 import { TbHeartRateMonitor } from "react-icons/tb";
 import { IoGitCompare } from "react-icons/io5";
 import { MdVideoLibrary } from "react-icons/md";
+import { FaUserFriends } from "react-icons/fa";
 
 const BaseURL = import.meta.env.VITE_BASE_URL;
 
@@ -112,6 +113,15 @@ export default function DashSidebar() {
                     as="div"
                   >
                    Account Details
+                  </Sidebar.Item>
+                </Link>
+                <Link	to='/dashboard?tab=referFriend'>
+                  <Sidebar.Item
+                    active={tab === "referFriend"}
+                    icon={FaUserFriends}
+                    as="div"
+                  >
+                    Refer a Friend
                   </Sidebar.Item>
                 </Link>
                 <Link to='/dashboard?tab=trainingVideos'>
@@ -262,6 +272,25 @@ export default function DashSidebar() {
             >
               Sign Out
             </Sidebar.Item>
+
+          {/* Rules, T & C, Disclaimers */}
+          <div className="absolute bottom-0 w-full">
+            <Link to="/dashboard?tab=rules">
+              <Sidebar.Item active={tab === "rules"} as="div">
+                Rules
+              </Sidebar.Item>
+            </Link>
+            <Link to="/dashboard?tab=termsConditions">
+              <Sidebar.Item active={tab === "termsConditions"} as="div">
+                T&C
+              </Sidebar.Item>
+            </Link>
+            <Link to="/dashboard?tab=disclaimers">
+              <Sidebar.Item active={tab === "disclaimers"} as="div">
+                Disclaimers
+              </Sidebar.Item>
+            </Link>
+          </div>
           </Sidebar.ItemGroup>
         </Sidebar.Items>
       </Sidebar>
