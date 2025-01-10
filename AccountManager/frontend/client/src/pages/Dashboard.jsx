@@ -19,6 +19,9 @@ import TradeMatchingCom from "../components/TradeMatchingCom";
 import DashEvalPaDetails from "../components/DashEvalPaDetails";
 import DashTrainingVideosComp from "../components/DashTrainingVideosComp";
 import DashReferfriendComp from "../components/DashReferfriendComp";
+import DashDisclaimersComp from "../components/condtions/DashDisclaimersComp";
+import DashTCComp from "../components/condtions/DashTCComp";
+import DashRulesComp from "../components/condtions/DashRulesComp";
 
 export default function Dashboard() {
   const location = useLocation();
@@ -75,6 +78,12 @@ export default function Dashboard() {
       {tab === "trainingVideos" && <DashTrainingVideosComp />}
       {/* Refer friend */}
       {tab === "referFriend" && <DashReferfriendComp/>}
+      {/* Disclaimers */}
+      {tab === "disclaimers" && <DashDisclaimersComp/>}
+      {/* Terms and Conditions */}
+      {tab === "termsConditions" && <DashTCComp/>}
+      {/* Rules */}
+      {tab === "rules" && <DashRulesComp/>}
     </div>
   );
 }

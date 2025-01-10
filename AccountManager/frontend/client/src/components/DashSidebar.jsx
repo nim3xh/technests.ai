@@ -280,8 +280,8 @@ export default function DashSidebar() {
                 Rules
               </Sidebar.Item>
             </Link>
-            <Link to="/dashboard?tab=terms-and-conditions">
-              <Sidebar.Item active={tab === "terms-and-conditions"} as="div">
+            <Link to="/dashboard?tab=termsConditions">
+              <Sidebar.Item active={tab === "termsConditions"} as="div">
                 T & C
               </Sidebar.Item>
             </Link>
