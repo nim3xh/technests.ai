@@ -46,6 +46,9 @@ export default function DashTrades() {
     UseTrail: "false",
     TrailTrigger: "",
     Trail : "",
+    Repeat: "",
+    RepeatTimes: "",
+    RepeatEvery: "",
     ApexId: "",
   });
   const [combinedData, setCombinedData] = useState([]);
@@ -183,6 +186,9 @@ export default function DashTrades() {
       UseTrail: "false",
       TrailTrigger: "",
       Trail : "",
+      Repeat: "",
+      RepeatTimes: "",
+      RepeatEvery: "",
       ApexId: "",
     });
     setIsEditMode(false);
@@ -354,7 +360,6 @@ export default function DashTrades() {
           <TableHead>
             <TableHeadCell>#</TableHeadCell>
             <TableHeadCell>Trade Name</TableHeadCell>
-            {/* <TableHeadCell>Time</TableHeadCell> */}
             <TableHeadCell>Stop Loss</TableHeadCell>
             <TableHeadCell>Profit</TableHeadCell>
             <TableHeadCell>Use Breakeven</TableHeadCell>
@@ -365,7 +370,9 @@ export default function DashTrades() {
             <TableHeadCell>Trail</TableHeadCell>
             <TableHeadCell>Instrument</TableHeadCell>
             <TableHeadCell>Quantity</TableHeadCell>
-            {/* <TableHeadCell>Apex ID</TableHeadCell> */}
+            <TableHeadCell>Repeat</TableHeadCell>
+            <TableHeadCell>Repeat times</TableHeadCell>
+            <TableHeadCell>Repeat every</TableHeadCell>
             <TableHeadCell></TableHeadCell>
           </TableHead>
           <TableBody>
@@ -373,7 +380,6 @@ export default function DashTrades() {
               <TableRow key={index}>
                 <TableCell>{index + 1}</TableCell>
                 <TableCell>{trade.TradeName}</TableCell>
-                {/* <TableCell>{trade.Time ? convertTo12HourFormat(trade.Time) : "-"}</TableCell> */}
                 <TableCell>{trade.StopLoss}</TableCell>
                 <TableCell>{trade.Profit}</TableCell>
                 <TableCell>{trade.UseBreakeven === true ? "Yes" : "No"}</TableCell>
@@ -384,7 +390,9 @@ export default function DashTrades() {
                 <TableCell>{trade.Trail}</TableCell>
                 <TableCell>{trade.Instrument}</TableCell>
                 <TableCell>{trade.Quantity}</TableCell>
-                {/* <TableCell>{trade.ApexId}</TableCell> */}
+                <TableCell>{trade.Repeat}</TableCell>
+                <TableCell>{trade.RepeatTimes}</TableCell>
+                <TableCell>{trade.RepeatEvery}</TableCell>
                 <TableCell>
                   <Button.Group>
                     <Button
@@ -607,6 +615,58 @@ export default function DashTrades() {
                 required
               />
             </div>
+            <div>
+                  <Checkbox
+                    id="Repeat"
+                    name="Repeat"
+                    checked={newTrade.Repeat === true}
+                    onChange={(e) =>
+                      setNewTrade((prevTrade) => ({
+                        ...prevTrade,
+                        Repeat: e.target.checked,
+                      }))
+                    }
+                  />
+                  <Label htmlFor="Repeat">Enable Repeat</Label>
+            </div>
+            {newTrade.Repeat && (
+                  <div>
+                    <Label htmlFor="RepeatTimes" value="Repeat Times" />
+                    <TextInput
+                      type="number"
+                      id="RepeatTimes"
+                      name="RepeatTimes"
+                      placeholder="Enter number of repetitions"
+                      value={newTrade.RepeatTimes || ""}
+                      onChange={(e) =>
+                        setNewTrade((prevTrade) => ({
+                          ...prevTrade,
+                          RepeatTimes: parseInt(e.target.value, 10),
+                        }))
+                      }
+                      required
+                    />
+                  </div>
+            )}
+            {newTrade.Repeat && (
+                  <div>
+                    <Label htmlFor="RepeatEvery" value="Repeat Every (Seconds)" />
+                    <TextInput
+                      type="number"
+                      id="RepeatEvery"
+                      name="RepeatEvery"
+                      placeholder="Enter frequency in seconds"
+                      value={newTrade.RepeatEvery || ""}
+                      onChange={(e) =>
+                        setNewTrade((prevTrade) => ({
+                          ...prevTrade,
+                          RepeatEvery: parseInt(e.target.value, 10),
+                        }))
+                      }
+                      required
+                    />
+                  </div>
+            )}
           </form>
         </Modal.Body>
         <Modal.Footer>
