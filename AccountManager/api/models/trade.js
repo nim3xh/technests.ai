@@ -68,6 +68,19 @@ module.exports = (sequelize, DataTypes) => {
           key: 'id',
         },
       },
+      Repeat: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: false,
+      },
+      RepeatTimes: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
+      RepeatEvery: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
       ApexId:{
         type: DataTypes.INTEGER,
         allowNull: true,
