@@ -14,6 +14,9 @@ function save(req, res){
         Trail_Trigger: req.body.Trail_Trigger,
         Trail: req.body.Trail,
         Instrument: req.body.Instrument,
+        Repeat: req.body.Repeat,
+        Repeat_Times: req.body.Repeat_Times,
+        Repeat_Every: req.body.Repeat_Every,
         Account_Number: req.body.Account_Number
     };
 

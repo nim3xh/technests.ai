@@ -422,27 +422,30 @@ export default function DashTradingComp() {
       
       const createTradeCSV = (tradeData, accountLabel, accountNumbers, accountDirection,time) => {
         const tradeHeaders = [
-            `Direction (${accountLabel})`,
-            "Quantity", "Time", "Stop Loss", "Profit", "Use Breakeven", "Breakeven Trigger", "Breakeven Offset", "Use Trail", "Trail Trigger", "Trail", "Instrument", "Account Number",
+          `Direction (${accountLabel})`,
+          "Quantity", "Time", "Stop Loss", "Profit", "Use Breakeven", "Breakeven Trigger", "Breakeven Offset", "Use Trail", "Trail Trigger", "Trail", "Instrument","Repeat","Repeat Times","Repeat Every", "Account Number",
         ];
 
         const tradeCSV = [tradeHeaders.join(",")];
         tradeData.forEach((trade, index) => {
             tradeCSV.push(
                 [
-                    accountDirection[index],
-                    trade.Quantity,
-                    convertTo12HourFormat(time[index]),
-                    trade.StopLoss,
-                    trade.Profit,
-                    trade.UseBreakeven,
-                    trade.BreakevenTrigger,
-                    trade.BreakevenOffset,
-                    trade.UseTrail,
-                    trade.TrailTrigger,
-                    trade.Trail,
-                    trade.Instrument,
-                    accountNumbers[index] || "-",
+                  accountDirection[index],
+                  trade.Quantity,
+                  convertTo12HourFormat(time[index]),
+                  trade.StopLoss,
+                  trade.Profit,
+                  trade.UseBreakeven,
+                  trade.BreakevenTrigger,
+                  trade.BreakevenOffset,
+                  trade.UseTrail,
+                  trade.TrailTrigger,
+                  trade.Trail,
+                  trade.Instrument,
+                  trade.Repeat,
+                  trade.RepeatTimes,
+                  trade.RepeatEvery,
+                  accountNumbers[index] || "-",
                 ].join(",")
             );
         });
@@ -570,6 +573,9 @@ export default function DashTradingComp() {
                       Trail_Trigger: accountTrades[i].trade.TrailTrigger,
                       Trail: accountTrades[i].trade.Trail,
                       Instrument: accountTrades[i].trade.Instrument,
+                      Repeat: accountTrades[i].trade.Repeat,
+                      Repeat_Times: accountTrades[i].trade.RepeatTimes,
+                      Repeat_Every: accountTrades[i].trade.RepeatEvery,
                       Account_Number: accountTrades[i].accountNumber
                     };
                      try {

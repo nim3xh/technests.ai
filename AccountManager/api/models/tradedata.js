@@ -26,6 +26,9 @@ module.exports = (sequelize, DataTypes) => {
     Trail_Trigger: DataTypes.INTEGER,
     Trail: DataTypes.INTEGER,
     Instrument: DataTypes.STRING,
+    Repeat: DataTypes.BOOLEAN,
+    Repeat_Times: DataTypes.INTEGER,
+    Repeat_Every: DataTypes.INTEGER,
     Account_Number: DataTypes.STRING
   }, {
     sequelize,

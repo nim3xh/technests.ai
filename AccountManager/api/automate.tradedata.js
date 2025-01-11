@@ -308,7 +308,7 @@ const exportCSVForEachAccount = async (groupedSets) => {
     const createTradeCSV = (tradeData, accountLabel, accountNumbers, accountDirection,time) => {
         const tradeHeaders = [
             `Direction (${accountLabel})`,
-            "Quantity", "Time", "Stop Loss", "Profit", "Use Breakeven", "Breakeven Trigger", "Breakeven Offset", "Use Trail", "Trail Trigger", "Trail", "Instrument", "Account Number",
+            "Quantity", "Time", "Stop Loss", "Profit", "Use Breakeven", "Breakeven Trigger", "Breakeven Offset", "Use Trail", "Trail Trigger", "Trail", "Instrument","Repeat","Repeat Times","Repeat Every", "Account Number",
         ];
 
         const tradeCSV = [tradeHeaders.join(",")];
@@ -327,6 +327,9 @@ const exportCSVForEachAccount = async (groupedSets) => {
                     trade.TrailTrigger,
                     trade.Trail,
                     trade.Instrument,
+                    trade.Repeat,
+                    trade.RepeatTimes,
+                    trade.RepeatEvery,
                     accountNumbers[index] || "-",
                 ].join(",")
             );
@@ -419,6 +422,9 @@ const exportCSVForEachAccount = async (groupedSets) => {
                       Trail_Trigger: accountTrades[i].trade.TrailTrigger,
                       Trail: accountTrades[i].trade.Trail,
                       Instrument: accountTrades[i].trade.Instrument,
+                      Repeat: accountTrades[i].trade.Repeat,
+                      Repeat_Times: accountTrades[i].trade.RepeatTimes,
+                      Repeat_Every: accountTrades[i].trade.RepeatEvery,
                       Account_Number: accountTrades[i].accountNumber
                     };
                      try {

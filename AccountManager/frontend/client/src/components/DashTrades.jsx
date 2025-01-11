@@ -214,6 +214,9 @@ export default function DashTrades() {
         BreakevenOffset: newTrade.BreakevenOffset.toString(),
         TrailTrigger: newTrade.TrailTrigger.toString(),
         Trail: newTrade.Trail.toString(),
+        Repeat: newTrade.Repeat.toString(),
+        RepeatTimes: newTrade.RepeatTimes.toString(),
+        RepeatEvery: newTrade.RepeatEvery.toString(),
         // ApexId: newTrade.ApexId.toString(),
       };
   
@@ -390,7 +393,7 @@ export default function DashTrades() {
                 <TableCell>{trade.Trail}</TableCell>
                 <TableCell>{trade.Instrument}</TableCell>
                 <TableCell>{trade.Quantity}</TableCell>
-                <TableCell>{trade.Repeat}</TableCell>
+                <TableCell>{trade.Repeat == true ? "Yes" : "No"}</TableCell>
                 <TableCell>{trade.RepeatTimes}</TableCell>
                 <TableCell>{trade.RepeatEvery}</TableCell>
                 <TableCell>
@@ -619,11 +622,11 @@ export default function DashTrades() {
                   <Checkbox
                     id="Repeat"
                     name="Repeat"
-                    checked={newTrade.Repeat === true}
+                    checked={newTrade.Repeat === "true"}
                     onChange={(e) =>
                       setNewTrade((prevTrade) => ({
                         ...prevTrade,
-                        Repeat: e.target.checked,
+                        Repeat: e.target.checked? "true" : "false",
                       }))
                     }
                   />
