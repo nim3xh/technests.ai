@@ -9,6 +9,7 @@ import {
   TableHeadCell,
   TableRow,
   Spinner,
+  Button,
   Tooltip,
   Breadcrumb,
 } from "flowbite-react";
@@ -23,6 +24,7 @@ const BaseURL = import.meta.env.VITE_BASE_URL;
 
 export default function DashboardCompUser() {
   const { currentUser } = useSelector((state) => state.user);
+  const [createLoding, setCreateLoding] = useState(false);
   const [combinedData, setCombinedData] = useState([]);
   const [combinedDeletedData, setCombinedDeletedData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -316,17 +318,6 @@ export default function DashboardCompUser() {
           ) : (
             <>
               <div className="flex-wrap flex gap-4 justify-center mt-4">
-                    {/* <div className="flex flex-col p-3 dark:bg-slate-800 gap-4 md:w-40 w-full rounded-md shadow-md">
-                      <div className="flex justify-between">
-                        <div className="">
-                          <h3 className="text-gray-500 text-md uppercase">
-                            Users{" "}
-                          </h3>
-                          <p className="text-2xl">{totalUniqueAccountsDisplayed}</p>
-                        </div>
-                      </div>
-                    </div> */}
-
                     <div className="flex flex-col p-3 dark:bg-slate-800 gap-4 md:w-40 w-full rounded-md shadow-md">
                       <div className="flex justify-between">
                         <div>
@@ -420,25 +411,6 @@ export default function DashboardCompUser() {
                         </div>
                       </div>
                     </Tooltip>
-                    
-
-
-                    {/* <div className="flex flex-col p-3 dark:bg-slate-800 gap-4 md:w-60 w-full rounded-md shadow-md">
-                      <div className="flex justify-between">
-                        <div>
-                          <h3 className="text-gray-500 text-md uppercase">
-                            Admin Only
-                          </h3>
-                          <p className="text-2xl">
-                            {userStats.reduce(
-                              (acc, user) => acc + user.evalAdminOnly+user.paAdminOnly,
-                              0
-                            )}
-                          </p>
-                        </div>
-                        <CiMemoPad className="bg-teal-600 text-white rounded-full text-5xl p-3 shadow-lg" />
-                      </div>
-                    </div> */}
                   </div>
 
                   <div className="flex flex-col md:flex-row justify-center items-center md:space-x-4">
@@ -488,14 +460,6 @@ export default function DashboardCompUser() {
                   <div className="flex flex-col md:flex-row justify-center items-center md:space-x-4">
                     {/* Table Section */}
                     <div>
-                    {/* <div className="w-full flex justify-between items-center mb-3 mt-5">
-                      <p className="text-left text-sm md:text-base text-gray-700 dark:text-white">
-                        Last Updated: 
-                        <span className="font-medium text-gray-600 dark:text-white">
-                          {formattedDateTime ? `(${formattedDateTime})` : 'N/A'}
-                        </span>
-                      </p>
-                    </div> */}
                     <div className="table-wrapper overflow-x-auto max-h-[400px]">
                       <Table hoverable className="shadow-md w-full">
                         <TableHead>
@@ -505,8 +469,6 @@ export default function DashboardCompUser() {
                           <TableHeadCell className="sticky top-0 bg-white z-10">PA</TableHeadCell>
                           <TableHeadCell className="sticky top-0 bg-white z-10">Admin Only</TableHeadCell>
                           <TableHeadCell className="sticky top-0 bg-white z-10"><b>Total</b></TableHeadCell>
-                          {/* <TableHeadCell className="sticky top-0 bg-white z-10">EVAL to PA</TableHeadCell> */}
-                          {/* <TableHeadCell className="sticky top-0 bg-white z-10">PO</TableHeadCell> */}
                         </TableHead>
                         <TableBody>
                           {userStats
@@ -527,16 +489,44 @@ export default function DashboardCompUser() {
                                 <TableCell>{user.paActive}</TableCell>
                                 <TableCell>{user.evalAdminOnly + user.paAdminOnly}</TableCell>
                                 <TableCell><b>{user.totalAccounts}</b></TableCell>
-                                {/* <TableCell>Pending</TableCell> */}
-                                {/* <TableCell>Pending</TableCell> */}
                               </TableRow>
                             ))}
                         </TableBody>
                       </Table>
-                    </div>
-                      
+                    </div> 
                     </div>
                   </div>
+                  <div className="flex-wrap flex gap-4 justify-center mt-4">
+                  {/* <Button.Group outline> */}
+                      <Button
+                          gradientDuoTone="greenToBlue"
+                          // onClick={uploadCsvs}
+                        >
+                          {createLoding ? (
+                            <>
+                              <Spinner size="sm" />
+                              <span className="pl-3">Loading...</span>
+                            </>
+                          ) : (
+                            <>Upload CSV</>
+                          )}
+                        </Button>
+                        <br></br>
+                        <Button
+                          gradientDuoTone='purpleToBlue'
+                          // onClick={uploadCsvs}
+                        >
+                          {createLoding ? (
+                            <>
+                              <Spinner size="sm" />
+                              <span className="pl-3">Loading...</span>
+                            </>
+                          ) : (
+                            <>Download CSV</>
+                          )}
+                        </Button>
+                      {/* </Button.Group> */}
+                     </div>
             </>
           )}
         </>
