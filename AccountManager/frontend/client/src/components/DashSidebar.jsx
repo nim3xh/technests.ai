@@ -77,10 +77,10 @@ export default function DashSidebar() {
                     icon={HiChartPie}
                     as="div"
                   >
-                    Summary
+                    Dashboard
                   </Sidebar.Item>
                 </Link>
-                <Link to="/dashboard?tab=profile">
+                {/* <Link to="/dashboard?tab=profile">
                   <Sidebar.Item
                     active={tab === "profile"}
                     icon={HiUser}
@@ -96,8 +96,8 @@ export default function DashSidebar() {
                   >
                     Profile
                   </Sidebar.Item>
-                </Link>
-                <Link to="/dashboard?tab=tradeMonitorUser">
+                </Link> */}
+                {/* <Link to="/dashboard?tab=tradeMonitorUser">
                   <Sidebar.Item
                     active={tab === "tradeMonitor"}
                     icon={TbHeartRateMonitor}
@@ -105,8 +105,8 @@ export default function DashSidebar() {
                   >
                     Trade Monitor
                   </Sidebar.Item>
-                </Link>
-                <Link to="/dashboard?tab=accountDetailsUser">
+                </Link> */}
+                {/* <Link to="/dashboard?tab=accountDetailsUser">
                   <Sidebar.Item
                     active={tab === "accountDetails"}
                     icon={IoMdAnalytics}
@@ -114,7 +114,7 @@ export default function DashSidebar() {
                   >
                    Account Details
                   </Sidebar.Item>
-                </Link>
+                </Link> */}
                 <Link	to='/dashboard?tab=referFriend'>
                   <Sidebar.Item
                     active={tab === "referFriend"}
