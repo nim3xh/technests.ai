@@ -65,6 +65,90 @@ function signUp(req, res) {
     });
 }
 
+
+function bulkSignUp(req, res) {
+    const users = req.body.users; // Expecting an array of user objects {email, password, role}
+    if (!Array.isArray(users) || users.length === 0) {
+        return res.status(400).json({
+            message: "Invalid input: users array is required"
+        });
+    }
+
+    const schema = {
+        email: { type: "email", empty: false },
+        password: { type: "string", empty: false },
+        role: { type: "string", empty: false }
+    };
+
+    // Validate all users
+    const validationErrors = [];
+    const validatedUsers = users.map((user, index) => {
+        const validationResponse = v.validate(user, schema);
+        if (validationResponse !== true) {
+            validationErrors.push({ index, errors: validationResponse });
+        }
+        return user;
+    });
+
+    if (validationErrors.length > 0) {
+        return res.status(400).json({
+            message: "Validation failed for one or more users",
+            errors: validationErrors
+        });
+    }
+
+    // Check if any of the emails already exist
+    const emails = users.map(user => user.email);
+    models.UserCredentials.findAll({
+        where: {
+            email: emails
+        }
+    }).then(existingUsers => {
+        const existingEmails = existingUsers.map(user => user.email);
+        const duplicates = users.filter(user => existingEmails.includes(user.email));
+        if (duplicates.length > 0) {
+            return res.status(409).json({
+                message: "Some emails already exist",
+                duplicates: duplicates.map(user => user.email)
+            });
+        }
+
+        // Hash passwords and create users
+        const hashPromises = users.map(user =>
+            bcrypt.hash(user.password, 10).then(hash => ({
+                ...user,
+                password: hash
+            }))
+        );
+
+        Promise.all(hashPromises)
+            .then(hashedUsers => {
+                models.UserCredentials.bulkCreate(hashedUsers)
+                    .then(result => {
+                        res.status(201).json({
+                            message: "Users created successfully",
+                            users: result
+                        });
+                    })
+                    .catch(error => {
+                        res.status(500).json({
+                            error: error
+                        });
+                    });
+            })
+            .catch(err => {
+                res.status(500).json({
+                    error: err
+                });
+            });
+    }).catch(error => {
+        res.status(500).json({
+            error: error
+        });
+    });
+}
+
+
 function signIn(req, res) {
   models.UserCredentials.findOne({
     where: {
@@ -206,5 +290,6 @@ module.exports = {
     signUp: signUp,
     signIn: signIn,
     changePassword: changePassword,
-    signout: signout
+    signout: signout,
+    bulkSignUp: bulkSignUp
 };
