@@ -344,47 +344,93 @@ export default function DashboardCompUser() {
     input.accept = ".csv"; // Accept only CSV files
     input.multiple = false; // Allow only one file selection
   
+    const accountNumber = currentUser?.user?.ApexAccountNumber;
+    if (!accountNumber) {
+      alert("Please contact the admin to assign an account number to your account.");
+      return;
+    }
+  
     input.onchange = async (event) => {
       const csvFile = event.target.files[0]; // Get the selected file
       if (!csvFile) return; // Exit if no file was selected
   
-      const formData = new FormData();
-      formData.append("csvFile", csvFile); // Append the single file
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        const csvContent = e.target.result; // The content of the CSV file as a string
   
-      setCreateLoding(true);
+        // Parse the CSV content to extract "Account" values
+        const rows = csvContent.split("\n").map((row) => row.split(","));
+        const header = rows[0]; // Header row
+        const accountIndex = header.indexOf('"Account"'); // Find index of the "Account" column
+        if (accountIndex === -1) {
+          console.error("No 'Account' column found in the CSV");
+          return;
+        }
   
-      try {
-        const token = currentUser.token; // Get the token from the currentUser object
-
-        // console.log("Deleting existing account details for APEX-", currentUser);
-
-        await axios.delete(`${BaseURL}accountDetails/account/APEX-${currentUser.user.ApexAccountNumber}`, {
-          headers: {
-              Authorization: `Bearer ${token}` // Pass the token in the Authorization header
+        // Get the first value of the "Account" column
+        const firstAccountValue = rows[1]?.[accountIndex]?.replace(/"/g, ""); // Remove quotes
+        if (firstAccountValue) {
+          // console.log("First Account Value:", firstAccountValue);
+  
+          // Extract the number (e.g., 182660) from the firstAccountValue
+          const extractedAccountNumber = firstAccountValue.split("-")[1];
+          // console.log("Extracted Account Number:", extractedAccountNumber);
+  
+          // Compare with the accountNumber
+          if (extractedAccountNumber === accountNumber) {
+            // console.log("The account number matches!");
+          } else {
+            alert("The CSV account does not match the user account number.");
+            return;
           }
-        });
+        } else {
+          alert("No value found in the 'Account' column");
+          return;
+        }
   
-        await axios.post(`${BaseURL}accountDetails/add-account`, formData, {
-          headers: {
-            "Content-Type": "multipart/form-data",
-            Authorization: `Bearer ${token}`, // Add token in headers for authentication
-          },
-        });
+        // Proceed with your upload logic or any other processing
+        const formData = new FormData();
+        formData.append("csvFile", csvFile); // Append the single file
+        setCreateLoding(true);
   
-        setCreateLoding(false);
-        alert("CSV uploaded successfully!");
+        try {
+          const token = currentUser.token; // Get the token from the currentUser object
   
-        // Refetch data after uploading CSV
-        fetchData();
-      } catch (error) {
-        console.error("Error uploading CSV:", error);
-        alert("Failed to upload the CSV file.");
-        setCreateLoding(false);
-      }
+          await axios.delete(`${BaseURL}accountDetails/account/APEX-${currentUser.user.ApexAccountNumber}`, {
+            headers: {
+              Authorization: `Bearer ${token}`, // Pass the token in the Authorization header
+            },
+          });
+          await axios.post(`${BaseURL}accountDetails/add-account`, formData, {
+            headers: {
+              "Content-Type": "multipart/form-data",
+              Authorization: `Bearer ${token}`, // Add token in headers for authentication
+            },
+          });
+  
+          setCreateLoding(false);
+          alert("CSV uploaded successfully!");
+  
+          // Refetch data after uploading CSV
+          fetchData();
+        } catch (error) {
+          console.error("Error uploading CSV:", error);
+          alert("Failed to upload the CSV file.");
+          setCreateLoding(false);
+        }
+      };
+  
+      reader.onerror = (e) => {
+        console.error("Error reading the file:", e.target.error);
+      };
+  
+      reader.readAsText(csvFile); // Read the file as a text string
     };
   
     input.click(); // Trigger the file input dialog
   };
+  
+  
   
   return (
     <div className="p-3 w-full">
