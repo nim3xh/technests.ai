@@ -54,7 +54,7 @@ app.use("/todaystrade", todaystrade);
 
 // Optional: A basic health check route
 app.get("/", (req, res) => {
-  res.send("API is running!");
+  res.send("Welcome to Technest Account Manager API");
 });
 
 app.get('/file-creation-time', async (req, res) => {
@@ -141,8 +141,9 @@ app.get('/download/:accountNumber', (req, res) => {
   try {
     const { accountNumber } = req.params;
     console.log(accountNumber);
-    const dashboardsPath = path.join(__dirname, '..dashboards', accountNumber);
-
+    
+    const dashboardsPath = path.join(__dirname, 'dashboards', accountNumber);
+    
     console.log(`Checking for files for account number ${accountNumber} in folder:`);
      // Check if the folder exists
     if (!fs.existsSync(dashboardsPath)) {

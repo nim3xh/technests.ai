@@ -84,7 +84,6 @@ function bulkSave(req, res) {
   }
 }
 
-
 function importFromCSV(req, res) {
   const results = [];
   const filePath = req.file.path;

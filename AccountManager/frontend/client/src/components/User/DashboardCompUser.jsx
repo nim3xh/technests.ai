@@ -305,7 +305,7 @@ export default function DashboardCompUser() {
         return;
       }
   
-      const downloadUrl = `${BaseURL}/download/${accountNumber}`;
+      const downloadUrl = `${BaseURL}download/${accountNumber}`;
       console.log(`Downloading CSVs from: ${downloadUrl}`);
   
       // Trigger the file download
