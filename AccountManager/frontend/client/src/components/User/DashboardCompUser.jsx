@@ -390,68 +390,21 @@ export default function DashboardCompUser() {
                         </div>                    
                       </div>
                     </div>
-
-                    <Tooltip content="Balance > $53,000">
-                      <div className="flex flex-col p-3 dark:bg-slate-800 gap-4 md:w-40 w-full rounded-md shadow-md">
-                        <div className="flex justify-between">
-                          <div>
-                            <h3 className="text-gray-500 text-md uppercase">
-                              PO1
-                            </h3>
-                            <p className="text-2xl">
-                              {paStats.PA1}
-                            </p>
-                          </div>
-                          {/* <MdAccountBalance className="bg-teal-600 text-white rounded-full text-5xl p-3 shadow-lg" /> */}
-                        </div>
+                    <div className="flex flex-col p-3 dark:bg-slate-800 gap-4 md:w-40 w-full rounded-md shadow-md">
+                      <div className="flex justify-between">
+                        <div>
+                        <h3 className="text-gray-500 text-md uppercase">
+                            Admin Only
+                          </h3>
+                          <p className="text-2xl">
+                            {userStats.reduce(
+                              (acc, user) => acc + user.evalAdminOnly+user.paAdminOnly,
+                              0
+                            )}
+                          </p>
+                        </div>                    
                       </div>
-                    </Tooltip>
-                    <Tooltip content="Balance > $56,000">
-                      <div className="flex flex-col p-3 dark:bg-slate-800 gap-4 md:w-40 w-full rounded-md shadow-md">
-                        <div className="flex justify-between">
-                          <div>
-                            <h3 className="text-gray-500 text-md uppercase">
-                              PO2
-                            </h3>
-                            <p className="text-2xl">
-                              {paStats.PA2}
-                            </p>
-                          </div>
-                          {/* <MdAccountBalance className="bg-teal-600 text-white rounded-full text-5xl p-3 shadow-lg" /> */}
-                        </div>
-                      </div>
-                    </Tooltip>
-                    
-                    <Tooltip content="Balance > $59,000">
-                      <div className="flex flex-col p-3 dark:bg-slate-800 gap-4 md:w-40 w-full rounded-md shadow-md" >
-                        <div className="flex justify-between">
-                          <div>
-                            <h3 className="text-gray-500 text-md uppercase">
-                              PO3
-                            </h3>
-                            <p className="text-2xl">
-                              {paStats.PA3}
-                            </p>
-                          </div>
-                          {/* <MdAccountBalance className="bg-teal-600 text-white rounded-full text-5xl p-3 shadow-lg" /> */}
-                        </div>
-                      </div>
-                    </Tooltip>
-                      
-                    <Tooltip content="Balance > $62,000">
-                      <div className="flex flex-col p-3 dark:bg-slate-800 gap-4 md:w-40 w-full rounded-md shadow-md">
-                        <div className="flex justify-between">
-                          <div title="Balance Range: 58,001 - 60,600">
-                            <h3 className="text-gray-500 text-md uppercase">
-                              PO4
-                            </h3>
-                            <p className="text-2xl">
-                              {paStats.PA4}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    </Tooltip>
+                    </div>
                   </div>
 
                   <div className="flex flex-col md:flex-row justify-center items-center md:space-x-4">
