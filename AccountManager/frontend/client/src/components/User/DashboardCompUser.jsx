@@ -299,14 +299,15 @@ export default function DashboardCompUser() {
   const downloadCsvs = async () => {
     try {
       const accountNumber = currentUser?.user?.ApexAccountNumber;
+      // alert(accountNumber);
   
       if (!accountNumber) {
-        console.error("Account number is missing.");
+        alert("Please contact the admin to assign an account number to your account.");
         return;
       }
-  
+
       const downloadUrl = `${BaseURL}download/${accountNumber}`;
-      console.log(`Downloading CSVs from: ${downloadUrl}`);
+      // console.log(`Downloading CSVs from: ${downloadUrl}`);
   
       // Trigger the file download
       const response = await fetch(downloadUrl, {
@@ -337,6 +338,54 @@ export default function DashboardCompUser() {
     }
   };
 
+  const uploadCsv = async () => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = ".csv"; // Accept only CSV files
+    input.multiple = false; // Allow only one file selection
+  
+    input.onchange = async (event) => {
+      const csvFile = event.target.files[0]; // Get the selected file
+      if (!csvFile) return; // Exit if no file was selected
+  
+      const formData = new FormData();
+      formData.append("csvFile", csvFile); // Append the single file
+  
+      setCreateLoding(true);
+  
+      try {
+        const token = currentUser.token; // Get the token from the currentUser object
+
+        // console.log("Deleting existing account details for APEX-", currentUser);
+
+        await axios.delete(`${BaseURL}accountDetails/account/APEX-${currentUser.user.ApexAccountNumber}`, {
+          headers: {
+              Authorization: `Bearer ${token}` // Pass the token in the Authorization header
+          }
+        });
+  
+        await axios.post(`${BaseURL}accountDetails/add-account`, formData, {
+          headers: {
+            "Content-Type": "multipart/form-data",
+            Authorization: `Bearer ${token}`, // Add token in headers for authentication
+          },
+        });
+  
+        setCreateLoding(false);
+        alert("CSV uploaded successfully!");
+  
+        // Refetch data after uploading CSV
+        fetchData();
+      } catch (error) {
+        console.error("Error uploading CSV:", error);
+        alert("Failed to upload the CSV file.");
+        setCreateLoding(false);
+      }
+    };
+  
+    input.click(); // Trigger the file input dialog
+  };
+  
   return (
     <div className="p-3 w-full">
       <Breadcrumb aria-label="Default breadcrumb example">
@@ -411,7 +460,7 @@ export default function DashboardCompUser() {
                   {/* <Button.Group outline> */}
                       <Button
                           gradientDuoTone="greenToBlue"
-                          // onClick={uploadCsvs}
+                          onClick={uploadCsv}
                         >
                           {createLoding ? (
                             <>
