@@ -84,64 +84,6 @@ function bulkSave(req, res) {
   }
 }
 
-function importFromCSV(req, res) {
-  const results = [];
-  const filePath = req.file.path;
-
-  fs.createReadStream(filePath)
-    .pipe(csv())
-    .on("data", (data) => {
-      const account = data.Account;
-      const accountBalance = parseFloat(
-        data["Account Balance"] ? data["Account Balance"].replace(/,/g, "") : 0
-      );
-      const status = data.Status;
-      const accountNameParts = data["Account Name"].split(" (");
-      const accountNumber = accountNameParts[0];
-      const name = accountNameParts[1] ? accountNameParts[1].slice(0, -1) : ""; // Remove the closing parenthesis
-
-      const trailingThreshold = data["Trailing Threshold"]
-        ? parseFloat(data["Trailing Threshold"].replace(/,/g, ""))
-        : null;
-
-      const PnL = data["PnL"]
-        ? parseFloat(data["PnL"].replace(/,/g, ""))
-        : null; // Change to null if PnL is missing
-
-      results.push({
-        account,
-        accountBalance,
-        status,
-        accountNumber,
-        name,
-        trailingThreshold,
-        PnL,
-      });
-    })
-    .on("end", () => {
-      // Save all results to the database
-      models.AccountDetail.bulkCreate(results)
-        .then(() => {
-          res.status(201).json({
-            message: "Accounts imported successfully",
-            importedAccounts: results,
-          });
-        })
-        .catch((error) => {
-          res.status(500).json({
-            message: "Something went wrong while saving accounts",
-            error: error,
-          });
-        });
-    })
-    .on("error", (error) => {
-      res.status(500).json({
-        message: "Error reading the CSV file",
-        error: error,
-      });
-    });
-}
-
 const processCSV = (filePath) => {
   return new Promise((resolve, reject) => {
     const accountNameMap = new Map(); // Map to store base account numbers and their corresponding names
@@ -236,6 +178,48 @@ const processCSV = (filePath) => {
       });
   });
 };
+
+async function importFromCSV(req, res) {
+  const file = req.file; // Assuming you're using a middleware like multer for single file upload
+
+  if (!file) {
+    return res.status(400).json({ message: "No file uploaded" });
+  }
+
+  try {
+    // Process the CSV file and collect results
+    const results = await processCSV(file.path);
+
+    // Retrieve existing accounts to avoid duplicates
+    const existingAccounts = await models.AccountDetail.findAll({
+      attributes: ["account"], // Adjust according to your model
+      raw: true,
+    });
+    const existingAccountSet = new Set(
+      existingAccounts.map((acc) => acc.account)
+    );
+
+    // Filter results to only include new accounts
+    const newAccounts = results.filter(
+      (result) => !existingAccountSet.has(result.account)
+    );
+
+    // Save new accounts to the database
+    if (newAccounts.length > 0) {
+      await models.AccountDetail.bulkCreate(newAccounts);
+    }
+
+    res.status(201).json({
+      message: "Accounts imported successfully",
+      importedAccounts: newAccounts,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Something went wrong while processing the file",
+      error: error.message || error,
+    });
+  }
+}
 
 
 // Main function to import data from multiple CSVs
