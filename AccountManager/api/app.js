@@ -135,6 +135,61 @@ app.get('/current-time', (req, res) => {
   res.json({ time });
 });
 
+//for download _EVAL.csv and _PA.csv files relevent to account number from dashboards folder, account number equals to folder name
+// Endpoint to download _EVAL.csv and _PA.csv files
+app.get('/download/:accountNumber', (req, res) => {
+  try {
+    const { accountNumber } = req.params;
+    console.log(accountNumber);
+    const dashboardsPath = path.join(__dirname, '..dashboards', accountNumber);
+
+    console.log(`Checking for files for account number ${accountNumber} in folder:`);
+     // Check if the folder exists
+    if (!fs.existsSync(dashboardsPath)) {
+      return res.status(404).send(`No folder found for account number ${accountNumber}.`);
+    }
+
+    // Find the relevant files in the folder
+    const files = fs.readdirSync(dashboardsPath).filter((file) =>
+      file.endsWith('_EVAL.csv') || file.endsWith('_PA.csv')
+    );
+
+    if (files.length === 0) {
+      return res.status(404).send(`No _EVAL.csv or _PA.csv files found for account number ${accountNumber}.`);
+    }
+
+    // Serve multiple files as a ZIP for download
+    const archiver = require('archiver'); // Ensure `archiver` is installed
+
+    const zipFileName = `${accountNumber}_files.zip`;
+    res.setHeader('Content-Disposition', `attachment; filename=${zipFileName}`);
+    res.setHeader('Content-Type', 'application/zip');
+
+    const archive = archiver('zip', { zlib: { level: 9 } });
+
+    // Handle archive stream errors
+    archive.on('error', (err) => {
+      console.error('Error creating ZIP archive:', err);
+      res.status(500).send('Failed to create ZIP file.');
+    });
+
+    // Pipe archive data to the response
+    archive.pipe(res);
+
+    // Add files to the archive
+    files.forEach((file) => {
+      const filePath = path.join(dashboardsPath, file);
+      archive.file(filePath, { name: file });
+    });
+
+    // Finalize the archive
+    archive.finalize();
+  } catch (error) {
+    console.error(`Error while downloading files for account number ${req.params.accountNumber}:`, error);
+    res.status(500).send('An error occurred while processing your request.');
+  }
+});
+
 // Catch-all route to handle SPA (Single Page Application) routing
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'dist', 'index.html'));

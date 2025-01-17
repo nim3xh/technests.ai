@@ -296,6 +296,47 @@ export default function DashboardCompUser() {
   );
   const totalUniqueAccountsDisplayed = uniqueAccountsInFilteredData.size;
 
+  const downloadCsvs = async () => {
+    try {
+      const accountNumber = currentUser?.user?.ApexAccountNumber;
+  
+      if (!accountNumber) {
+        console.error("Account number is missing.");
+        return;
+      }
+  
+      const downloadUrl = `${BaseURL}/download/${accountNumber}`;
+      console.log(`Downloading CSVs from: ${downloadUrl}`);
+  
+      // Trigger the file download
+      const response = await fetch(downloadUrl, {
+        method: 'GET',
+      });
+  
+      if (response.ok) {
+        // Create a blob from the response
+        const blob = await response.blob();
+  
+        // Create a temporary anchor element to trigger download
+        const a = document.createElement('a');
+        const url = window.URL.createObjectURL(blob);
+        a.href = url;
+        a.download = `${accountNumber}_files.zip`;
+        document.body.appendChild(a);
+        a.click();
+  
+        // Clean up
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+        console.log("CSV files downloaded successfully.");
+      } else {
+        console.error(`Failed to download CSV files. Status: ${response.status}`);
+      }
+    } catch (error) {
+      console.error("An error occurred while downloading CSV files:", error);
+    }
+  };
+
   return (
     <div className="p-3 w-full">
       <Breadcrumb aria-label="Default breadcrumb example">
@@ -514,7 +555,7 @@ export default function DashboardCompUser() {
                         <br></br>
                         <Button
                           gradientDuoTone='purpleToBlue'
-                          // onClick={uploadCsvs}
+                          onClick={downloadCsvs}
                         >
                           {createLoding ? (
                             <>

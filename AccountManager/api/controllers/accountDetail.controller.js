@@ -42,11 +42,10 @@ function bulkSave(req, res) {
     const validatedAccounts = accountDetails.map((account) => {
       if (
         !account.account ||
-        account.accountBalance === undefined ||
-        !account.status
+        account.accountBalance === undefined
       ) {
         throw new Error(
-          "Each account must include 'account', 'accountBalance', and 'status'."
+          "Each account must include 'account' and 'accountBalance'."
         );
       }
 
@@ -59,7 +58,7 @@ function bulkSave(req, res) {
         account: account.account,
         accountBalance: account.accountBalance,
         accountNumber: accountNumber, // Derived accountNumber
-        status: account.status,
+        status: "active",
         trailingThreshold: account.trailingThreshold || null, // Optional fields default to null
         PnL: account.PnL || null,
       };
