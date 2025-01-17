@@ -32,6 +32,8 @@ export default function DashboardCompUser() {
   const [userStats, setUserStats] = useState([]);
   const [selectedDate, setSelectedDate] = useState(null);
   const [todayDate, setTodayDate] = useState(new Date());
+  const [IsDownButtonEnabled, setIsDownButtonEnabled] = useState(false);
+  const [isUpButtonEnabled, setIsUpButtonEnabled] = useState(false);
   const [deletedpaStats, setDeletedpaStats] = useState({
     PA1: 0,
     PA2: 0,
@@ -429,8 +431,63 @@ export default function DashboardCompUser() {
   
     input.click(); // Trigger the file input dialog
   };
-  
-  
+
+  const now = new Date();
+
+  useEffect(() => {
+      const checkTime = () => {
+        // Get the current time in PST
+        const nowPST = new Date().toLocaleString('en-US', { 
+          timeZone: 'America/Los_Angeles', 
+          hour12: false 
+        });      
+        const hours = new Date(nowPST).getHours();
+        const minutes = new Date(nowPST).getMinutes();
+
+        // Enable the button between 9 PM and 6 AM PST
+        if (hours >= 21 || hours < 6 || (hours === 6 && minutes === 0)) {
+          setIsDownButtonEnabled(true);
+        } else {
+          setIsDownButtonEnabled(false);
+        }
+      };
+
+      // Check time every minute
+      const intervalId = setInterval(checkTime, 60000);
+
+      // Run the check on initial load
+      checkTime();
+
+      return () => clearInterval(intervalId);
+    }, []);
+
+    useEffect(() => {
+      const checkTime = () => {
+         // Get the current time in PST
+         const nowPST = new Date().toLocaleString('en-US', { 
+          timeZone: 'America/Los_Angeles', 
+          hour12: false 
+        });  
+        const hours = new Date(nowPST).getHours();
+        const minutes = new Date(nowPST).getMinutes();
+
+        // Enable the button between 7 PM and 5 AM PST
+        if ((hours >= 19 || hours < 5) || (hours === 5 && minutes === 0)) {
+          setIsUpButtonEnabled(true);
+        } else {
+          setIsUpButtonEnabled(false);
+        }
+      };
+
+      // Check time every minute
+      const intervalId = setInterval(checkTime, 60000);
+
+      // Run the check on initial load
+      checkTime();
+
+      return () => clearInterval(intervalId);
+    }, []);
+
   
   return (
     <div className="p-3 w-full">
@@ -507,6 +564,7 @@ export default function DashboardCompUser() {
                       <Button
                           gradientDuoTone="greenToBlue"
                           onClick={uploadCsv}
+                          disabled={!isUpButtonEnabled}
                         >
                           {createLoding ? (
                             <>
@@ -521,6 +579,7 @@ export default function DashboardCompUser() {
                         <Button
                           gradientDuoTone='purpleToBlue'
                           onClick={downloadCsvs}
+                          disabled={!IsDownButtonEnabled}
                         >
                           {createLoding ? (
                             <>
