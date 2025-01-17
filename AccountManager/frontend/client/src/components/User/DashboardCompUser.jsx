@@ -321,19 +321,19 @@ export default function DashboardCompUser() {
         const a = document.createElement('a');
         const url = window.URL.createObjectURL(blob);
         a.href = url;
-        a.download = `${accountNumber}_files.zip`;
+        a.download = `${accountNumber}:${formattedTodayDate}_Trades.zip`;
         document.body.appendChild(a);
         a.click();
   
         // Clean up
         window.URL.revokeObjectURL(url);
         document.body.removeChild(a);
-        console.log("CSV files downloaded successfully.");
+        // console.log("CSV files downloaded successfully.");
       } else {
-        console.error(`Failed to download CSV files. Status: ${response.status}`);
+        // console.error(`Failed to download CSV files. Status: ${response.status}`);
       }
     } catch (error) {
-      console.error("An error occurred while downloading CSV files:", error);
+      // console.error("An error occurred while downloading CSV files:", error);
     }
   };
 
