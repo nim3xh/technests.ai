@@ -191,6 +191,32 @@ app.get('/download/:accountNumber', (req, res) => {
   }
 });
 
+// Endpoint to append input to a file
+app.post('/alert-hook', (req, res) => {
+  try {
+    const dashboardsPath = path.join(__dirname, 'dashboards', 'test');
+    const filePath = path.join(dashboardsPath, 'test.txt');
+
+    // Ensure the test folder exists
+    if (!fs.existsSync(dashboardsPath)) {
+      fs.mkdirSync(dashboardsPath, { recursive: true });
+    }
+
+    // Prepare the input data with a newline
+    const inputData = JSON.stringify(req.body) + '\n';
+
+    // Append the input data to the file
+    fs.appendFileSync(filePath, inputData);
+
+    console.log('Data appended to file:', inputData.trim());
+    res.status(200).send('Data appended successfully.');
+  } catch (error) {
+    console.error('Error appending data:', error);
+    res.status(500).send('Failed to append data.');
+  }
+});
+
+
 // Catch-all route to handle SPA (Single Page Application) routing
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'dist', 'index.html'));
