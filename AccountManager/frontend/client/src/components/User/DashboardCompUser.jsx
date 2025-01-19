@@ -36,6 +36,7 @@ export default function DashboardCompUser() {
   const [IsDownButtonEnabled, setIsDownButtonEnabled] = useState(false);
   const [isUpButtonEnabled, setIsUpButtonEnabled] = useState(false);
   const [alert , setAlert] = useState(false);
+  const [errAlert,seterrAlert] =  useState(false);
   const [deletedpaStats, setDeletedpaStats] = useState({
     PA1: 0,
     PA2: 0,
@@ -306,7 +307,7 @@ export default function DashboardCompUser() {
       // alert(accountNumber);
   
       if (!accountNumber) {
-        alert("Please contact the admin to assign an account number to your account.");
+        setAlert("Please contact the admin to assign an account number to your account.");
         return;
       }
 
@@ -350,7 +351,7 @@ export default function DashboardCompUser() {
 
     const accountNumber = currentUser?.user?.ApexAccountNumber;
     if (!accountNumber) {
-        alert("Please contact the admin to assign an account number to your account.");
+      setAlert("Please contact the admin to assign an account number to your account.");
         return;
     }
 
@@ -389,11 +390,11 @@ export default function DashboardCompUser() {
                 if (extractedAccountNumber === accountNumber) {
                     console.log("The account number matches!");
                 } else {
-                    alert("The CSV account does not match the user account number.");
+                  setAlert("The CSV account does not match the user account number.");
                     return;
                 }
             } else {
-                alert("No value found in the 'Account' column");
+              setAlert("No value found in the 'Account' column");
                 return;
             }
 
@@ -430,7 +431,7 @@ export default function DashboardCompUser() {
                         Authorization: `Bearer ${token}`, // Pass the token in the Authorization header
                     },
                 });
-                   
+
                 setAlert('ApexID_Trade.csv , ApexID_PA.csv and ApexID_EVAL.csv have been created and uploaded successfully.');
           
                 setIsDownButtonEnabled(true);
@@ -441,7 +442,7 @@ export default function DashboardCompUser() {
                 fetchData();
             } catch (error) {
                 console.error("Error uploading CSV:", error);
-                alert("Failed to upload the CSV file.");
+                setAlert("Failed to upload the CSV file.");
                 setCreateLoding(false);
             }
         };
@@ -619,7 +620,7 @@ export default function DashboardCompUser() {
                      </div>
                      {alert && (
                       <Alert color="success" onDismiss={() => setAlert(false)}>
-                        <span className="font-medium">Info alert!</span> {alert}
+                        <span className="font-medium"></span> {alert}
                       </Alert>
                       )}
             </>
