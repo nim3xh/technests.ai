@@ -583,11 +583,11 @@ export default function DashTradingComp() {
                       const headers = {
                         Authorization: `Bearer ${token}`,
                       };
-                      const response = await axios.post(``, tradeData, {
+                      const response = await axios.post(`${BaseURL}tradeData`, {
                         headers,
                       });
                     }catch (err) {
-                      alert("Error adding trade data:", err);
+                      setAlert("Error adding trade data:", err);
                     }
                   }
 
@@ -615,7 +615,7 @@ export default function DashTradingComp() {
 
                       const filterPATradeCSV = tradeCSV.split("\n").filter((line, index) => {
                         if (index === 0) return true; // Keep the header row
-                        const accountNumber = line.split(",")[12];
+                        const accountNumber = line.split(",").pop(); // Gets the last column
                         return accountNumber.startsWith("PA");
                       }).join("\n");
                     
@@ -627,7 +627,7 @@ export default function DashTradingComp() {
 
                       const filterEVALTradeCSV = tradeCSV.split("\n").filter((line, index) => {
                         if (index === 0) return true; // Keep the header row
-                        const accountNumber = line.split(",")[12];
+                        const accountNumber = line.split(",").pop(); // Gets the last column
                         return accountNumber.startsWith("APEX");
                       }).join("\n");
                     
