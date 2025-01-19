@@ -307,7 +307,7 @@ export default function DashboardCompUser() {
       // alert(accountNumber);
   
       if (!accountNumber) {
-        setAlert("Please contact the admin to assign an account number to your account.");
+        seterrAlert("Please contact the admin to assign an account number to your account.");
         return;
       }
 
@@ -351,7 +351,7 @@ export default function DashboardCompUser() {
 
     const accountNumber = currentUser?.user?.ApexAccountNumber;
     if (!accountNumber) {
-      setAlert("Please contact the admin to assign an account number to your account.");
+      seterrAlert("Please contact the admin to assign an account number to your account.");
         return;
     }
 
@@ -390,11 +390,11 @@ export default function DashboardCompUser() {
                 if (extractedAccountNumber === accountNumber) {
                     console.log("The account number matches!");
                 } else {
-                  setAlert("The CSV account does not match the user account number.");
+                  seterrAlert("The CSV account does not match the user account number.");
                     return;
                 }
             } else {
-              setAlert("No value found in the 'Account' column");
+              seterrAlert("No value found in the 'Account' column");
                 return;
             }
 
@@ -442,7 +442,7 @@ export default function DashboardCompUser() {
                 fetchData();
             } catch (error) {
                 console.error("Error uploading CSV:", error);
-                setAlert("Failed to upload the CSV file.");
+                seterrAlert("Failed to upload the CSV file.");
                 setCreateLoding(false);
             }
         };
@@ -621,6 +621,11 @@ export default function DashboardCompUser() {
                      {alert && (
                       <Alert color="success" onDismiss={() => setAlert(false)}>
                         <span className="font-medium"></span> {alert}
+                      </Alert>
+                      )}
+                     {errAlert && (
+                      <Alert color='red' onDismiss={() => seterrAlert(false)}>
+                        <span className="font-medium"></span> {errAlert}
                       </Alert>
                       )}
             </>
