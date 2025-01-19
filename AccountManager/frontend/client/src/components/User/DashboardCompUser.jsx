@@ -12,6 +12,7 @@ import {
   Button,
   Tooltip,
   Breadcrumb,
+  Alert,
 } from "flowbite-react";
 import { MdAccountBalance, MdPerson, MdTableRows } from "react-icons/md";
 import { CiMemoPad } from "react-icons/ci";
@@ -34,6 +35,7 @@ export default function DashboardCompUser() {
   const [todayDate, setTodayDate] = useState(new Date());
   const [IsDownButtonEnabled, setIsDownButtonEnabled] = useState(false);
   const [isUpButtonEnabled, setIsUpButtonEnabled] = useState(false);
+  const [alert , setAlert] = useState(false);
   const [deletedpaStats, setDeletedpaStats] = useState({
     PA1: 0,
     PA2: 0,
@@ -415,10 +417,10 @@ export default function DashboardCompUser() {
                     },
                 });
 
-                alert("CSV uploaded successfully!");
-
+                setAlert("CSV uploaded successfully!");
+                await new Promise(resolve => setTimeout(resolve, 5000));
                 setIsDownButtonEnabled(false);
-
+                setAlert('Creating ApexID_Trade.csv , ApexID_PA.csv and ApexID_EVAL.csv files.');
                 // Wait for 5 seconds before triggering the trade data automation
                 await new Promise(resolve => setTimeout(resolve, 5000));
 
@@ -428,7 +430,9 @@ export default function DashboardCompUser() {
                         Authorization: `Bearer ${token}`, // Pass the token in the Authorization header
                     },
                 });
-
+                   
+                setAlert('ApexID_Trade.csv , ApexID_PA.csv and ApexID_EVAL.csv have been created and uploaded successfully.');
+          
                 setIsDownButtonEnabled(true);
 
                 setCreateLoding(false);
@@ -613,6 +617,11 @@ export default function DashboardCompUser() {
                         </Button>
                       {/* </Button.Group> */}
                      </div>
+                     {alert && (
+                      <Alert color="success" onDismiss={() => setAlert(false)}>
+                        <span className="font-medium">Info alert!</span> {alert}
+                      </Alert>
+                      )}
             </>
           )}
         </>
