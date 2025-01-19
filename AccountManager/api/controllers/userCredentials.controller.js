@@ -27,8 +27,8 @@ function save(req, res) {
             });
           } else {
             const UserCredentials = {
-              FirstName: req.body.firstName,
-              LastName: req.body.lastName,
+              FirstName: req.body.firstName || req.body.FirstName,
+              LastName: req.body.lastName || req.body.LastName,
               ApexAccountNumber: req.body.apexAccountNumber,
               email: req.body.email,
               password: hash,
@@ -97,8 +97,8 @@ function index(req, res) {
 function update(req, res) { 
   const id = req.params.id;
   const updatedUserCredentials = {
-    FirstName: req.body.firstName,
-    LastName: req.body.lastName,
+    FirstName: req.body.firstName || req.body.FirstName,
+    LastName: req.body.lastName || req.body.LastName,
     ApexAccountNumber: req.body.apexAccountNumber,
     email: req.body.email,
     role: req.body.role,

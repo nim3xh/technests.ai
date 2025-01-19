@@ -412,29 +412,32 @@ export default function DashUsers() {
               <Label htmlFor="apexAccountNumber" value="Apex Account Number" />
               <Dropdown
                 label={
-                  editUserDetails.ApexAccountNumber
-                    ? editUserDetails.ApexAccountNumber.replace(/APEX-/, "") // Display without "APEX-"
+                  editUserDetails.apexAccountNumber
+                    ? editUserDetails.apexAccountNumber // Display the selected numeric part
                     : "Select User"
                 }
                 className="w-full text-left dark:bg-gray-800 dark:text-gray-200"
                 inline
               >
-                {uniqueAccountNumbers.map((account) => (
-                  <Dropdown.Item
-                    key={account}
-                    onClick={() => {
-                      const extractedAccountNumber = account.replace(/APEX-/, ""); // Remove "APEX-" prefix
-                      setEditUserDetails((prevState) => ({
-                        ...prevState,
-                        apexAccountNumber: extractedAccountNumber.split(" ")[0], // Set without "APEX-"
-                      }));
-                    }}
-                  >
-                    {account.replace(/APEX-/, "")} {/* Display without "APEX-" */}
-                  </Dropdown.Item>
-                ))}
+                {uniqueAccountNumbers.map((account) => {
+                  const numericPart = account.replace(/APEX-/, "").split(" ")[0]; // Remove "APEX-" and extract the numeric part
+                  return (
+                    <Dropdown.Item
+                      key={account}
+                      onClick={() => {
+                        setEditUserDetails((prevState) => ({
+                          ...prevState,
+                          apexAccountNumber: numericPart, // Store only the numeric part
+                        }));
+                      }}
+                    >
+                      {account} {/* Display the full string */}
+                    </Dropdown.Item>
+                  );
+                })}
               </Dropdown>
             </div>
+
 
             {/* Email Input */}
             <div>

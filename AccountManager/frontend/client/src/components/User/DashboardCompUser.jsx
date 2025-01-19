@@ -415,9 +415,24 @@ export default function DashboardCompUser() {
                     },
                 });
 
-                setCreateLoding(false);
                 alert("CSV uploaded successfully!");
 
+                setIsDownButtonEnabled(false);
+
+                // Wait for 5 seconds before triggering the trade data automation
+                await new Promise(resolve => setTimeout(resolve, 5000));
+
+                // Call the manual REST trigger for automateTradeData
+                await axios.post(`${BaseURL}trigger-trade-data`, null, {
+                    headers: {
+                        Authorization: `Bearer ${token}`, // Pass the token in the Authorization header
+                    },
+                });
+
+                setIsDownButtonEnabled(true);
+
+                setCreateLoding(false);
+              
                 // Refetch data after uploading CSV
                 fetchData();
             } catch (error) {
