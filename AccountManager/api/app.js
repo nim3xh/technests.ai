@@ -152,7 +152,7 @@ app.get('/download/:accountNumber', (req, res) => {
 
     // Find the relevant files in the folder
     const files = fs.readdirSync(dashboardsPath).filter((file) =>
-      file.endsWith('_EVAL.csv') || file.endsWith('_PA.csv')
+      file.endsWith('_EVAL.csv') || file.endsWith('_PA.csv') || file.endsWith('_Trades.csv')
     );
 
     if (files.length === 0) {

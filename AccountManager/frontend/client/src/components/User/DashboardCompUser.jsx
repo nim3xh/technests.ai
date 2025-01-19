@@ -586,26 +586,47 @@ export default function DashboardCompUser() {
                   </div>
              
                   <div className="flex-wrap flex gap-4 justify-center mt-4">
-                  {/* <Button.Group outline> */}
+                  {!isUpButtonEnabled ? (
+                    <Tooltip content="Upload is only allowed between 7 PM and 5 AM PST">
                       <Button
-                          gradientDuoTone="greenToBlue"
-                          onClick={uploadCsv}
-                          disabled={!isUpButtonEnabled}
-                        >
-                          {createLoding ? (
-                            <>
-                              <Spinner size="sm" />
-                              <span className="pl-3">Loading...</span>
-                            </>
-                          ) : (
-                            <>Upload CSV</>
-                          )}
-                        </Button>
-                        <br></br>
+                        gradientDuoTone="greenToBlue"
+                        onClick={uploadCsv}
+                        disabled
+                      >
+                        {createLoding ? (
+                          <>
+                            <Spinner size="sm" />
+                            <span className="pl-3">Loading...</span>
+                          </>
+                        ) : (
+                          <>Upload CSV</>
+                        )}
+                      </Button>
+                    </Tooltip>
+                  ) : (
+                    <Button
+                      gradientDuoTone="greenToBlue"
+                      onClick={uploadCsv}
+                    >
+                      {createLoding ? (
+                        <>
+                          <Spinner size="sm" />
+                          <span className="pl-3">Loading...</span>
+                        </>
+                      ) : (
+                        <>Upload CSV</>
+                      )}
+                    </Button>
+                  )}
+
+                  <br></br>
+                  {
+                    !IsDownButtonEnabled ? (
+                      <Tooltip content="Download is only allowed between 9 PM and 6 AM PST">
                         <Button
-                          gradientDuoTone='purpleToBlue'
+                          gradientDuoTone="purpleToBlue"
                           onClick={downloadCsvs}
-                          disabled={!IsDownButtonEnabled}
+                          disabled
                         >
                           {createLoding ? (
                             <>
@@ -616,7 +637,24 @@ export default function DashboardCompUser() {
                             <>Download CSV</>
                           )}
                         </Button>
-                      {/* </Button.Group> */}
+                      </Tooltip>
+                    ) : (
+                      <Button
+                        gradientDuoTone="purpleToBlue"
+                        onClick={downloadCsvs}
+                      >
+                        {createLoding ? (
+                          <>
+                            <Spinner size="sm" />
+                            <span className="pl-3">Loading...</span>
+                          </>
+                        ) : (
+                          <>Download CSV</>
+                        )}
+                      </Button>
+                    )
+                  }
+
                      </div>
                      {alert && (
                       <Alert color="success" onDismiss={() => setAlert(false)}>
