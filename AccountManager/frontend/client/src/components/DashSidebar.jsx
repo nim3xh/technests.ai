@@ -19,6 +19,7 @@ import { TbHeartRateMonitor } from "react-icons/tb";
 import { IoGitCompare } from "react-icons/io5";
 import { MdVideoLibrary } from "react-icons/md";
 import { FaUserFriends } from "react-icons/fa";
+import { AiOutlineLineChart } from "react-icons/ai";
 
 const BaseURL = import.meta.env.VITE_BASE_URL;
 
@@ -180,6 +181,15 @@ export default function DashSidebar() {
                   as="div"
                 >
                   Create New Trades
+                </Sidebar.Item>
+              </Link>
+              <Link to="/dashboard?tab=createdTradeView">
+                <Sidebar.Item
+                  active={tab === "createdTradeView"}
+                  icon={AiOutlineLineChart  }
+                  as="div"
+                >
+                  Created Trades
                 </Sidebar.Item>
               </Link>
               {/* <Link to="/dashboard?tab=tradeMatching">
