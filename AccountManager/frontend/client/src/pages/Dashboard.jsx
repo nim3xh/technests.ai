@@ -22,6 +22,7 @@ import DashReferfriendComp from "../components/User/DashReferfriendComp";
 import DashDisclaimersComp from "../components/condtions/DashDisclaimersComp";
 import DashTCComp from "../components/condtions/DashTCComp";
 import DashRulesComp from "../components/condtions/DashRulesComp";
+import DashCreatedTradeView from "../components/DashCreatedTradeView";
 
 export default function Dashboard() {
   const location = useLocation();
@@ -84,6 +85,8 @@ export default function Dashboard() {
       {tab === "termsConditions" && <DashTCComp/>}
       {/* Rules */}
       {tab === "rules" && <DashRulesComp/>}
+      {/* Created Trade View */}
+      {tab === "createdTradeView" && <DashCreatedTradeView/>}
     </div>
   );
 }
