@@ -29,6 +29,11 @@ export default function DashCreatedTradeView() {
   const [error, setError] = useState(null);
   const [trades, setTrades] = useState([]);
   const [createdDateTime, setCreatedDateTime] = useState("");
+  const [filtered, setFiltered] = useState([]);
+  const [selectedFilters, setSelectedFilters] = useState({
+      EVAL: false,
+      PA: false,
+  });
 
   const formattedDateTime = createdDateTime
   ? new Intl.DateTimeFormat('en-US', {
@@ -77,9 +82,42 @@ export default function DashCreatedTradeView() {
     }
   };
 
+  const filter = () => {
+    let filtered = trades;
+    if (selectedFilters.PA) {
+      filtered = filtered.filter((item) => item.Account_Number.startsWith("PA"));
+    }
+
+    if (selectedFilters.EVAL) {
+      filtered = filtered.filter((item) => item.Account_Number.startsWith("APEX"));
+    }
+
+    setFiltered(filtered);
+  }
+
   useEffect(() => {
     fetchTrades();
   }, []);
+
+  useEffect(() => {
+    filter();
+  }, [selectedFilters]);
+
+  const handleFilterChange = (filter) => {
+    setSelectedFilters((prevFilters) => {
+      // If the 'EVAL' checkbox is clicked, uncheck 'PA'
+      if (filter === "EVAL") {
+        return { EVAL: !prevFilters.EVAL, PA: false };
+      }
+  
+      // If the 'PA' checkbox is clicked, uncheck 'EVAL'
+      if (filter === "PA") {
+        return { EVAL: false, PA: !prevFilters.PA };
+      }
+  
+      return prevFilters;
+    });
+  };
   
   return (
     <div className="p-3 w-full">
@@ -110,6 +148,30 @@ export default function DashCreatedTradeView() {
                     {formattedDateTime ? `(${formattedDateTime})` : 'N/A'}
                 </span>
               </p>
+              <div className="text-center">
+              <div className="flex flex-col md:flex-row justify-left items-center md:space-x-4 mt-2">
+                <div className="flex items-center">
+                  <Checkbox
+                    id="eval"
+                    checked={selectedFilters.EVAL}
+                    onChange={() => handleFilterChange("EVAL")}
+                  />
+                    <label htmlFor="eval" className="ml-2 text-sm font-medium">
+                      EVAL Only
+                    </label>
+                </div>
+                <div className="flex items-center">
+                  <Checkbox
+                    id="pa"
+                    checked={selectedFilters.PA}
+                    onChange={() => handleFilterChange("PA")}
+                  />
+                    <label htmlFor="pa" className="ml-2 text-sm font-medium">
+                      PA Only
+                    </label>
+                </div>
+              </div>
+            </div>  
             </div>
             <div className="flex flex-col md:flex-row justify-center items-center md:space-x-4">
               <div className="table-wrapper overflow-x-auto max-h-[690px]">
@@ -135,7 +197,7 @@ export default function DashCreatedTradeView() {
                     <TableHeadCell className="sticky top-0 bg-white z-10 hidden sm:table-cell">Use Trail</TableHeadCell>
                   </TableRow>
                   <TableBody>
-                    {trades.map((trade, index) => (
+                    {filtered.map((trade, index) => (
                       <TableRow key={trade._id}>
                       {/* <TableCell>{index + 1}</TableCell> */}
                       <TableCell style={{ width: '200px', fontSize: '15px', textAlign: 'left' }}>
