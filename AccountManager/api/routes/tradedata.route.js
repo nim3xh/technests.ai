@@ -21,10 +21,10 @@ const verifyApiKey = (req, res, next) => {
 
 
 router.post('/', tradeDataController.save);
-router.get('/', tradeDataController.index);
+router.get('/',verifyToken,tradeDataController.index);
 router.get('/info',verifyApiKey, tradeDataController.index);
 router.get('/info/:account_number',verifyApiKey, tradeDataController.tradeDataByAccount);
-router.get('/getByUserId/:account_number', tradeDataController.tradeDataByAccount);
+router.get('/getByUserId/:account_number',verifyToken, tradeDataController.tradeDataByAccount);
 router.get('/:id', verifyToken, tradeDataController.show);
 router.patch('/:id', verifyToken, tradeDataController.update);
 router.delete('/delete/:id', verifyToken, tradeDataController.destroy);
