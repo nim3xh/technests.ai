@@ -275,16 +275,19 @@ export default function DashCreatedTradeView() {
                     <TableHeadCell className="sticky top-0 bg-white z-10 hidden sm:table-cell">Direction</TableHeadCell>
                     <TableHeadCell className="sticky top-0 bg-white z-10 hidden sm:table-cell">Instrument</TableHeadCell>
                     <TableHeadCell className="sticky top-0 bg-white z-10 hidden sm:table-cell">Profit</TableHeadCell>
-                    <TableHeadCell className="sticky top-0 bg-white z-10 hidden sm:table-cell">Quantity</TableHeadCell>
+                    <TableHeadCell className="sticky top-0 bg-white z-10 hidden sm:table-cell">Qnt</TableHeadCell>
                     <TableHeadCell className="sticky top-0 bg-white z-10 hidden sm:table-cell">Repeat</TableHeadCell>
                     <TableHeadCell className="sticky top-0 bg-white z-10 hidden sm:table-cell">Repeat Every</TableHeadCell>
                     <TableHeadCell className="sticky top-0 bg-white z-10 hidden sm:table-cell">Repeat Times</TableHeadCell>
-                    <TableHeadCell className="sticky top-0 bg-white z-10 hidden sm:table-cell">Stop Loss</TableHeadCell>
+                    <TableHeadCell className="sticky top-0 bg-white z-10 hidden sm:table-cell">SL</TableHeadCell>
                     <TableHeadCell className="sticky top-0 bg-white z-10 hidden sm:table-cell">Time</TableHeadCell>
                     <TableHeadCell className="sticky top-0 bg-white z-10 hidden sm:table-cell">Trail</TableHeadCell>
                     <TableHeadCell className="sticky top-0 bg-white z-10 hidden sm:table-cell">Trail Trigger</TableHeadCell>
                     <TableHeadCell className="sticky top-0 bg-white z-10 hidden sm:table-cell">Use Breakeven</TableHeadCell>
                     <TableHeadCell className="sticky top-0 bg-white z-10 hidden sm:table-cell">Use Trail</TableHeadCell>
+                    <TableHeadCell className="sticky top-0 bg-white z-10 hidden sm:table-cell">
+                      
+                    </TableHeadCell>
                   </TableRow>
                   <TableBody>
                     {filtered.map((trade, index) => (
@@ -310,6 +313,14 @@ export default function DashCreatedTradeView() {
                       <TableCell>{trade.Trail_Trigger}</TableCell>
                       <TableCell>{trade.Use_Breakeven ? 'Yes' : 'No'}</TableCell>
                       <TableCell>{trade.Use_Trail ? 'Yes' : 'No'}</TableCell>
+                      <TableCell>
+                        <Button
+                        outline
+                        gradientDuoTone="pinkToOrange"
+                        >
+                          Cancel
+                        </Button>
+                      </TableCell>
                     </TableRow>                    
                     ))}
                   </TableBody>
