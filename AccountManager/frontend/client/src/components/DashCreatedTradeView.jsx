@@ -34,6 +34,8 @@ export default function DashCreatedTradeView() {
       EVAL: false,
       PA: false,
   });
+  const [selectedAccount, setSelectedAccount] = useState(null);
+  const [combinedData, setCombinedData] = useState([]);
 
   const formattedDateTime = createdDateTime
   ? new Intl.DateTimeFormat('en-US', {
@@ -56,6 +58,59 @@ export default function DashCreatedTradeView() {
     if (hour === 0) hour = 12; 
     else if (hour > 12) hour -= 12;
     return `${hour.toString().padStart(2, "0")}:${minutes} ${modifier}`;
+  };
+
+  const mergeData = (users, accountDetails) => {
+    return accountDetails.map((account) => {
+      const user = users.find((u) => u.accountNumber === account.accountNumber);
+      return {
+        ...account,
+        name: user ? user.name : "Unknown",
+      };
+    });
+  };
+
+  const encounteredAccounts = new Set();
+
+  const uniqueAccountNumbers = combinedData
+    .map((item) => {
+      // Match and extract the account number pattern APEX-245360
+      const match = item.accountNumber.match(/^(APEX-\d+)/);
+      if (match) {
+        const accountNumber = match[1];
+        if (!encounteredAccounts.has(accountNumber)) {
+          encounteredAccounts.add(accountNumber);
+          return `${accountNumber} (${item.name})`;
+        }
+      }
+      return null; // Skip if already encountered or no match
+    })
+    .filter(Boolean); // Filter out null values
+
+  const fetchData = async () => {
+    try {
+      const token = currentUser.token; // Get the token from the currentUser object
+
+      const headers = {
+        Authorization: `Bearer ${token}`, // Add token in the Authorization header
+      };
+
+      const [usersResponse, accountDetailsResponse] = await Promise.all([
+        axios.get(`${BaseURL}users`, { headers }), // Pass headers with the token
+        axios.get(`${BaseURL}accountDetails`, { headers }), // Pass headers with the token
+      ]);
+
+      const mergedData = mergeData(
+        usersResponse.data,
+        accountDetailsResponse.data
+      );
+      setCombinedData(mergedData);
+
+      setLoading(false);
+    } catch (err) {
+      setError("Something went wrong while fetching data.",err);
+      setLoading(false);
+    }
   };
 
   const fetchTrades = async () => {
@@ -93,16 +148,23 @@ export default function DashCreatedTradeView() {
       filtered = filtered.filter((item) => item.Account_Number.startsWith("APEX"));
     }
 
+    if (selectedAccount != null) {
+      filtered = filtered.filter((item) => {
+        return item.Account_Number.replace(/(PA-)?(APEX-)?(\d+)(-\d+)?/, '$3') === selectedAccount.replace(/APEX-/, "").split(" ")[0];
+      });
+    }
+
     setFiltered(filtered);
   }
 
   useEffect(() => {
     fetchTrades();
+    fetchData();
   }, []);
 
   useEffect(() => {
     filter();
-  }, [selectedFilters]);
+  }, [selectedFilters,selectedAccount]);
 
   const handleFilterChange = (filter) => {
     setSelectedFilters((prevFilters) => {
@@ -119,6 +181,11 @@ export default function DashCreatedTradeView() {
       return prevFilters;
     });
   };
+
+  const handleAccountSelection = (account) => {
+    setSelectedAccount(account);
+  };
+
   
   return (
     <div className="p-3 w-full">
@@ -152,6 +219,28 @@ export default function DashCreatedTradeView() {
               <div className="text-center">
               <div className="flex flex-col md:flex-row justify-left items-center md:space-x-4 mt-2">
                 <div className="flex items-center">
+                  <Dropdown
+                    label={
+                    selectedAccount
+                      ? selectedAccount.replace(/APEX-/, "") // Remove "APEX-"
+                      : "Select User"
+                    }
+                    className="w-full text-left dark:bg-gray-800 dark:text-gray-200  relative z-20"
+                    inline
+                  >
+                    <Dropdown.Item onClick={() => setSelectedAccount(null)}>
+                      Clear Selection
+                    </Dropdown.Item>
+                      {uniqueAccountNumbers.map((account) => (
+                        <Dropdown.Item
+                          key={account}
+                          onClick={() => handleAccountSelection(account)}
+                        >
+                          {selectedAccount === account ? "✓ " : ""}{" "}
+                          {account.replace(/APEX-/, "")} {/* Display without "APEX-" */}
+                        </Dropdown.Item>
+                      ))}
+                  </Dropdown>
                   <Checkbox
                     id="eval"
                     checked={selectedFilters.EVAL}
