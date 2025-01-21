@@ -418,10 +418,10 @@ export default function DashboardCompUser() {
                     },
                 });
 
-                setAlert("CSV uploaded successfully!");
+                setAlert("Account Management Activities.....");
                 await new Promise(resolve => setTimeout(resolve, 5000));
                 setIsDownButtonEnabled(false);
-                setAlert('Creating ApexID_Trade.csv , ApexID_PA.csv and ApexID_EVAL.csv files.');
+                setAlert('Calculating.....');
                 // Wait for 5 seconds before triggering the trade data automation
                 await new Promise(resolve => setTimeout(resolve, 5000));
 
@@ -432,7 +432,7 @@ export default function DashboardCompUser() {
                     },
                 });
 
-                setAlert('ApexID_Trade.csv , ApexID_PA.csv and ApexID_EVAL.csv have been created and uploaded successfully.');
+                setAlert('Please select Download CSV to Proceed.');
           
                 setIsDownButtonEnabled(true);
 
