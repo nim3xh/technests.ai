@@ -68,6 +68,7 @@ export default function DashCreatedTradeView() {
 
       const response = await axios.get(`${BaseURL}tradeData`, { headers });
       setTrades(response.data);
+      setFiltered(response.data);
 
       if(response.data !=  null && response.data.length > 0){
         setCreatedDateTime(response.data[0].createdAt);
@@ -179,7 +180,7 @@ export default function DashCreatedTradeView() {
                <TableHead>
                   <TableRow>
                     {/* <TableHeadCell>#</TableHeadCell> */}
-                    <TableHeadCell className="sticky top-0 bg-white z-10 hidden sm:table-cell">Account Number</TableHeadCell>
+                    <TableHeadCell className="sticky top-0 bg-white z-10 hidden sm:table-cell">Account </TableHeadCell>
                     <TableHeadCell className="sticky top-0 bg-white z-10 hidden sm:table-cell">BO</TableHeadCell>
                     <TableHeadCell className="sticky top-0 bg-white z-10 hidden sm:table-cell">BT</TableHeadCell>
                     <TableHeadCell className="sticky top-0 bg-white z-10 hidden sm:table-cell">Direction</TableHeadCell>
