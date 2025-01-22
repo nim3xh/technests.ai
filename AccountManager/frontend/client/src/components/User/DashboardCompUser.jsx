@@ -411,35 +411,53 @@ export default function DashboardCompUser() {
                         Authorization: `Bearer ${token}`, // Pass the token in the Authorization header
                     },
                 });
+
                 await axios.post(`${BaseURL}accountDetails/add-account`, formData, {
                     headers: {
                         "Content-Type": "multipart/form-data",
                         Authorization: `Bearer ${token}`, // Add token in headers for authentication
                     },
                 });
-
-                setAlert("Account Management Activities.....");
-                await new Promise(resolve => setTimeout(resolve, 5000));
+  
                 setIsDownButtonEnabled(false);
-                setAlert('Calculating.....');
-                // Wait for 5 seconds before triggering the trade data automation
-                await new Promise(resolve => setTimeout(resolve, 5000));
+                
+                const checkTime = async () => {
+                  // Get the current time in PST
+                  const nowPST = new Date().toLocaleString('en-US', { 
+                   timeZone: 'America/Los_Angeles', 
+                   hour12: false 
+                 }); 
 
-                // Call the manual REST trigger for automateTradeData
-                await axios.post(`${BaseURL}trigger-trade-data`, null, {
-                    headers: {
-                        Authorization: `Bearer ${token}`, // Pass the token in the Authorization header
-                    },
-                });
+                 const hours = new Date(nowPST).getHours();
+                 const minutes = new Date(nowPST).getMinutes();
+         
+                 // Disable the automaticaly trade creation between 10 PM and 2 PM AM PST
+                 if ((hours >= 22 && hours < 24) || (hours >= 0 && hours < 14)) {
+                    setAlert('This data will be processed after 2 AM PST.');
+                 } else {
+                    setAlert("Account Management Activities.....");
+                    await new Promise(resolve => setTimeout(resolve, 5000));
+                    setAlert('Calculating.....');
+                    // Wait for 5 seconds before triggering the trade data automation
+                    await new Promise(resolve => setTimeout(resolve, 5000));
+                    // Call the manual REST trigger for automateTradeData
+                    await axios.post(`${BaseURL}trigger-trade-data`, null, {
+                        headers: {
+                            Authorization: `Bearer ${token}`, // Pass the token in the Authorization header
+                        },
+                    });
+                    setAlert('Please select Download CSV to Proceed.');
+                    setIsDownButtonEnabled(true);
+                    setCreateLoding(false);
+                 }
+               };
+        
+              // Run the check for create trades
+              checkTime(); 
+                
+              // Refetch data after uploading CSV
+              fetchData();
 
-                setAlert('Please select Download CSV to Proceed.');
-          
-                setIsDownButtonEnabled(true);
-
-                setCreateLoding(false);
-              
-                // Refetch data after uploading CSV
-                fetchData();
             } catch (error) {
                 console.error("Error uploading CSV:", error);
                 seterrAlert("Failed to upload the CSV file.");
@@ -470,8 +488,8 @@ export default function DashboardCompUser() {
         const hours = new Date(nowPST).getHours();
         const minutes = new Date(nowPST).getMinutes();
 
-        // Enable the button between 9 PM and 6 AM PST
-        if (hours >= 21 || hours < 6 || (hours === 6 && minutes === 0)) {
+        // Enable the button between 10 PM and 6 AM PST
+        if (hours >= 22 || hours < 6 || (hours === 6 && minutes === 0)) {
           setIsDownButtonEnabled(true);
         } else {
           setIsDownButtonEnabled(false);
@@ -497,8 +515,8 @@ export default function DashboardCompUser() {
         const hours = new Date(nowPST).getHours();
         const minutes = new Date(nowPST).getMinutes();
 
-        // Enable the button between 7 PM and 5 AM PST
-        if ((hours >= 19 || hours < 5) || (hours === 5 && minutes === 0)) {
+        // Enable the button between 7 PM and 1:00 AM PST
+        if ((hours >= 19 && hours < 24) || (hours >= 0 && hours < 1)) {
           setIsUpButtonEnabled(true);
         } else {
           setIsUpButtonEnabled(false);
@@ -622,7 +640,7 @@ export default function DashboardCompUser() {
                   <br></br>
                   {
                     !IsDownButtonEnabled ? (
-                      <Tooltip content="Download is only allowed between 9 PM and 6 AM PST">
+                      <Tooltip content="Available after 10:00 PM">
                         <Button
                           gradientDuoTone="purpleToBlue"
                           onClick={downloadCsvs}
