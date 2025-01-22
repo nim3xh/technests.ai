@@ -583,7 +583,7 @@ export default function DashTradingComp() {
                       const headers = {
                         Authorization: `Bearer ${token}`,
                       };
-                      const response = await axios.post(`${BaseURL}tradeData`, {
+                      const response = await axios.post(`${BaseURL}tradeData`, tradeData, {
                         headers,
                       });
                     }catch (err) {
