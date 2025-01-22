@@ -125,6 +125,8 @@ export default function DashCreatedTradeView() {
       setTrades(response.data);
       setFiltered(response.data);
 
+      console.log(response.data);
+
       if(response.data !=  null && response.data.length > 0){
         setCreatedDateTime(response.data[0].createdAt);
       } else {

@@ -447,13 +447,14 @@ export default function DashboardCompUser() {
                         },
                     });
                     setAlert('Please select Download CSV to Proceed.');
-                    setIsDownButtonEnabled(true);
-                    setCreateLoding(false);
+                    
                  }
                };
         
               // Run the check for create trades
               checkTime(); 
+              setIsDownButtonEnabled(true);
+              setCreateLoding(false);
                 
               // Refetch data after uploading CSV
               fetchData();
