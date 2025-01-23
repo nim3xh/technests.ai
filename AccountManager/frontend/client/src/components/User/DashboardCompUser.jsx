@@ -556,55 +556,6 @@ export default function DashboardCompUser() {
           ) : (
             <>
               <div className="flex-wrap flex gap-4 justify-center mt-4">
-                    <div className="flex flex-col p-3 dark:bg-slate-800 gap-4 md:w-40 w-full rounded-md shadow-md">
-                      <div className="flex justify-between">
-                        <div>
-                          <h3 className="text-gray-500 text-md uppercase">
-                            EVAL
-                          </h3>
-                          <p className="text-2xl">
-                            {userStats.reduce(
-                              (acc, user) => acc + user.evalActive,
-                              0
-                            )}
-                          </p>
-                        </div>
-                        {/* <MdTableRows className="bg-teal-600 text-white rounded-full text-5xl p-3 shadow-lg" /> */}
-                      </div>
-                    </div>
-                    <div className="flex flex-col p-3 dark:bg-slate-800 gap-4 md:w-40 w-full rounded-md shadow-md">
-                      <div className="flex justify-between">
-                        <div>
-                        <h3 className="text-gray-500 text-md uppercase">
-                            PA
-                          </h3>
-                          <p className="text-2xl">
-                          {userStats.reduce(
-                            (acc, user) => acc + user.paActive,
-                            0
-                          )}
-                          </p>
-                        </div>                    
-                      </div>
-                    </div>
-                    <div className="flex flex-col p-3 dark:bg-slate-800 gap-4 md:w-40 w-full rounded-md shadow-md">
-                      <div className="flex justify-between">
-                        <div>
-                        <h3 className="text-gray-500 text-md uppercase">
-                            Admin Only
-                          </h3>
-                          <p className="text-2xl">
-                            {userStats.reduce(
-                              (acc, user) => acc + user.evalAdminOnly+user.paAdminOnly,
-                              0
-                            )}
-                          </p>
-                        </div>                    
-                      </div>
-                    </div>
-                  </div>
-             
-                  <div className="flex-wrap flex gap-4 justify-center mt-4">
                   {!isUpButtonEnabled ? (
                     <Tooltip content="Upload is only allowed between 7 PM and 5 AM PST">
                       <Button
