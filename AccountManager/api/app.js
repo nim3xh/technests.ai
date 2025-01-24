@@ -136,8 +136,8 @@ app.get('/current-time', (req, res) => {
 });
 
 app.get('/download/demo', (req, res) => {
-  const filePath = path.join(__dirname, 'demo.csv');  // Absolute path to the file
-  const fileName = 'demo.csv';  // Name of the file for download
+  const filePath = path.join(__dirname, 'upload_sample.csv');  // Absolute path to the file
+  const fileName = 'dashboard_data_sample.csv';  // Name of the file for download
 
   // Set headers for the file download
   res.setHeader('Content-Disposition', `attachment; filename=${fileName}`);
