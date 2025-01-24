@@ -136,60 +136,53 @@ app.get('/current-time', (req, res) => {
 });
 
 //for download _EVAL.csv and _PA.csv files relevent to account number from dashboards folder, account number equals to folder name
-// Endpoint to download _EVAL.csv and _PA.csv files
+// Endpoint to download a single _Trades.csv file relevant to account number
 app.get('/download/:accountNumber', (req, res) => {
   try {
     const { accountNumber } = req.params;
     console.log(accountNumber);
-    
+
     const dashboardsPath = path.join(__dirname, 'dashboards', accountNumber);
-    
-    console.log(`Checking for files for account number ${accountNumber} in folder:`);
-     // Check if the folder exists
+    console.log(`Checking for files for account number ${accountNumber} in folder: ${dashboardsPath}`);
+
+    // Check if the folder exists
     if (!fs.existsSync(dashboardsPath)) {
       return res.status(404).send(`No folder found for account number ${accountNumber}.`);
     }
 
-    // Find the relevant files in the folder
-    const files = fs.readdirSync(dashboardsPath).filter((file) =>
-      file.endsWith('_EVAL.csv') || file.endsWith('_PA.csv') || file.endsWith('_Trades.csv')
-    );
+    // Find the relevant _Trades.csv file in the folder
+    const files = fs.readdirSync(dashboardsPath).filter((file) => file.endsWith('_Trades.csv'));
 
     if (files.length === 0) {
-      return res.status(404).send(`No _EVAL.csv or _PA.csv files found for account number ${accountNumber}.`);
+      return res.status(404).send(`No _Trades.csv file found for account number ${accountNumber}.`);
     }
 
-    // Serve multiple files as a ZIP for download
-    const archiver = require('archiver'); // Ensure `archiver` is installed
+    if (files.length > 1) {
+      return res.status(400).send(`Multiple _Trades.csv files found for account number ${accountNumber}. Please ensure only one file exists.`);
+    }
 
-    const zipFileName = `${accountNumber}_files.zip`;
-    res.setHeader('Content-Disposition', `attachment; filename=${zipFileName}`);
-    res.setHeader('Content-Type', 'application/zip');
+    // Serve the single _Trades.csv file for download
+    const filePath = path.join(dashboardsPath, files[0]);
+    const fileName = files[0];
 
-    const archive = archiver('zip', { zlib: { level: 9 } });
+    res.setHeader('Content-Disposition', `attachment; filename=${fileName}`);
+    res.setHeader('Content-Type', 'text/csv');
 
-    // Handle archive stream errors
-    archive.on('error', (err) => {
-      console.error('Error creating ZIP archive:', err);
-      res.status(500).send('Failed to create ZIP file.');
+    // Stream the file to the client
+    const fileStream = fs.createReadStream(filePath);
+    fileStream.pipe(res);
+
+    // Handle file stream errors
+    fileStream.on('error', (err) => {
+      console.error('Error reading the file:', err);
+      res.status(500).send('Failed to read the file.');
     });
-
-    // Pipe archive data to the response
-    archive.pipe(res);
-
-    // Add files to the archive
-    files.forEach((file) => {
-      const filePath = path.join(dashboardsPath, file);
-      archive.file(filePath, { name: file });
-    });
-
-    // Finalize the archive
-    archive.finalize();
   } catch (error) {
-    console.error(`Error while downloading files for account number ${req.params.accountNumber}:`, error);
+    console.error(`Error while downloading _Trades.csv file for account number ${req.params.accountNumber}:`, error);
     res.status(500).send('An error occurred while processing your request.');
   }
 });
+
 
 // Endpoint to append input to a file
 app.post('/alert-hook', (req, res) => {
