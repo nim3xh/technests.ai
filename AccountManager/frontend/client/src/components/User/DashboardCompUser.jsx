@@ -588,7 +588,6 @@ export default function DashboardCompUser() {
                       )}
                     </Button>
                   )}
-
                   <br></br>
                   {
                     !IsDownButtonEnabled ? (
@@ -624,18 +623,30 @@ export default function DashboardCompUser() {
                       </Button>
                     )
                   }
-
-                     </div>
-                     {alert && (
-                      <Alert color="success" onDismiss={() => setAlert(false)}>
-                        <span className="font-medium"></span> {alert}
-                      </Alert>
-                      )}
-                     {errAlert && (
-                      <Alert color='red' onDismiss={() => seterrAlert(false)}>
-                        <span className="font-medium"></span> {errAlert}
-                      </Alert>
-                      )}
+               </div>
+                {/* Link for downloading default file */}
+                <div className="text-center mb-4 mt-4">
+                <a
+                  href="/assets/demo.csv"
+                  download="demo.csv"
+                  className="text-blue-500 underline hover:text-blue-700"
+                >
+                  Click here to download the default dashboard file template
+                </a>
+                  <p className="text-sm text-gray-600">
+                    Use this template for best results when uploading your dashboard file.
+                  </p>
+                </div>
+                {alert && (
+                  <Alert color="success" onDismiss={() => setAlert(false)}>
+                    <span className="font-medium"></span> {alert}
+                   </Alert>
+                  )}
+                {errAlert && (
+                  <Alert color='red' onDismiss={() => seterrAlert(false)}>
+                    <span className="font-medium"></span> {errAlert}
+                  </Alert>
+                )}
             </>
           )}
         </>
