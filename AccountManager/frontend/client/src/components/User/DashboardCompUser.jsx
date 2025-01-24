@@ -327,7 +327,7 @@ export default function DashboardCompUser() {
         const a = document.createElement('a');
         const url = window.URL.createObjectURL(blob);
         a.href = url;
-        a.download = `${accountNumber}:${formattedTodayDate}_Trades.zip`;
+        a.download = `${accountNumber}:${formattedTodayDate}_Trades.csv`;
         document.body.appendChild(a);
         a.click();
   
