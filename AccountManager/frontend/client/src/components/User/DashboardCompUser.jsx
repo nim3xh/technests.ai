@@ -627,13 +627,12 @@ export default function DashboardCompUser() {
                 {/* Link for downloading default file */}
                 <div className="text-center mb-4 mt-4">
                 <a
-                  href="/assets/demo.csv"
-                  download="demo.csv"
-                  className="text-blue-500 underline hover:text-blue-700"
-                >
-                  Click here to download the default dashboard file template
-                </a>
-                  <p className="text-sm text-gray-600">
+                    href={`${BaseURL}download/demo`}  // Inject the BaseURL variable properly
+                    className="text-blue-500 underline hover:text-blue-700"
+                  >
+                    Click here to download the default dashboard file template
+                  </a>
+                    <p className="text-sm text-gray-600">
                     Use this template for best results when uploading your dashboard file.
                   </p>
                 </div>
