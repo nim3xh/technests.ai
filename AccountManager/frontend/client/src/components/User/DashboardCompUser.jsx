@@ -626,16 +626,19 @@ export default function DashboardCompUser() {
                </div>
                 {/* Link for downloading default file */}
                 <div className="text-center mb-4 mt-4">
-                <a
-                    href={`${BaseURL}download/demo`}  // Inject the BaseURL variable properly
+                  <a
+                    href={`${BaseURL}download/demo`} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
                     className="text-blue-500 underline hover:text-blue-700"
                   >
                     Click here to download the default dashboard file template
                   </a>
-                    <p className="text-sm text-gray-600">
+                  <p className="text-sm text-gray-600">
                     Use this template for best results when uploading your dashboard file.
                   </p>
                 </div>
+
                 {alert && (
                   <Alert color="success" onDismiss={() => setAlert(false)}>
                     <span className="font-medium"></span> {alert}
