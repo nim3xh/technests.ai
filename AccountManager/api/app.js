@@ -135,6 +135,25 @@ app.get('/current-time', (req, res) => {
   res.json({ time });
 });
 
+app.get('/download/demo', (req, res) => {
+  const filePath = path.join(__dirname, 'demo.csv');  // Absolute path to the file
+  const fileName = 'demo.csv';  // Name of the file for download
+
+  // Set headers for the file download
+  res.setHeader('Content-Disposition', `attachment; filename=${fileName}`);
+  res.setHeader('Content-Type', 'text/csv');  // Correct MIME type for CSV files
+
+  // Create a read stream for the file and pipe it to the response
+  const fileStream = fs.createReadStream(filePath);
+  fileStream.pipe(res);
+
+  // Handle any file reading errors
+  fileStream.on('error', (err) => {
+    console.error('Error reading the file:', err);
+    res.status(500).send('Failed to read the file.');
+  });
+});
+
 //for download _EVAL.csv and _PA.csv files relevent to account number from dashboards folder, account number equals to folder name
 // Endpoint to download a single _Trades.csv file relevant to account number
 app.get('/download/:accountNumber', (req, res) => {
