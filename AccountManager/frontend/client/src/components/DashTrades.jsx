@@ -214,9 +214,9 @@ export default function DashTrades() {
         BreakevenOffset: newTrade.BreakevenOffset.toString(),
         TrailTrigger: newTrade.TrailTrigger.toString(),
         Trail: newTrade.Trail.toString(),
-        Repeat: newTrade.Repeat.toString(),
-        RepeatTimes: newTrade.RepeatTimes.toString(),
-        RepeatEvery: newTrade.RepeatEvery.toString(),
+        Repeat: (newTrade.Repeat?.toString() || "false"),
+        RepeatTimes: (newTrade.RepeatTimes?.toString() || "0"),
+        RepeatEvery: (newTrade.RepeatEvery?.toString() || "0"),        
         // ApexId: newTrade.ApexId.toString(),
       };
   
@@ -234,7 +234,7 @@ export default function DashTrades() {
       setShowModal(false);
       resetForm();
     } catch (err) {
-      alert("Something went wrong while saving trade.");
+     alert("Something went wrong while saving trade.");
     }
   };
   
