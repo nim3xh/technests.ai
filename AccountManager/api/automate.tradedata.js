@@ -149,8 +149,8 @@ const getTradeTime = (accountBalance) => {
 
     // Check if the account type is "PA"
     if (accountType.startsWith("PA")) { 
-      if (balance >= 49000 && balance <= 52799) {
-        return "PA STD"; // For PA accounts with balance between 49000 and 52801
+      if (balance >= 49000 && balance <= 52599) {
+        return "PA STD"; // For PA accounts with balance between 49000 and 52600
       } else if(balance >= 52400 && balance < 53000) {
         return "PA Mini"; // For PA accounts with balance between 52800 and 53000
       } else if (balance < 49000) {
