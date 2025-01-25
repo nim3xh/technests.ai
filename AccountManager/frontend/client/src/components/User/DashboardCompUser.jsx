@@ -431,9 +431,21 @@ export default function DashboardCompUser() {
                  const hours = new Date(nowPST).getHours();
                  const minutes = new Date(nowPST).getMinutes();
          
-                 // Disable the automaticaly trade creation between 10 PM and 2 PM AM PST
+                 // Disable the automaticaly trade creation between 10 PM and 2 PM PST
                  if ((hours >= 22 && hours < 24) || (hours >= 0 && hours < 14)) {
-                    setAlert('This data will be processed after 2 AM PST.');
+                    // setAlert('This data will be processed after 2 PM PST.');
+                    setAlert("Account Management Activities.....");
+                    await new Promise(resolve => setTimeout(resolve, 5000));
+                    setAlert('Calculating.....');
+                    // Wait for 5 seconds before triggering the trade data automation
+                    await new Promise(resolve => setTimeout(resolve, 5000));
+                    // Call the manual REST trigger for automateTradeData
+                    await axios.post(`${BaseURL}trigger-trade-data`, null, {
+                        headers: {
+                            Authorization: `Bearer ${token}`, // Pass the token in the Authorization header
+                        },
+                    });
+                    setAlert('Please select Download CSV to Proceed.');
                  } else {
                     setAlert("Account Management Activities.....");
                     await new Promise(resolve => setTimeout(resolve, 5000));
@@ -493,7 +505,7 @@ export default function DashboardCompUser() {
         if (hours >= 22 || hours < 6 || (hours === 6 && minutes === 0)) {
           setIsDownButtonEnabled(true);
         } else {
-          setIsDownButtonEnabled(false);
+          setIsDownButtonEnabled(true);
         }
       };
 
@@ -520,7 +532,7 @@ export default function DashboardCompUser() {
         if ((hours >= 19 && hours < 24) || (hours >= 0 && hours < 1)) {
           setIsUpButtonEnabled(true);
         } else {
-          setIsUpButtonEnabled(false);
+          setIsUpButtonEnabled(true);
         }
       };
 
@@ -557,7 +569,7 @@ export default function DashboardCompUser() {
             <>
               <div className="flex-wrap flex gap-4 justify-center mt-4">
                   {!isUpButtonEnabled ? (
-                    <Tooltip content="Upload is only allowed between 7 PM and 5 AM PST">
+                    <Tooltip content="Upload is only allowed between 7 PM and 1 AM PST">
                       <Button
                         gradientDuoTone="greenToBlue"
                         onClick={uploadCsv}
