@@ -423,7 +423,7 @@ export default function DashTradingComp() {
       const createTradeCSV = (tradeData, accountLabel, accountNumbers, accountDirection,time) => {
         const tradeHeaders = [
           `Direction (${accountLabel})`,
-          "Quantity", "Time", "Stop Loss", "Profit", "Use Breakeven", "Breakeven Trigger", "Breakeven Offset", "Use Trail", "Trail Trigger", "Trail", "Instrument","Repeat","Repeat Times","Repeat Every", "Account Number",
+          "Quantity", "Time", "Stop Loss", "Profit", "Use Breakeven", "Breakeven Trigger", "Breakeven Offset", "Use Trail", "Trail Trigger", "Trail", "Instrument", "Account Number",
         ];
 
         const tradeCSV = [tradeHeaders.join(",")];
@@ -442,9 +442,9 @@ export default function DashTradingComp() {
                   trade.TrailTrigger,
                   trade.Trail,
                   trade.Instrument,
-                  trade.Repeat,
-                  trade.RepeatTimes,
-                  trade.RepeatEvery,
+                  // trade.Repeat,
+                  // trade.RepeatTimes,
+                  // trade.RepeatEvery,
                   accountNumbers[index] || "-",
                 ].join(",")
             );
