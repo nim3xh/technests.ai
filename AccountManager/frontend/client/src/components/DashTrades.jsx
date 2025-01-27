@@ -210,10 +210,12 @@ export default function DashTrades() {
         // Time: newTrade.Time.toString(),
         StopLoss: newTrade.StopLoss.toString(),
         Profit: newTrade.Profit.toString(),
-        BreakevenTrigger: newTrade.BreakevenTrigger.toString(),
-        BreakevenOffset: newTrade.BreakevenOffset.toString(),
-        TrailTrigger: newTrade.TrailTrigger.toString(),
-        Trail: newTrade.Trail.toString(),
+        UseBreakeven: newTrade.UseBreakeven?.toString() || "false",
+        BreakevenTrigger: newTrade.BreakevenTrigger?.toString() || "0",	
+        BreakevenOffset: newTrade.BreakevenOffset?.toString() || "0",
+        UseTrail: newTrade.UseTrail?.toString() || "false",
+        TrailTrigger: newTrade.TrailTrigger?.toString() || "0",
+        Trail: newTrade.Trail?.toString()  || "0", 
         Repeat: (newTrade.Repeat?.toString() || "false"),
         RepeatTimes: (newTrade.RepeatTimes?.toString() || "0"),
         RepeatEvery: (newTrade.RepeatEvery?.toString() || "0"),        
@@ -234,7 +236,7 @@ export default function DashTrades() {
       setShowModal(false);
       resetForm();
     } catch (err) {
-     alert("Something went wrong while saving trade.");
+     console.log("Something went wrong while saving trade.",err);
     }
   };
   
