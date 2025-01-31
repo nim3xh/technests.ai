@@ -138,13 +138,7 @@ const getTradeTime = (accountBalance) => {
   // Function to determine the trade name based on account balance and account type (PA or EVAL)
   const getTradeNameBasedOnBalance = (accountType, balance) => {
     if (accountType.startsWith("APEX")) {
-      if (balance >= 49000 && balance <= 52799) {
-        return "EVAL STD"; // For EVAL accounts with balance between 49500 and 52801
-      } else if (balance >= 52800 && balance < 53000) {
-        return "EVAL Mini"; // For EVAL accounts with balance above 52800
-      } else if (balance < 49500) {
-        return "EVAL MAX"; // For EVAL accounts with balance below 49500
-      }
+        return "EVAL STD"; // for all EVAL accounts
     }
 
     // Check if the account type is "PA"
