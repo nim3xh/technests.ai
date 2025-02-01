@@ -102,38 +102,32 @@ function automateTradeData() {
     selectSetsOfThreeAcc();
 }
 
-// Helper function to get a random time between two given times without gaps
-const getRandomTime = (startHour, startMinute, endHour, endMinute) => {
-    const start = new Date();
-    start.setHours(startHour, startMinute, 0, 0);
+    // Function to get a random time within a specified range
+    const getRandomTime = (startHour, startMinute, endHour, endMinute) => {
+        let start = new Date();
+        start.setHours(startHour, startMinute, 0, 0);
+        
+        let end = new Date();
+        end.setHours(endHour, endMinute, 0, 0);
+        
+        let randomTime = new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()));
+        
+        return randomTime.toLocaleTimeString("en-US", { hour: '2-digit', minute: '2-digit', hour12: true });
+    };
 
-    const end = new Date();
-    end.setHours(endHour, endMinute, 0, 0);
-
-    const randomTime = new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()));
-
-    const hours = randomTime.getHours();
-    const minutes = randomTime.getMinutes().toString().padStart(2, '0');
-    
-    return `${hours}:${minutes}`;
-};
-
-// Function to get trade time based on account balance
-const getTradeTime = (accountBalance) => {
-    if (accountBalance < 49000) {
-      // Far Big Trades: 6:30 AM - 9:30 AM
-      return getRandomTime(6, 30, 9, 30);
-    } else if (accountBalance >= 49000 && accountBalance <= 52799) {
-      // Standard Trades: 9:30 AM - 11:30 AM
-      return getRandomTime(9, 30, 11, 30);
-    } else if (accountBalance >= 52800) {
-      // Mini Trade: 11:30 AM - 12:00 PM
-      return getRandomTime(11, 30, 12, 0);
-    } else {
-      // Default case if the balance does not match any range
-      return "-";
-    }
-  };
+    // Function to get trade time based on account balance and type
+    const getTradeTime = (accountType, accountBalance) => {
+        if (accountType.startsWith("APEX")) {
+            if (accountBalance < 53000) {
+                return getRandomTime(7, 30, 8, 30); // EVAL Standard trades
+            } else {
+                return "No Trade"; // No trade for EVAL if balance >= 53000
+            }
+        } else if (accountType.startsWith("PA")) {
+            return getRandomTime(5, 0, 12, 45); // PA trading time
+        }
+        return "-"; // Default fallback
+    };
 
   // Function to determine the trade name based on account balance and account type (PA or EVAL)
   const getTradeNameBasedOnBalance = (accountType, balance) => {
@@ -223,7 +217,7 @@ const exportCSVForEachAccount = async (groupedSets) => {
 
         // Generate rows for matched accounts
         const rows = [...matchesPA, ...matchesEVAL].map(([account1, account2], i) => {
-            const tradeTime = getTradeTime(account1.accountBalance);
+            const tradeTime = getTradeTime(account1.account,account1.accountBalance);
             const direction1 = account1.accountBalance >= 53000 ? "Long" : i % 2 === 0 ? "Long" : "Short";
             const direction2 = account2.accountBalance >= 53000 ? "Long" : direction1 === "Long" ? "Short" : "Long";
 
@@ -250,7 +244,7 @@ const exportCSVForEachAccount = async (groupedSets) => {
         // Add unmatched accounts
         unmatchedAccountsPA.concat(unmatchedAccountsEVAL).forEach((account, i) => {
             const direction = i % 2 === 0 ? "Long" : "Short";
-            const time = getTradeTime(account.accountBalance);
+            const time = getTradeTime(account.account,account.accountBalance);
             rows.push([
                 {
                     direction: direction,
@@ -272,7 +266,7 @@ const exportCSVForEachAccount = async (groupedSets) => {
                     flattenedRows[i].time === flattenedRows[j].time &&
                     flattenedRows[i].accountNumber === flattenedRows[j].accountNumber
                 ) {
-                    flattenedRows[j].time = getTradeTime(flattenedRows[j].balance);
+                    flattenedRows[j].time = getTradeTime(flattenedRows[j].account,flattenedRows[j].balance);
                 }
             }
         }
