@@ -177,59 +177,31 @@ export default function DashTradingComp() {
     }
   };
 
-  // Helper function to get a random time between two given times without gaps
-  const getRandomTime = (startHour, startMinute, endHour, endMinute) => {
-    const start = new Date();
-    start.setHours(startHour, startMinute, 0, 0);
-
-    const end = new Date();
-    end.setHours(endHour, endMinute, 0, 0);
-
-    const randomTime = new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()));
-
-    const hours = randomTime.getHours();
-    const minutes = randomTime.getMinutes().toString().padStart(2, '0');
-    
-    return `${hours}:${minutes}`;
-  };
-
-  // Function to get trade time based on account balance
-  const getTradeTime = (accountBalance) => {
-    if (accountBalance < 49000) {
-      // Far Big Trades: 6:30 AM - 9:30 AM
-      return getRandomTime(6, 30, 9, 30);
-    } else if (accountBalance >= 49000 && accountBalance <= 52799) {
-      // Standard Trades: 9:30 AM - 11:30 AM
-      return getRandomTime(9, 30, 11, 30);
-    } else if (accountBalance >= 52800) {
-      // Mini Trade: 11:30 AM - 12:00 PM
-      return getRandomTime(11, 30, 12, 0);
-    } else {
-      // Default case if the balance does not match any range
-      return "-";
-    }
-  };
-
-  // Function to determine the trade name based on account balance and account type (PA or EVAL)
-  const getTradeNameBasedOnBalance = (accountType, balance) => {
+  // Function to get trade time based on account balance and type
+  const getTradeTime = (accountType, accountBalance) => {
     if (accountType.startsWith("APEX")) {
-      return "EVAL STD"; // for all EVAL accounts
+        if (accountBalance < 53000) {
+            return getRandomTime(7, 30, 8, 30); // EVAL Standard trades
+        } else {
+            return "No Trade"; // No trade for EVAL if balance >= 53000
+        }
+    } else if (accountType.startsWith("PA")) {
+        return getRandomTime(5, 0, 12, 45); // PA trading time
+    }
+    return "-"; // Default fallback
+  };
+
+
+  // Function to determine the trade type based on account balance and type
+  const getTradeNameBasedOnBalance = (accountType, balance) => {
+    if (accountType.startsWith("EVAL")) {
+        return balance < 53000 ? "EVAL STD" : "No Trade";
+    } 
+
+    if (accountType.startsWith("PA")) { 
+        return balance < 51749 ? "PA STD" : "PA Mini";
     }
 
-    // Check if the account type is "PA"
-    if (accountType.startsWith("PA")) { 
-      if (balance >= 49000 && balance <= 52599) {
-        return "PA STD"; // For PA accounts with balance between 49000 and 52600
-      } else if(balance >= 52400 && balance < 53000) {
-        return "PA Mini"; // For PA accounts with balance between 52800 and 53000
-      } else if (balance < 49000) {
-        return "PA Max"; // For PA accounts with balance below 49000
-      } else if (balance >= 52600) {
-        return "PA micro"; // For PA accounts with balance 53k or more
-      } else {
-        return "PA micro"; // For PA accounts with balance above 53000
-      }
-    }
     return "-"; // Default fallback if no condition matches
   };
 
@@ -309,7 +281,7 @@ export default function DashTradingComp() {
   
       // Generate rows for matched accounts
       const rows = [...matchesPA, ...matchesEVAL].map(([account1, account2], i) => {
-          const tradeTime = getTradeTime(account1.accountBalance);
+          const tradeTime = getTradeTime(account1.account,account1.accountBalance);
           const direction1 = account1.accountBalance >= 53000 ? "Long" : i % 2 === 0 ? "Long" : "Short";
           const direction2 = account2.accountBalance >= 53000 ? "Long" : direction1 === "Long" ? "Short" : "Long";
   
@@ -336,7 +308,7 @@ export default function DashTradingComp() {
       // Add unmatched accounts
       unmatchedAccountsPA.concat(unmatchedAccountsEVAL).forEach((account, i) => {
           const direction = i % 2 === 0 ? "Long" : "Short";
-          const time = getTradeTime(account.accountBalance);
+          const time = getTradeTime(account.account,account.accountBalance);
           rows.push([
               {
                   direction: direction,
@@ -358,7 +330,7 @@ export default function DashTradingComp() {
                   flattenedRows[i].time === flattenedRows[j].time &&
                   flattenedRows[i].accountNumber === flattenedRows[j].accountNumber
               ) {
-                  flattenedRows[j].time = getTradeTime(flattenedRows[j].balance);
+                  flattenedRows[j].time = getTradeTime(flattenedRows[j].account,flattenedRows[j].balance);
               }
           }
       }

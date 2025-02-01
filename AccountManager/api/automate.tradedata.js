@@ -126,7 +126,7 @@ const getTradeTime = (accountType, accountBalance) => {
     } else if (accountType.startsWith("PA")) {
         return getRandomTime(5, 0, 12, 45); // PA trading time
     }
-    // return "-"; // Default fallback
+    return "-"; // Default fallback
 };
 
 // Function to determine the trade type based on account balance and type
@@ -139,7 +139,7 @@ const getTradeNameBasedOnBalance = (accountType, balance) => {
         return balance < 51749 ? "PA STD" : "PA Mini";
     }
 
-    // return "-"; // Default fallback if no condition matches
+    return "-"; // Default fallback if no condition matches
 };
 
 
