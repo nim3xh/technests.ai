@@ -375,8 +375,6 @@ const exportCSVForEachAccount = async (groupedSets) => {
                     time: row.time,
                 })).filter((item) => item.trade);
 
-                console.log(accountTrades);
-
                 const tradeCSV = createTradeCSV(
                     accountTrades.map((item) => item.trade),
                     accounts[i].replace(/APEX-/, "").split(" ")[0],
