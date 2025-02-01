@@ -368,12 +368,23 @@ const exportCSVForEachAccount = async (groupedSets) => {
                     return  tradeValid && accountNumber === filteredAccountStringFromInput;
                 });
                 
+                const parseTime = (timeStr) => {
+                    const [time, period] = timeStr.split(" ");
+                    let [hours, minutes] = time.split(":").map(Number);
+                    
+                    if (period === "PM" && hours !== 12) hours += 12;
+                    if (period === "AM" && hours === 12) hours = 0;
+                    
+                    return hours * 60 + minutes; // Convert to minutes for easy comparison
+                };
+                
                 const accountTrades = filteredAccountData.map((row) => ({
                     trade: tradesData.find((trade) => trade.TradeName === row.trade),
                     accountNumber: row.account,
                     direction: row.direction,
-                    time: row.time,
-                })).filter((item) => item.trade);
+                    time: row.time
+                })).filter((item) => item.trade)
+                  .sort((a, b) => parseTime(a.time) - parseTime(b.time)); 
 
                 const tradeCSV = createTradeCSV(
                     accountTrades.map((item) => item.trade),
