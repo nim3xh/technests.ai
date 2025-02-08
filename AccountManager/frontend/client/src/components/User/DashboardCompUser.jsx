@@ -34,6 +34,7 @@ export default function DashboardCompUser() {
   const [selectedDate, setSelectedDate] = useState(null);
   const [todayDate, setTodayDate] = useState(new Date());
   const [IsDownButtonEnabled, setIsDownButtonEnabled] = useState(false);
+  const [IsCounterEnabled, setIsCounterEnabled] = useState(false);
   const [isUpButtonEnabled, setIsUpButtonEnabled] = useState(false);
   const [alert , setAlert] = useState(false);
   const [errAlert,seterrAlert] =  useState(false);
@@ -344,150 +345,116 @@ export default function DashboardCompUser() {
   };
 
   const uploadCsv = async () => {
-    const input = document.createElement("input");
-    input.type = "file";
-    input.accept = ".csv"; // Accept only CSV files
-    input.multiple = false; // Allow only one file selection
+      const input = document.createElement("input");
+      input.type = "file";
+      input.accept = ".csv"; 
+      input.multiple = false; 
 
-    const accountNumber = currentUser?.user?.ApexAccountNumber;
-    if (!accountNumber) {
-      seterrAlert("Please contact the admin to assign an account number to your account.");
-        return;
-    }
+      const accountNumber = currentUser?.user?.ApexAccountNumber;
+      if (!accountNumber) {
+          seterrAlert("Please contact the admin to assign an account number to your account.");
+          return;
+      }
 
-    input.onchange = async (event) => {
-        const csvFile = event.target.files[0]; // Get the selected file
-        if (!csvFile) return; // Exit if no file was selected
+      input.onchange = async (event) => {
+          const csvFile = event.target.files[0]; 
+          if (!csvFile) return;
 
-        const reader = new FileReader();
-        reader.onload = async (e) => {
-            const csvContent = e.target.result; // The content of the CSV file as a string
+          const reader = new FileReader();
+          reader.onload = async (e) => {
+              const csvContent = e.target.result; 
+              const rows = csvContent.split("\n").map((row) => row.split(","));
+              const header = rows[0]; 
+              const accountIndex = header.indexOf('"Account"'); 
+              
+              if (accountIndex === -1) {
+                  console.error("No 'Account' column found in the CSV");
+                  return;
+              }
 
-            // Parse the CSV content to extract "Account" values
-            const rows = csvContent.split("\n").map((row) => row.split(","));
-            const header = rows[0]; // Header row
-            const accountIndex = header.indexOf('"Account"'); // Find index of the "Account" column
-            if (accountIndex === -1) {
-                console.error("No 'Account' column found in the CSV");
-                return;
-            }
+              const firstAccountValue = rows[1]?.[accountIndex]?.replace(/"/g, ""); 
+              if (firstAccountValue) {
+                  console.log("First Account Value:", firstAccountValue);
 
-            // Get the first value of the "Account" column
-            const firstAccountValue = rows[1]?.[accountIndex]?.replace(/"/g, ""); // Remove quotes
-            if (firstAccountValue) {
-                console.log("First Account Value:", firstAccountValue);
+                  const extractAccountNumber = (account) => {
+                      const matches = account.match(/(?:PA-)?APEX-(\d+)-\d+/);
+                      return matches ? matches[1] : null;
+                  };
 
-                // Function to extract account number based on the format
-                const extractAccountNumber = (account) => {
-                    const matches = account.match(/(?:PA-)?APEX-(\d+)-\d+/);
-                    return matches ? matches[1] : null;
-                };
+                  const extractedAccountNumber = extractAccountNumber(firstAccountValue);
+                  console.log("Extracted Account Number:", extractedAccountNumber);
 
-                const extractedAccountNumber = extractAccountNumber(firstAccountValue);
-                console.log("Extracted Account Number:", extractedAccountNumber);
+                  if (extractedAccountNumber !== accountNumber) {
+                      seterrAlert("The CSV account does not match the user account number.");
+                      return;
+                  }
+              } else {
+                  seterrAlert("No value found in the 'Account' column");
+                  return;
+              }
 
-                // Compare with the accountNumber
-                if (extractedAccountNumber === accountNumber) {
-                    console.log("The account number matches!");
-                } else {
-                  seterrAlert("The CSV account does not match the user account number.");
-                    return;
-                }
-            } else {
-              seterrAlert("No value found in the 'Account' column");
-                return;
-            }
+              // Proceed with file upload
+              const formData = new FormData();
+              formData.append("csvFile", csvFile);
+              setCreateLoding(true);
 
-            // Proceed with your upload logic or any other processing
-            const formData = new FormData();
-            formData.append("csvFile", csvFile); // Append the single file
-            setCreateLoding(true);
+              try {
+                  const token = currentUser.token;
 
-            try {
-                const token = currentUser.token; // Get the token from the currentUser object
+                  await axios.delete(`${BaseURL}accountDetails/account/APEX-${currentUser.user.ApexAccountNumber}`, {
+                      headers: { Authorization: `Bearer ${token}` },
+                  });
 
-                await axios.delete(`${BaseURL}accountDetails/account/APEX-${currentUser.user.ApexAccountNumber}`, {
-                    headers: {
-                        Authorization: `Bearer ${token}`, // Pass the token in the Authorization header
-                    },
-                });
+                  await axios.post(`${BaseURL}accountDetails/add-account`, formData, {
+                      headers: {
+                          "Content-Type": "multipart/form-data",
+                          Authorization: `Bearer ${token}`,
+                      },
+                  });
 
-                await axios.post(`${BaseURL}accountDetails/add-account`, formData, {
-                    headers: {
-                        "Content-Type": "multipart/form-data",
-                        Authorization: `Bearer ${token}`, // Add token in headers for authentication
-                    },
-                });
-  
-                setIsDownButtonEnabled(false);
-                
-                const checkTime = async () => {
-                  // Get the current time in PST
-                  const nowPST = new Date().toLocaleString('en-US', { 
-                   timeZone: 'America/Los_Angeles', 
-                   hour12: false 
-                 }); 
+                  setIsDownButtonEnabled(false);
+                  setIsUpButtonEnabled(false);
+                  startReverseTimer(); // Start the countdown timer
+                  
+              } catch (error) {
+                  console.error("Error uploading CSV:", error);
+                  seterrAlert("Failed to upload the CSV file.");
+                  setCreateLoding(false);
+              }
+          };
 
-                 const hours = new Date(nowPST).getHours();
-                 const minutes = new Date(nowPST).getMinutes();
-         
-                 // Disable the automaticaly trade creation between 10 PM and 2 PM PST
-                 if ((hours >= 22 && hours < 24) || (hours >= 0 && hours < 14)) {
-                    // setAlert('This data will be processed after 2 PM PST.');
-                    setAlert("Account Management Activities.....");
-                    await new Promise(resolve => setTimeout(resolve, 5000));
-                    setAlert('Calculating.....');
-                    // Wait for 5 seconds before triggering the trade data automation
-                    await new Promise(resolve => setTimeout(resolve, 5000));
-                    // Call the manual REST trigger for automateTradeData
-                    await axios.post(`${BaseURL}trigger-trade-data`, null, {
-                        headers: {
-                            Authorization: `Bearer ${token}`, // Pass the token in the Authorization header
-                        },
-                    });
-                    setAlert('Please select Download CSV to Proceed.');
-                 } else {
-                    setAlert("Account Management Activities.....");
-                    await new Promise(resolve => setTimeout(resolve, 5000));
-                    setAlert('Calculating.....');
-                    // Wait for 5 seconds before triggering the trade data automation
-                    await new Promise(resolve => setTimeout(resolve, 5000));
-                    // Call the manual REST trigger for automateTradeData
-                    await axios.post(`${BaseURL}trigger-trade-data`, null, {
-                        headers: {
-                            Authorization: `Bearer ${token}`, // Pass the token in the Authorization header
-                        },
-                    });
-                    setAlert('Please select Download CSV to Proceed.');
-                    
-                 }
-               };
-        
-              // Run the check for create trades
-              checkTime(); 
-              setIsDownButtonEnabled(true);
-              setCreateLoding(false);
-                
-              // Refetch data after uploading CSV
-              fetchData();
+          reader.onerror = (e) => {
+              console.error("Error reading the file:", e.target.error);
+          };
 
-            } catch (error) {
-                console.error("Error uploading CSV:", error);
-                seterrAlert("Failed to upload the CSV file.");
-                setCreateLoding(false);
-            }
-        };
+          reader.readAsText(csvFile);
+      };
 
-        reader.onerror = (e) => {
-            console.error("Error reading the file:", e.target.error);
-        };
+      input.click();
+  };
 
-        reader.readAsText(csvFile); // Read the file as a text string
-    };
+  // Function to start the 5-minute reverse countdown
+  const startReverseTimer = () => {
+      setIsCounterEnabled(true);
+      let timeLeft = 300; // 5 minutes in seconds
+      setAlert("Finding signals … please wait ⏳");
 
-    input.click(); // Trigger the file input dialog
-};
+      const timerInterval = setInterval(() => {
+          const minutes = Math.floor(timeLeft / 60);
+          const seconds = timeLeft % 60;
+          setAlert(`Finding signals … please wait ⏳ ${minutes}:${seconds < 10 ? '0' : ''}${seconds}`);
 
+          if (timeLeft <= 0) {
+              clearInterval(timerInterval);
+              setAlert("✅ Success! You can now download the CSV.");
+              setIsDownButtonEnabled(true); // Enable the download button
+              setIsUpButtonEnabled(true); // Enable the upload button
+              setIsCounterEnabled(false); // Disable the counter
+          }
+
+          timeLeft--;
+      }, 1000); // Update every second
+  };
 
   const now = new Date();
 
@@ -569,27 +536,19 @@ export default function DashboardCompUser() {
             <>
               <div className="flex-wrap flex gap-4 justify-center mt-4">
                   {!isUpButtonEnabled ? (
-                    <Tooltip content="Upload is only allowed between 7 PM and 1 AM PST">
-                      <Button
-                        gradientDuoTone="greenToBlue"
-                        onClick={uploadCsv}
-                        disabled
-                      >
-                        {createLoding ? (
-                          <>
-                            <Spinner size="sm" />
-                            <span className="pl-3">Loading...</span>
-                          </>
-                        ) : (
+                    !IsCounterEnabled ? (
+                      <Tooltip content="Upload is only allowed between 7 PM and 1 AM PST">
+                        <Button gradientDuoTone="greenToBlue" onClick={uploadCsv} disabled>
                           <>Upload CSV</>
-                        )}
+                        </Button>
+                      </Tooltip>
+                    ) : (
+                      <Button gradientDuoTone="greenToBlue" onClick={uploadCsv} disabled>
+                        <>Upload CSV</>
                       </Button>
-                    </Tooltip>
+                    )
                   ) : (
-                    <Button
-                      gradientDuoTone="greenToBlue"
-                      onClick={uploadCsv}
-                    >
+                    <Button gradientDuoTone="greenToBlue" onClick={uploadCsv}>
                       {createLoding ? (
                         <>
                           <Spinner size="sm" />
@@ -600,44 +559,34 @@ export default function DashboardCompUser() {
                       )}
                     </Button>
                   )}
-                  <br></br>
-                  {
-                    !IsDownButtonEnabled ? (
-                      <Tooltip content="Available after 10:00 PM">
-                        <Button
-                          gradientDuoTone="purpleToBlue"
-                          onClick={downloadCsvs}
-                          disabled
-                        >
-                          {createLoding ? (
-                            <>
-                              <Spinner size="sm" />
-                              <span className="pl-3">Loading...</span>
-                            </>
-                          ) : (
-                            <>Download CSV</>
-                          )}
+                  <br />
+                  {!IsDownButtonEnabled ? (
+                    !IsCounterEnabled ? (
+                      <Tooltip content="Available after 10:00 PM PST">
+                        <Button gradientDuoTone="purpleToBlue" onClick={downloadCsvs} disabled>
+                          <>Download CSV</>
                         </Button>
                       </Tooltip>
                     ) : (
-                      <Button
-                        gradientDuoTone="purpleToBlue"
-                        onClick={downloadCsvs}
-                      >
-                        {createLoding ? (
-                          <>
-                            <Spinner size="sm" />
-                            <span className="pl-3">Loading...</span>
-                          </>
-                        ) : (
-                          <>Download CSV</>
-                        )}
+                      <Button gradientDuoTone="purpleToBlue" onClick={downloadCsvs} disabled>
+                        <>Download CSV</>
                       </Button>
                     )
-                  }
-               </div>
+                  ) : (
+                    <Button gradientDuoTone="purpleToBlue" onClick={downloadCsvs}>
+                      {createLoding ? (
+                        <>
+                          <Spinner size="sm" />
+                          <span className="pl-3">Loading...</span>
+                        </>
+                      ) : (
+                        <>Download CSV</>
+                      )}
+                    </Button>
+                  )}
+                </div>;
                 {/* Link for downloading default file */}
-                <div className="text-center mb-4 mt-4">
+                {/* <div className="text-center mb-4 mt-4">
                   <a
                     href={`${BaseURL}download/demo`} 
                     target="_blank" 
@@ -649,7 +598,7 @@ export default function DashboardCompUser() {
                   <p className="text-sm text-gray-600">
                     Use this template for best results when uploading your dashboard file.
                   </p>
-                </div>
+                </div> */}
 
                 {alert && (
                   <Alert color="success" onDismiss={() => setAlert(false)}>
