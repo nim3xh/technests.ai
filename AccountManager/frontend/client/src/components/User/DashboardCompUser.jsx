@@ -584,7 +584,7 @@ export default function DashboardCompUser() {
                       )}
                     </Button>
                   )}
-                </div>;
+                </div>
                 {/* Link for downloading default file */}
                 {/* <div className="text-center mb-4 mt-4">
                   <a
