@@ -31,6 +31,7 @@ router.get('/viewDeleted', verifyToken,accountDetailController.indexDeleted);
 router.get('/viewDeleted/:account', verifyToken,accountDetailController.indexDeletedbyAccNu);
 router.get("/:id", verifyToken, accountDetailController.show);
 router.get("/account/:account", verifyToken, accountDetailController.showByACnu);
+router.get("/accCrate/:account", accountDetailController.showByACnu);
 router.get("/info/:account", verifyApiKey, accountDetailController.showByACnu);
 router.patch("/:id", verifyToken, accountDetailController.update);
 router.patch("/account/:account", verifyToken, accountDetailController.updateByACnu);

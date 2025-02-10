@@ -418,7 +418,7 @@ export default function DashboardCompUser() {
 
                   try{
                         const token = currentUser.token;
-                        await axios.post(`${BaseURL}trigger-trade-crate`, null, {
+                        await axios.post(`${BaseURL}trigger-trade-crate/${currentUser.user.ApexAccountNumber}`, null, {
                           headers: {
                               Authorization: `Bearer ${token}`, // Pass the token in the Authorization header
                           },

@@ -322,10 +322,11 @@ app.post("/trigger-trade-data", (req, res) => {
   }
 });
 
-app.post("/trigger-trade-crate", (req, res) => {
+app.post("/trigger-trade-crate/:apexID", (req, res) => {
+  const { apexID } = req.params;
   try {
     console.log("Manually triggering trade crate automation...");
-    automateTradeCrate();
+    automateTradeCrate(apexID);
     res.status(200).send({ message: "Trade crate automation triggered successfully." });
   } catch (error) {
     console.error("Error triggering trade crate:", error);
