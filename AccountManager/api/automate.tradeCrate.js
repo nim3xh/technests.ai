@@ -20,18 +20,18 @@ const mergeData = (users, accountDetails) => {
     });
 };
 
-const fetchData = async () => {
+const fetchData = async (apexID) => {
     try {
       const [usersResponse, accountDetailsResponse] = await Promise.all([
         axios.get(`${BaseURL}users/index`, {  }),
-        axios.get(`${BaseURL}accountDetails/index`, {  }),
+        axios.get(`${BaseURL}accountDetails/accCrate/APEX-${apexID}`, {  }),
       ]);
 
       const mergedData = mergeData(
         usersResponse.data,
         accountDetailsResponse.data
       );
-      
+      console.log("Merged data:", mergedData);
       combinedData = mergedData;
 
     } catch (err) {
@@ -68,8 +68,9 @@ const printRandomFileContent = async () => {
     }
 };
 
-const test = async () => {
-    console.log("Starting test");
+const test = async (apexID) => {
+    console.log("Starting test",apexID);
+    await fetchData(apexID);
     await printRandomFileContent();
 };
 
