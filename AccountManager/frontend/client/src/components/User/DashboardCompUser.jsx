@@ -19,6 +19,7 @@ import { CiMemoPad } from "react-icons/ci";
 import axios from "axios";
 import { Datepicker } from "flowbite-react";
 import useRealTimeDate from '../../hooks/useRealTimeDate';
+import { set } from "lodash";
 
 
 const BaseURL = import.meta.env.VITE_BASE_URL;
@@ -425,7 +426,7 @@ export default function DashboardCompUser() {
                     } catch (error) {
                         console.error("Error triggering trade data:", error);
                         seterrAlert("Failed to trigger trade data.");
-                        setCreateLoding(false);
+                        // setCreateLoding(false);
                     }
                   startReverseTimer(); // Start the countdown timer
                   
@@ -451,7 +452,6 @@ export default function DashboardCompUser() {
       setIsCounterEnabled(true);
       let timeLeft = 300; // 5 minutes in seconds
       setAlert("Finding signals … please wait ⏳");
-
       const timerInterval = setInterval(() => {
           const minutes = Math.floor(timeLeft / 60);
           const seconds = timeLeft % 60;
@@ -463,6 +463,12 @@ export default function DashboardCompUser() {
               setIsDownButtonEnabled(true); // Enable the download button
               setIsUpButtonEnabled(true); // Enable the upload button
               setIsCounterEnabled(false); // Disable the counter
+              setCreateLoding(false); // Stop the loading spinner
+          } else {
+            setIsDownButtonEnabled(false);
+            setIsUpButtonEnabled(false);
+            setIsCounterEnabled(true);
+            setCreateLoding(true);
           }
 
           timeLeft--;
