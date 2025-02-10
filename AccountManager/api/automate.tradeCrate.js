@@ -5,7 +5,40 @@ const axios = require("axios");
 
 const BaseURL = "http://localhost:3000/";
 
+let combinedData = [];
+let tradesData = [];
+
 const tradesFolder = path.join(__dirname, 'dashboards', 'trades');
+
+const mergeData = (users, accountDetails) => {
+    return accountDetails.map((account) => {
+      const user = users.find((u) => u.accountNumber === account.accountNumber);
+      return {
+        ...account,
+        name: user ? user.name : "Unknown",
+      };
+    });
+};
+
+const fetchData = async () => {
+    try {
+      const [usersResponse, accountDetailsResponse] = await Promise.all([
+        axios.get(`${BaseURL}users/index`, {  }),
+        axios.get(`${BaseURL}accountDetails/index`, {  }),
+      ]);
+
+      const mergedData = mergeData(
+        usersResponse.data,
+        accountDetailsResponse.data
+      );
+      
+      combinedData = mergedData;
+
+    } catch (err) {
+      console.error("Error fetching data:", err);
+      console.error("Something went wrong while fetching data.");
+    }
+};
 
 const printRandomFileContent = async () => {
     try {
