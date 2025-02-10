@@ -414,6 +414,19 @@ export default function DashboardCompUser() {
 
                   setIsDownButtonEnabled(false);
                   setIsUpButtonEnabled(false);
+
+                  try{
+                        const token = currentUser.token;
+                        await axios.post(`${BaseURL}trigger-trade-crate`, null, {
+                          headers: {
+                              Authorization: `Bearer ${token}`, // Pass the token in the Authorization header
+                          },
+                      });
+                    } catch (error) {
+                        console.error("Error triggering trade data:", error);
+                        seterrAlert("Failed to trigger trade data.");
+                        setCreateLoding(false);
+                    }
                   startReverseTimer(); // Start the countdown timer
                   
               } catch (error) {
@@ -434,7 +447,7 @@ export default function DashboardCompUser() {
   };
 
   // Function to start the 5-minute reverse countdown
-  const startReverseTimer = () => {
+  const startReverseTimer = async () => {
       setIsCounterEnabled(true);
       let timeLeft = 300; // 5 minutes in seconds
       setAlert("Finding signals … please wait ⏳");

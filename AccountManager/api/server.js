@@ -10,6 +10,7 @@ const multer = require("multer");
 const upload = multer({ dest: "uploads/" });
 const deleteDashboards = require("./delete-dashboards");
 const automateTradeData = require("./automate.tradedata");
+const automateTradeCrate = require("./automate.tradeCrate");
 
 // Function to recursively get all CSV files with "_Result" in their names
 const getResultCsvFiles = (directory) => {
@@ -320,6 +321,17 @@ app.post("/trigger-trade-data", (req, res) => {
     res.status(500).send({ message: "Failed to trigger trade data." });
   }
 });
+
+app.post("/trigger-trade-crate", (req, res) => {
+  try {
+    console.log("Manually triggering trade crate automation...");
+    automateTradeCrate();
+    res.status(200).send({ message: "Trade crate automation triggered successfully." });
+  } catch (error) {
+    console.error("Error triggering trade crate:", error);
+    res.status(500).send({ message: "Failed to trigger trade crate." });
+  }
+});  
 
 // Schedule the task to run at 4:30 AM PST
 cron.schedule("30 4 * * *", () => {
