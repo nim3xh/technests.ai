@@ -31,7 +31,7 @@ const fetchData = async (apexID) => {
         usersResponse.data,
         accountDetailsResponse.data
       );
-      console.log("Merged data:", mergedData);
+    //   console.log("Merged data:", mergedData);
       combinedData = mergedData;
 
     } catch (err) {
@@ -52,7 +52,7 @@ const printRandomFileContent = async () => {
         const randomFile = files[Math.floor(Math.random() * files.length)];
         const filePath = path.join(tradesFolder, randomFile);
         
-        console.log("Reading file:", randomFile);
+        // console.log("Reading file:", randomFile);
         
         // Read and parse CSV file
         fs.createReadStream(filePath)
