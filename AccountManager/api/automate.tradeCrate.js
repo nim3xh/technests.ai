@@ -2,6 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const csv = require('csv-parser');
 const axios = require("axios");
+const { stringify } = require('csv-stringify');
 
 const BaseURL = "http://localhost:3000/";
 
@@ -45,14 +46,12 @@ const processTrades = async (apexID) => {
         console.log("Reading file:", randomFile);
 
         const trades = [];
-        
+
         fs.createReadStream(filePath)
             .pipe(csv())
             .on('data', (row) => {
-                // Pick a random account from merged data
                 const randomAccount = combinedData[Math.floor(Math.random() * combinedData.length)];
-                
-                // Add account number to the trade row
+
                 if (randomAccount) {
                     row.Account = randomAccount.account;
                     trades.push(row);
@@ -60,12 +59,28 @@ const processTrades = async (apexID) => {
             })
             .on('end', () => {
                 console.log("Merged data:", JSON.stringify(trades, null, 2));
+
+                const outputDir = path.join(__dirname, 'dashboards', apexID);
+                if (!fs.existsSync(outputDir)) {
+                    fs.mkdirSync(outputDir, { recursive: true });
+                }
+
+                const jsonOutputPath = path.join(outputDir, `${apexID}_Trades.json`);
+                fs.writeFileSync(jsonOutputPath, JSON.stringify(trades, null, 2));
+                console.log(`Processed trades saved to: ${jsonOutputPath}`);
+
+                const csvOutputPath = path.join(outputDir, `${apexID}_Trades.csv`);
+                const csvStream = stringify({ header: true });
+
+                const writableStream = fs.createWriteStream(csvOutputPath);
+                csvStream.pipe(writableStream);
                 
-                // Save cleaned trade data
-                const outputPath = path.join(__dirname, 'dashboards', apexID, `${apexID}_Trades.json`);
-                fs.writeFileSync(outputPath, JSON.stringify(trades, null, 2));
-                
-                console.log(`Processed trades saved to: ${outputPath}`);
+                trades.forEach(trade => csvStream.write(trade));
+                csvStream.end();
+
+                writableStream.on('finish', () => {
+                    console.log(`Processed trades CSV saved to: ${csvOutputPath}`);
+                });
             });
 
     } catch (error) {
